@@ -1,0 +1,82 @@
+{
+  "version": "3.4.0",
+  "eventos": [
+    {
+      "campo": "rfc",
+      "etapa": "CONTROL_ANIDADO_RESUELTO",
+      "clase": "TcxCustomInnerTextEdit",
+      "coincidencias": 2
+    },
+    {
+      "campo": "rfc",
+      "etapa": "CONTROL_IDENTIFICADO",
+      "clase": "TcxCustomInnerTextEdit"
+    },
+    {
+      "campo": "rfc",
+      "etapa": "ANTES_DE_ESCRIBIR",
+      "vacio": false,
+      "longitud": 13,
+      "clase": "TcxCustomInnerTextEdit"
+    },
+    {
+      "campo": "rfc",
+      "etapa": "TECLADO_ENVIADO",
+      "longitud": 13
+    },
+    {
+      "campo": "rfc",
+      "etapa": "SALIDA_DE_CAMPO_CONFIRMADA"
+    },
+    {
+      "campo": "rfc",
+      "etapa": "LECTURA_CONFIRMADA",
+      "coincide": true
+    },
+    {
+      "campo": "rfc",
+      "etapa": "CAMPO_CONFIRMADO_NO_VACIO",
+      "vacio": false,
+      "longitud": 13
+    },
+    {
+      "campo": "folio",
+      "etapa": "CONTROL_ANIDADO_RESUELTO",
+      "clase": "TcxCustomInnerTextEdit",
+      "coincidencias": 2
+    },
+    {
+      "campo": "folio",
+      "etapa": "CONTROL_IDENTIFICADO",
+      "clase": "TcxCustomInnerTextEdit"
+    },
+    {
+      "campo": "folio",
+      "etapa": "ANTES_DE_ESCRIBIR",
+      "vacio": false,
+      "longitud": 10,
+      "clase": "TcxCustomInnerTextEdit"
+    },
+    {
+      "campo": "folio",
+      "etapa": "TECLADO_ENVIADO",
+      "longitud": 10
+    },
+    {
+      "campo": "folio",
+      "etapa": "SALIDA_DE_CAMPO_CONFIRMADA"
+    },
+    {
+      "campo": "folio",
+      "etapa": "LECTURA_CONFIRMADA",
+      "coincide": true
+    },
+    {
+      "campo": "folio",
+      "etapa": "CAMPO_CONFIRMADO_NO_VACIO",
+      "vacio": false,
+      "longitud": 10
+    }
+  ],
+  "nota": "Sólo campos/etapas/booleanos/clases. No incluye valores de RFC, correo, folio ni contraseña."
+}

@@ -1,0 +1,12 @@
+{
+  "puerto": 8765,
+  "escuchar_en": "10.20.20.182",
+  "origenes_permitidos": [
+    "https://www.grupoary.com.mx"
+  ],
+  "https_publico": true,
+  "proxy_confiable": "10.20.20.154",
+  "permitir_facturacion_real": false,
+  "max_solicitudes_pendientes": 100,
+  "limite_envios_10_minutos": 8
+}

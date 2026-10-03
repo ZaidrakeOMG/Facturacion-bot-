@@ -1,0 +1,32 @@
+VERIFICACIÓN DEL ZIP COMPLETO — ARY VM R1 + MODO RÁPIDO
+Fecha: 03/oct/2026
+
+Origen: ARY_FACTURACION_BOT_BASE_VM_R1.zip + ARY_VM_R1_MODO_RAPIDO.zip.
+
+COMPROBACIONES DE ESTA ENTREGA
+- 231 archivos de R1 conservados idénticos byte por byte, comprobados de nuevo
+  después de ejecutar las pruebas.
+- Tres archivos Python del parche conservados idénticos; no se modificó su lógica.
+- Sintaxis comprobada de 93 archivos .py y .pyw.
+- Comprobación real de los cuatro hashes exigidos por iniciar_rapido.py: correcta.
+- Pruebas seleccionadas: 97 aprobadas (55 del modo rápido y 42 del adaptador).
+- ZIP verificado por CRC, rutas y comparación byte a byte tras generarlo.
+
+Sólo se adaptaron mensajes de INICIAR_RAPIDO.bat para indicar que debe ejecutarse
+1_PREPARAR_VM.bat cuando falte la .venv, y las instrucciones del paquete completo.
+No hay dependencias adicionales respecto de R1. No se incluye una .venv copiada.
+La configuración y los datos incluidos son los del ZIP R1, NO una copia en vivo
+de la VM: conservar los datos recientes según 00_LEEME_ZIP_COMPLETO.txt.
+
+PRUEBAS EJECUTADAS
+python -m pytest -q -p no:cacheprovider pruebas_rapido/test_perfil_rapido.py tests/test_compat_vm_20261003.py
+........................................................................ [ 74%]
+.........................                                                [100%]
+97 passed in 1.28s
+
+LÍMITES
+Las pruebas usan ventanas y dependencias simuladas. No se ejecutaron los BAT
+ni Polaris real en Windows desde este entorno, ni se midió un tiempo por factura.
+No se volvió a ejecutar la suite completa del bot. Los 17 fallos preexistentes
+registrados en PRUEBAS_VM.txt siguen pendientes; no se consideran corregidos por
+esta entrega, que únicamente integra los dos paquetes ya proporcionados.

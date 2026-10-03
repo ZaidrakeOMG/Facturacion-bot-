@@ -1,0 +1,1075 @@
+{
+  "id": "20261001_102603_1383e139",
+  "fecha": "2026-10-01T10:26:03-06:00",
+  "manual": false,
+  "etapa": "FACTURACION: agregar folio",
+  "error": "PolarisError: Polaris mostró una validación al agregar el folio. Revisa la pantalla; no se repite ni se timbra.",
+  "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\AUX_SISTEMAS\\Desktop\\ARY_FACTURACION_BOT\\ARY_FACTURACION_BOT\\arybot\\cola_operaciones.py\", line 119, in ejecutar_una\n    result=self.polaris.invoice(como_solicitud(data),test_mode=safe)\n  File \"C:\\Users\\AUX_SISTEMAS\\Desktop\\ARY_FACTURACION_BOT\\ARY_FACTURACION_BOT\\arybot\\diagnostico.py\", line 181, in wrapped\n    result=fn(self,*args,**kwargs)\n  File \"C:\\Users\\AUX_SISTEMAS\\Desktop\\ARY_FACTURACION_BOT\\ARY_FACTURACION_BOT\\arybot\\polaris.py\", line 1733, in invoice\n    self._add_ticket(inv,sol.ticket)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\AUX_SISTEMAS\\Desktop\\ARY_FACTURACION_BOT\\ARY_FACTURACION_BOT\\arybot\\polaris.py\", line 1585, in _add_ticket\n    raise PolarisError(\"Polaris mostró una validación al agregar el folio. Revisa la pantalla; no se repite ni se timbra.\")\narybot.polaris.PolarisError: Polaris mostró una validación al agregar el folio. Revisa la pantalla; no se repite ni se timbra.\n",
+  "contexto": {
+    "tipo": "FACTURA",
+    "id_solicitud": "1da513a7eb284279b9a8c56c1fa469e3",
+    "origen": "Portal web"
+  },
+  "ultimo_evento": {
+    "fecha": "2026-10-01T10:26:03.459-06:00",
+    "etapa": "LOG",
+    "estado": "INFO",
+    "detalle": "DIAGNÓSTICO 20261001_102603_8267590a: PolarisError: Polaris mostró una validación al agregar el folio. Revisa la pantalla; no se repite ni se timbra.",
+    "datos": {}
+  },
+  "ventanas": [
+    {
+      "nivel": 0,
+      "hwnd": 2426100,
+      "parent": 0,
+      "clase": "#32770",
+      "titulo": "Fecha Invalida",
+      "rect": [
+        638,
+        377,
+        970,
+        526
+      ],
+      "habilitado": true,
+      "foco": true
+    },
+    {
+      "nivel": 1,
+      "hwnd": 68388,
+      "parent": 2426100,
+      "clase": "Button",
+      "titulo": "Aceptar",
+      "rect": [
+        877,
+        491,
+        952,
+        514
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 68390,
+      "parent": 2426100,
+      "clase": "Static",
+      "titulo": "",
+      "rect": [
+        662,
+        426,
+        694,
+        458
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 68392,
+      "parent": 2426100,
+      "clase": "Static",
+      "titulo": "No se pueden facturar folios del mes anterior",
+      "rect": [
+        703,
+        436,
+        937,
+        451
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 1902328,
+      "parent": 0,
+      "clase": "TForm_Menu",
+      "titulo": "Polaris Facturacion --> ARY SUPER EXPRESS V, S.A. DE C.V.",
+      "rect": [
+        -8,
+        -8,
+        1608,
+        860
+      ],
+      "habilitado": false,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1312178,
+      "parent": 1902328,
+      "clase": "TToolBar",
+      "titulo": "",
+      "rect": [
+        0,
+        43,
+        1600,
+        87
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 592346,
+      "parent": 1902328,
+      "clase": "TStatusBar",
+      "titulo": "",
+      "rect": [
+        0,
+        833,
+        1600,
+        852
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1247822,
+      "parent": 1902328,
+      "clase": "MDIClient",
+      "titulo": "",
+      "rect": [
+        0,
+        87,
+        1600,
+        833
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1048784,
+      "parent": 1902328,
+      "clase": "TForm_FacturacionF",
+      "titulo": "Facturación de Efectivo",
+      "rect": [
+        385,
+        166,
+        1218,
+        804
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 3147420,
+      "parent": 1902328,
+      "clase": "TcxPageControl",
+      "titulo": "",
+      "rect": [
+        393,
+        197,
+        1210,
+        502
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 264908,
+      "parent": 1902328,
+      "clase": "TcxTabSheet",
+      "titulo": "Datos de Facturación",
+      "rect": [
+        394,
+        217,
+        1209,
+        501
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 526894,
+      "parent": 1902328,
+      "clase": "TcxLookupComboBox",
+      "titulo": "(valor omitido)",
+      "rect": [
+        619,
+        289,
+        921,
+        310
+      ],
+      "habilitado": false,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 526892,
+      "parent": 1902328,
+      "clase": "TcxCustomComboBoxInnerEdit",
+      "titulo": "(valor omitido)",
+      "rect": [
+        622,
+        292,
+        902,
+        305
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 461362,
+      "parent": 1902328,
+      "clase": "TcxLookupComboBox",
+      "titulo": "(valor omitido)",
+      "rect": [
+        658,
+        359,
+        921,
+        380
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 461360,
+      "parent": 1902328,
+      "clase": "TcxCustomComboBoxInnerEdit",
+      "titulo": "(valor omitido)",
+      "rect": [
+        661,
+        362,
+        902,
+        375
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 789142,
+      "parent": 1902328,
+      "clase": "TcxLabel",
+      "titulo": "626 - RÉGIMEN SIMPLIFICADO DE CONFIANZA",
+      "rect": [
+        494,
+        393,
+        921,
+        414
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 396054,
+      "parent": 1902328,
+      "clase": "TcxLabel",
+      "titulo": "Regimen Fiscal",
+      "rect": [
+        409,
+        395,
+        483,
+        412
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 396048,
+      "parent": 1902328,
+      "clase": "TdxCheckGroupBox",
+      "titulo": "Sustitucion de Factura",
+      "rect": [
+        408,
+        422,
+        921,
+        486
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 199418,
+      "parent": 1902328,
+      "clase": "TcxButton",
+      "titulo": "",
+      "rect": [
+        728,
+        447,
+        754,
+        471
+      ],
+      "habilitado": false,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 199422,
+      "parent": 1902328,
+      "clase": "TcxTextEdit",
+      "titulo": "(valor omitido)",
+      "rect": [
+        636,
+        449,
+        723,
+        470
+      ],
+      "habilitado": false,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 199420,
+      "parent": 1902328,
+      "clase": "TcxCustomInnerTextEdit",
+      "titulo": "(valor omitido)",
+      "rect": [
+        639,
+        452,
+        721,
+        465
+      ],
+      "habilitado": false,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 461572,
+      "parent": 1902328,
+      "clase": "TcxLabel",
+      "titulo": "Factura",
+      "rect": [
+        582,
+        450,
+        626,
+        467
+      ],
+      "habilitado": false,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 788926,
+      "parent": 1902328,
+      "clase": "TcxLookupComboBox",
+      "titulo": "(valor omitido)",
+      "rect": [
+        457,
+        449,
+        566,
+        470
+      ],
+      "habilitado": false,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 199416,
+      "parent": 1902328,
+      "clase": "TcxCustomComboBoxInnerEdit",
+      "titulo": "(valor omitido)",
+      "rect": [
+        460,
+        452,
+        547,
+        465
+      ],
+      "habilitado": false,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 396050,
+      "parent": 1902328,
+      "clase": "TcxLabel",
+      "titulo": "Serie",
+      "rect": [
+        425,
+        450,
+        453,
+        467
+      ],
+      "habilitado": false,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1051112,
+      "parent": 1902328,
+      "clase": "TcxLabel",
+      "titulo": "Forma de Pago",
+      "rect": [
+        511,
+        319,
+        567,
+        350
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1051216,
+      "parent": 1902328,
+      "clase": "TcxLookupComboBox",
+      "titulo": "(valor omitido)",
+      "rect": [
+        575,
+        323,
+        762,
+        344
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 592358,
+      "parent": 1902328,
+      "clase": "TcxCustomComboBoxInnerEdit",
+      "titulo": "(valor omitido)",
+      "rect": [
+        578,
+        326,
+        743,
+        339
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 199400,
+      "parent": 1902328,
+      "clase": "TcxLookupComboBox",
+      "titulo": "(valor omitido)",
+      "rect": [
+        460,
+        359,
+        580,
+        380
+      ],
+      "habilitado": false,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 199402,
+      "parent": 1902328,
+      "clase": "TcxCustomComboBoxInnerEdit",
+      "titulo": "(valor omitido)",
+      "rect": [
+        463,
+        362,
+        561,
+        375
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 2425654,
+      "parent": 1902328,
+      "clase": "TcxLabel",
+      "titulo": "Moneda",
+      "rect": [
+        409,
+        361,
+        451,
+        378
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 461574,
+      "parent": 1902328,
+      "clase": "TcxLabel",
+      "titulo": "Uso CFDI",
+      "rect": [
+        599,
+        361,
+        648,
+        378
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 2819568,
+      "parent": 1902328,
+      "clase": "TcxTextEdit",
+      "titulo": "(valor omitido)",
+      "rect": [
+        827,
+        323,
+        921,
+        344
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 199398,
+      "parent": 1902328,
+      "clase": "TcxCustomInnerTextEdit",
+      "titulo": "(valor omitido)",
+      "rect": [
+        830,
+        326,
+        919,
+        339
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 526816,
+      "parent": 1902328,
+      "clase": "TcxLabel",
+      "titulo": "Cuenta",
+      "rect": [
+        778,
+        325,
+        817,
+        342
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 2360652,
+      "parent": 1902328,
+      "clase": "TcxLabel",
+      "titulo": "Metodo de pago",
+      "rect": [
+        549,
+        284,
+        611,
+        314
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 264920,
+      "parent": 1902328,
+      "clase": "TcxLabel",
+      "titulo": "35025",
+      "rect": [
+        458,
+        289,
+        535,
+        310
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 723520,
+      "parent": 1902328,
+      "clase": "TcxCheckBox",
+      "titulo": "Partido  Politico",
+      "rect": [
+        409,
+        321,
+        506,
+        342
+      ],
+      "habilitado": false,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 330376,
+      "parent": 1902328,
+      "clase": "TcxMemo",
+      "titulo": "(valor omitido)",
+      "rect": [
+        949,
+        351,
+        1180,
+        486
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 3735610,
+      "parent": 1902328,
+      "clase": "TcxCustomInnerMemo",
+      "titulo": "(valor omitido)",
+      "rect": [
+        949,
+        351,
+        1180,
+        486
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 199396,
+      "parent": 1902328,
+      "clase": "TDateTimePicker",
+      "titulo": "",
+      "rect": [
+        955,
+        309,
+        1051,
+        330
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 264916,
+      "parent": 1902328,
+      "clase": "TPanel",
+      "titulo": "",
+      "rect": [
+        949,
+        241,
+        1181,
+        284
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1051142,
+      "parent": 1902328,
+      "clase": "TcxLabel",
+      "titulo": "AA 77912",
+      "rect": [
+        950,
+        242,
+        1180,
+        265
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 788304,
+      "parent": 1902328,
+      "clase": "TcxLabel",
+      "titulo": "Timbres Restantes: 24,098",
+      "rect": [
+        950,
+        264,
+        1180,
+        283
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 264912,
+      "parent": 1902328,
+      "clase": "TcxLabel",
+      "titulo": "ADRIANA ALEJANDRA LOMAS MONROY",
+      "rect": [
+        458,
+        261,
+        921,
+        283
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 264910,
+      "parent": 1902328,
+      "clase": "TcxLabel",
+      "titulo": "LOMA800805G67",
+      "rect": [
+        629,
+        233,
+        755,
+        254
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 592384,
+      "parent": 1902328,
+      "clase": "TcxTextEdit",
+      "titulo": "(valor omitido)",
+      "rect": [
+        458,
+        233,
+        535,
+        254
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 199394,
+      "parent": 1902328,
+      "clase": "TcxCustomInnerTextEdit",
+      "titulo": "(valor omitido)",
+      "rect": [
+        461,
+        236,
+        533,
+        249
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 985510,
+      "parent": 1902328,
+      "clase": "TcxPageControl",
+      "titulo": "",
+      "rect": [
+        393,
+        502,
+        1210,
+        738
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 592420,
+      "parent": 1902328,
+      "clase": "TcxTabSheet",
+      "titulo": "&Transacciones",
+      "rect": [
+        394,
+        524,
+        1209,
+        737
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 330372,
+      "parent": 1902328,
+      "clase": "TcxGrid",
+      "titulo": "",
+      "rect": [
+        394,
+        574,
+        1209,
+        737
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 330374,
+      "parent": 1902328,
+      "clase": "TcxGridSite",
+      "titulo": "",
+      "rect": [
+        396,
+        576,
+        1207,
+        735
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 199388,
+      "parent": 1902328,
+      "clase": "TPanel",
+      "titulo": "",
+      "rect": [
+        394,
+        524,
+        1209,
+        574
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 789018,
+      "parent": 1902328,
+      "clase": "TcxTextEdit",
+      "titulo": "(valor omitido)",
+      "rect": [
+        525,
+        545,
+        578,
+        566
+      ],
+      "habilitado": false,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 526962,
+      "parent": 1902328,
+      "clase": "TcxCustomInnerTextEdit",
+      "titulo": "(valor omitido)",
+      "rect": [
+        528,
+        548,
+        576,
+        561
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 330370,
+      "parent": 1902328,
+      "clase": "TcxTextEdit",
+      "titulo": "(valor omitido)",
+      "rect": [
+        408,
+        545,
+        516,
+        566
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 723442,
+      "parent": 1902328,
+      "clase": "TcxCustomInnerTextEdit",
+      "titulo": "(valor omitido)",
+      "rect": [
+        411,
+        548,
+        514,
+        561
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 199392,
+      "parent": 1902328,
+      "clase": "TBitBtn",
+      "titulo": "&Eliminar Folio",
+      "rect": [
+        687,
+        535,
+        790,
+        566
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 199390,
+      "parent": 1902328,
+      "clase": "TBitBtn",
+      "titulo": "A&gregar Folio",
+      "rect": [
+        585,
+        535,
+        686,
+        566
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 592418,
+      "parent": 1902328,
+      "clase": "TStatusBar",
+      "titulo": "",
+      "rect": [
+        393,
+        779,
+        1210,
+        796
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 199360,
+      "parent": 1902328,
+      "clase": "TPanel",
+      "titulo": "",
+      "rect": [
+        393,
+        738,
+        1210,
+        779
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 199386,
+      "parent": 1902328,
+      "clase": "TBitBtn",
+      "titulo": "Cancelar",
+      "rect": [
+        1029,
+        742,
+        1120,
+        776
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1051062,
+      "parent": 1902328,
+      "clase": "TBitBtn",
+      "titulo": "&Aceptar",
+      "rect": [
+        935,
+        742,
+        1026,
+        776
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 2099684,
+      "parent": 1902328,
+      "clase": "TBitBtn",
+      "titulo": "&Cerrar",
+      "rect": [
+        1123,
+        742,
+        1207,
+        776
+      ],
+      "habilitado": false,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 527008,
+      "parent": 0,
+      "clase": "TApplication",
+      "titulo": "Polaris Facturacion",
+      "rect": [
+        800,
+        450,
+        800,
+        450
+      ],
+      "habilitado": false,
+      "foco": false
+    }
+  ],
+  "captura_factura_eventos": [
+    {
+      "campo": "rfc",
+      "etapa": "CONTROL_ANIDADO_RESUELTO",
+      "clase": "TcxCustomInnerTextEdit",
+      "coincidencias": 2
+    },
+    {
+      "campo": "rfc",
+      "etapa": "CONTROL_IDENTIFICADO",
+      "clase": "TcxCustomInnerTextEdit"
+    },
+    {
+      "campo": "rfc",
+      "etapa": "ANTES_DE_ESCRIBIR",
+      "vacio": false,
+      "longitud": 13,
+      "clase": "TcxCustomInnerTextEdit"
+    },
+    {
+      "campo": "rfc",
+      "etapa": "TECLADO_ENVIADO",
+      "longitud": 13
+    },
+    {
+      "campo": "rfc",
+      "etapa": "SALIDA_DE_CAMPO_CONFIRMADA"
+    },
+    {
+      "campo": "rfc",
+      "etapa": "LECTURA_CONFIRMADA",
+      "coincide": true
+    },
+    {
+      "campo": "rfc",
+      "etapa": "CAMPO_CONFIRMADO_NO_VACIO",
+      "vacio": false,
+      "longitud": 13
+    },
+    {
+      "campo": "folio",
+      "etapa": "CONTROL_ANIDADO_RESUELTO",
+      "clase": "TcxCustomInnerTextEdit",
+      "coincidencias": 2
+    },
+    {
+      "campo": "folio",
+      "etapa": "CONTROL_IDENTIFICADO",
+      "clase": "TcxCustomInnerTextEdit"
+    },
+    {
+      "campo": "folio",
+      "etapa": "ANTES_DE_ESCRIBIR",
+      "vacio": false,
+      "longitud": 10,
+      "clase": "TcxCustomInnerTextEdit"
+    },
+    {
+      "campo": "folio",
+      "etapa": "TECLADO_ENVIADO",
+      "longitud": 10
+    },
+    {
+      "campo": "folio",
+      "etapa": "SALIDA_DE_CAMPO_CONFIRMADA"
+    },
+    {
+      "campo": "folio",
+      "etapa": "LECTURA_CONFIRMADA",
+      "coincide": true
+    },
+    {
+      "campo": "folio",
+      "etapa": "CAMPO_CONFIRMADO_NO_VACIO",
+      "vacio": false,
+      "longitud": 10
+    }
+  ]
+}

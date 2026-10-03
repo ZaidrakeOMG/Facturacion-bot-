@@ -1,0 +1,64 @@
+ARY FACTURACIÓN BOT — R1 COMPLETO CON MODO RÁPIDO
+================================================
+
+CONTENIDO
+Proyecto completo de ARY_FACTURACION_BOT_BASE_VM_R1.zip más el modo rápido
+opcional de ARY_VM_R1_MODO_RAPIDO.zip, ya colocados en la misma carpeta.
+No se mezclaron las otras versiones o parches anteriores.
+Los 231 archivos de la base R1 se conservan idénticos. No se reprogramó
+facturación, captura, Gmail, portal ni la selección de estación en esta entrega.
+
+PUESTA EN MARCHA EN LA VM
+1. Cierra todas las versiones del bot y los procesos del portal que usen
+   sus archivos. Conserva la carpeta anterior como respaldo.
+2. Extrae la carpeta ARY_FACTURACION_BOT de este ZIP en una ubicación nueva.
+   No ejecutes el bot directamente dentro del ZIP.
+3. Si vas a continuar con tu trabajo actual, conserva los datos recientes
+   siguiendo el apartado siguiente ANTES de iniciar el bot.
+4. Ejecuta 1_PREPARAR_VM.bat una sola vez para crear el entorno de esa carpeta.
+   Se utiliza un Python ya instalado. No copies la .venv de otra carpeta o PC.
+5. Espera a que indique ENTORNO OK. Aunque ese instalador mencione el arranque
+   normal, para activar el modo rápido abre INICIAR_RAPIDO.bat.
+6. Comprueba ruta y usuario de Polaris. Mantén MODO SEGURO activado durante
+   la primera prueba; confirma estación, cliente y datos antes de emitir.
+
+CONSERVAR TU CONFIGURACIÓN E HISTORIAL RECIENTES
+Este ZIP contiene los datos que ya venían en R1, no los cambios que hiciste
+después en tu VM. No uses una copia antigua de la cola o del historial para
+continuar facturando: podría faltar el registro de operaciones recientes.
+
+Con todos los bots y portales cerrados, copia desde TU carpeta actualmente
+utilizada a la nueva carpeta, sustituyendo las copias incluidas:
+- config.json
+- la carpeta data COMPLETA (incluido el control de facturación y las colas)
+- token.json y credentials.json, si usas Gmail y están en tu versión actual
+- portal_config.json y alertas_internas.json, si los personalizaste
+
+Para data, retira primero la copia incluida de la carpeta nueva y coloca
+la copia completa de tu carpeta actual; no combines historiales distintos.
+No copies arybot, otros lanzadores ni .venv sobre este paquete.
+No uses aquí el migrador histórico para conservar toda la cola: sólo importa
+algunos ajustes y token, no reemplaza el historial completo.
+
+La contraseña de Polaris no se transporta como texto en este ZIP. Comprueba
+que esté disponible en la cuenta Windows de la VM y guárdala en Configuración
+si falta. No compartas el ZIP públicamente: incluye archivos privados que
+ya estaban en tu base.
+
+ARRANQUES DISPONIBLES
+INICIAR_RAPIDO.bat : inicia con las optimizaciones opcionales de espera.
+2_INICIAR_VM.bat   : inicia con el comportamiento normal de R1.
+Cierra uno antes de abrir el otro. No ejecutes dos bots a la vez.
+
+REGISTROS
+logs/arranque_rapido.txt    : errores de arranque del modo rápido.
+logs/tiempos_rapido.jsonl   : duración de etapas del modo rápido.
+logs/arranque_vm.txt       : preparación y arranque normal.
+COMPROBAR_VM.bat           : diagnóstico general de R1.
+
+VALIDACIÓN
+VERIFICACION_EMPAQUETADO.txt documenta las comprobaciones de este ZIP.
+Los informes anteriores se conservan; las pruebas simuladas no sustituyen
+una prueba de Polaris real. No se certifica que todo el bot esté libre de
+fallos ni se promete un tiempo exacto por factura. No cambies la resolución
+ni instales otros parches para usar este paquete completo.

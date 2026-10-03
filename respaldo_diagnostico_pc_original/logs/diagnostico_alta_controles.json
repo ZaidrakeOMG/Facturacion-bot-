@@ -1,0 +1,642 @@
+{
+  "version": "3.1.5",
+  "campo_no_identificado": "idcif",
+  "formulario": "Clientes de Efectivo",
+  "tamano_formulario": [
+    705,
+    568
+  ],
+  "controles": [
+    {
+      "clase": "TPanel",
+      "habilitado": true,
+      "rect_relativo": [
+        8,
+        217,
+        697,
+        499
+      ]
+    },
+    {
+      "clase": "TcxLabel",
+      "habilitado": true,
+      "rect_relativo": [
+        480,
+        228,
+        508,
+        245
+      ]
+    },
+    {
+      "clase": "TcxTextEdit",
+      "habilitado": false,
+      "rect_relativo": [
+        508,
+        226,
+        629,
+        247
+      ]
+    },
+    {
+      "clase": "TcxCustomInnerTextEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        511,
+        229,
+        627,
+        242
+      ]
+    },
+    {
+      "clase": "TcxLabel",
+      "habilitado": true,
+      "rect_relativo": [
+        253,
+        227,
+        282,
+        244
+      ]
+    },
+    {
+      "clase": "TcxTextEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        282,
+        226,
+        403,
+        247
+      ]
+    },
+    {
+      "clase": "TcxCustomInnerTextEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        285,
+        229,
+        401,
+        242
+      ]
+    },
+    {
+      "clase": "TcxLookupComboBox",
+      "habilitado": true,
+      "rect_relativo": [
+        370,
+        471,
+        684,
+        492
+      ]
+    },
+    {
+      "clase": "TcxCustomComboBoxInnerEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        373,
+        474,
+        665,
+        487
+      ]
+    },
+    {
+      "clase": "TcxLabel",
+      "habilitado": true,
+      "rect_relativo": [
+        284,
+        472,
+        358,
+        489
+      ]
+    },
+    {
+      "clase": "TcxLookupComboBox",
+      "habilitado": false,
+      "rect_relativo": [
+        500,
+        303,
+        520,
+        324
+      ]
+    },
+    {
+      "clase": "TcxCustomComboBoxInnerEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        503,
+        306,
+        503,
+        319
+      ]
+    },
+    {
+      "clase": "TcxLookupComboBox",
+      "habilitado": false,
+      "rect_relativo": [
+        436,
+        357,
+        684,
+        378
+      ]
+    },
+    {
+      "clase": "TcxCustomComboBoxInnerEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        439,
+        360,
+        665,
+        373
+      ]
+    },
+    {
+      "clase": "TcxLookupComboBox",
+      "habilitado": false,
+      "rect_relativo": [
+        113,
+        357,
+        361,
+        378
+      ]
+    },
+    {
+      "clase": "TcxCustomComboBoxInnerEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        116,
+        360,
+        342,
+        373
+      ]
+    },
+    {
+      "clase": "TcxCheckBox",
+      "habilitado": true,
+      "rect_relativo": [
+        32,
+        471,
+        126,
+        492
+      ]
+    },
+    {
+      "clase": "TcxLabel",
+      "habilitado": true,
+      "rect_relativo": [
+        113,
+        696,
+        321,
+        716
+      ]
+    },
+    {
+      "clase": "TcxLabel",
+      "habilitado": true,
+      "rect_relativo": [
+        453,
+        696,
+        599,
+        716
+      ]
+    },
+    {
+      "clase": "TcxLabel",
+      "habilitado": true,
+      "rect_relativo": [
+        15,
+        436,
+        98,
+        467
+      ]
+    },
+    {
+      "clase": "TcxTextEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        113,
+        441,
+        265,
+        462
+      ]
+    },
+    {
+      "clase": "TcxCustomInnerTextEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        116,
+        444,
+        263,
+        457
+      ]
+    },
+    {
+      "clase": "TcxTextEdit",
+      "habilitado": false,
+      "rect_relativo": [
+        436,
+        330,
+        684,
+        351
+      ]
+    },
+    {
+      "clase": "TcxCustomInnerTextEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        439,
+        333,
+        682,
+        346
+      ]
+    },
+    {
+      "clase": "TcxTextEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        591,
+        278,
+        645,
+        299
+      ]
+    },
+    {
+      "clase": "TcxCustomInnerTextEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        594,
+        281,
+        643,
+        294
+      ]
+    },
+    {
+      "clase": "TcxTextEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        508,
+        278,
+        562,
+        299
+      ]
+    },
+    {
+      "clase": "TcxCustomInnerTextEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        511,
+        281,
+        560,
+        294
+      ]
+    },
+    {
+      "clase": "TcxTextEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        113,
+        278,
+        495,
+        299
+      ]
+    },
+    {
+      "clase": "TcxCustomInnerTextEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        116,
+        281,
+        493,
+        294
+      ]
+    },
+    {
+      "clase": "TcxTextEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        113,
+        414,
+        684,
+        435
+      ]
+    },
+    {
+      "clase": "TcxCustomInnerTextEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        116,
+        417,
+        682,
+        430
+      ]
+    },
+    {
+      "clase": "TcxLabel",
+      "habilitado": true,
+      "rect_relativo": [
+        15,
+        415,
+        107,
+        432
+      ]
+    },
+    {
+      "clase": "TcxTextEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        339,
+        384,
+        494,
+        405
+      ]
+    },
+    {
+      "clase": "TcxCustomInnerTextEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        342,
+        387,
+        492,
+        400
+      ]
+    },
+    {
+      "clase": "TcxTextEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        113,
+        252,
+        234,
+        273
+      ]
+    },
+    {
+      "clase": "TcxCustomInnerTextEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        116,
+        255,
+        232,
+        268
+      ]
+    },
+    {
+      "clase": "TcxTextEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        370,
+        441,
+        684,
+        462
+      ]
+    },
+    {
+      "clase": "TcxCustomInnerTextEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        373,
+        444,
+        682,
+        457
+      ]
+    },
+    {
+      "clase": "TcxTextEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        529,
+        384,
+        684,
+        405
+      ]
+    },
+    {
+      "clase": "TcxCustomInnerTextEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        532,
+        387,
+        682,
+        400
+      ]
+    },
+    {
+      "clase": "TcxTextEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        113,
+        384,
+        268,
+        405
+      ]
+    },
+    {
+      "clase": "TcxCustomInnerTextEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        116,
+        387,
+        266,
+        400
+      ]
+    },
+    {
+      "clase": "TcxTextEdit",
+      "habilitado": false,
+      "rect_relativo": [
+        113,
+        330,
+        361,
+        351
+      ]
+    },
+    {
+      "clase": "TcxCustomInnerTextEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        116,
+        333,
+        359,
+        346
+      ]
+    },
+    {
+      "clase": "TcxTextEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        114,
+        303,
+        496,
+        324
+      ]
+    },
+    {
+      "clase": "TcxCustomInnerTextEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        117,
+        306,
+        494,
+        319
+      ]
+    },
+    {
+      "clase": "TcxTextEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        113,
+        226,
+        234,
+        247
+      ]
+    },
+    {
+      "clase": "TcxCustomInnerTextEdit",
+      "habilitado": true,
+      "rect_relativo": [
+        116,
+        229,
+        232,
+        242
+      ]
+    },
+    {
+      "clase": "TPanel",
+      "habilitado": true,
+      "rect_relativo": [
+        8,
+        75,
+        697,
+        217
+      ]
+    },
+    {
+      "clase": "TcxCheckBox",
+      "habilitado": true,
+      "rect_relativo": [
+        549,
+        174,
+        684,
+        191
+      ]
+    },
+    {
+      "clase": "TcxRadioGroup",
+      "habilitado": true,
+      "rect_relativo": [
+        80,
+        153,
+        339,
+        211
+      ]
+    },
+    {
+      "clase": "TcxCustomRadioGroupButton",
+      "habilitado": true,
+      "rect_relativo": [
+        212,
+        171,
+        336,
+        209
+      ]
+    },
+    {
+      "clase": "TcxCustomRadioGroupButton",
+      "habilitado": true,
+      "rect_relativo": [
+        88,
+        171,
+        212,
+        209
+      ]
+    },
+    {
+      "clase": "TcxMemo",
+      "habilitado": true,
+      "rect_relativo": [
+        80,
+        98,
+        684,
+        143
+      ]
+    },
+    {
+      "clase": "TcxCustomInnerMemo",
+      "habilitado": true,
+      "rect_relativo": [
+        80,
+        98,
+        684,
+        143
+      ]
+    },
+    {
+      "clase": "TcxLabel",
+      "habilitado": true,
+      "rect_relativo": [
+        13,
+        98,
+        80,
+        119
+      ]
+    },
+    {
+      "clase": "TStatusBar",
+      "habilitado": true,
+      "rect_relativo": [
+        8,
+        542,
+        697,
+        560
+      ]
+    },
+    {
+      "clase": "TPanel",
+      "habilitado": true,
+      "rect_relativo": [
+        8,
+        499,
+        697,
+        542
+      ]
+    },
+    {
+      "clase": "TBitBtn",
+      "habilitado": false,
+      "rect_relativo": [
+        597,
+        505,
+        684,
+        536
+      ]
+    },
+    {
+      "clase": "TBitBtn",
+      "habilitado": true,
+      "rect_relativo": [
+        508,
+        505,
+        595,
+        536
+      ]
+    },
+    {
+      "clase": "TBitBtn",
+      "habilitado": true,
+      "rect_relativo": [
+        419,
+        505,
+        506,
+        536
+      ]
+    },
+    {
+      "clase": "TToolBar",
+      "habilitado": true,
+      "rect_relativo": [
+        8,
+        31,
+        697,
+        75
+      ]
+    }
+  ],
+  "nota": "Sin valores de campos; solo clases y geometría. No prueba guardado."
+}

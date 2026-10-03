@@ -1,0 +1,97 @@
+{
+  "id": "20261003_105737_06947c49",
+  "fecha": "2026-10-03T10:57:37-06:00",
+  "manual": false,
+  "etapa": "CAMBIO DE ESTACIÓN: abrir menú real",
+  "error": "PolarisError: No se localizó una única opción \"Cambio de estación\". Menú visible: ",
+  "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\admin\\Desktop\\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\\ARY_FACTURACION_BOT\\arybot\\cola_operaciones.py\", line 167, in ejecutar_una\n    if kind=='ESTACION':result=self.polaris.test_station_only(data['estacion'])\n                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\admin\\Desktop\\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\\ARY_FACTURACION_BOT\\arybot\\polaris.py\", line 1160, in test_station_only\n    self._change_station(main,station,force=True)\n  File \"C:\\Users\\admin\\Desktop\\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\\ARY_FACTURACION_BOT\\arybot\\polaris.py\", line 1109, in _change_station\n    dlg=self._open_station_catalog(main)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\admin\\Desktop\\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\\ARY_FACTURACION_BOT\\arybot\\compat_vm.py\", line 272, in _open_station_catalog\n    self._menu_path(main, 'Utilerías', 'Cambio de estación')\n  File \"C:\\Users\\admin\\Desktop\\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\\ARY_FACTURACION_BOT\\arybot\\compat_vm.py\", line 250, in _menu_path\n    item = elegir_item(api.items(current), label)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\admin\\Desktop\\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\\ARY_FACTURACION_BOT\\arybot\\compat_vm.py\", line 85, in elegir_item\n    raise PolarisError(f'No se localizó una única opción \"{label}\". Menú visible: {names}')\narybot.polaris.PolarisError: No se localizó una única opción \"Cambio de estación\". Menú visible: \n",
+  "contexto": {
+    "tipo": "ESTACION",
+    "id_solicitud": "3d8f9538226a48d18b0aa857d4440480",
+    "origen": "Formulario"
+  },
+  "ultimo_evento": {
+    "fecha": "2026-10-03T10:57:36.783-06:00",
+    "etapa": "LOG",
+    "estado": "INFO",
+    "detalle": "Menú real: Utilerías; rectángulo 520,187,576,206.",
+    "datos": {}
+  },
+  "ventanas": [
+    {
+      "nivel": 0,
+      "hwnd": 1181050,
+      "parent": 0,
+      "clase": "TForm_Menu",
+      "titulo": "Polaris Facturacion --> ARY SUPER EXPRESS V, S.A. DE C.V.",
+      "rect": [
+        156,
+        156,
+        1772,
+        1024
+      ],
+      "habilitado": true,
+      "foco": true
+    },
+    {
+      "nivel": 1,
+      "hwnd": 591044,
+      "parent": 1181050,
+      "clase": "TToolBar",
+      "titulo": "",
+      "rect": [
+        164,
+        207,
+        1764,
+        251
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 2098080,
+      "parent": 1181050,
+      "clase": "TStatusBar",
+      "titulo": "",
+      "rect": [
+        164,
+        997,
+        1764,
+        1016
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1836774,
+      "parent": 1181050,
+      "clase": "MDIClient",
+      "titulo": "",
+      "rect": [
+        164,
+        251,
+        1764,
+        997
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 657070,
+      "parent": 0,
+      "clase": "TApplication",
+      "titulo": "Polaris Facturacion",
+      "rect": [
+        960,
+        540,
+        960,
+        540
+      ],
+      "habilitado": true,
+      "foco": false
+    }
+  ]
+}

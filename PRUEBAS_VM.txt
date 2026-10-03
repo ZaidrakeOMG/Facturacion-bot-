@@ -1,0 +1,87 @@
+VERIFICACIÓN - VM-BASE-ORIGINAL-2026-10-03-R1
+Fecha: 03/oct/2026
+Base recibida: ARY_FACTURACION_BOT(3).zip
+SHA256 ZIP original: 4fec83fe63ccbb02e2745557a613a694f67b0c4809927b263a8d444357f0eee0
+
+1. PRUEBAS DEL ADAPTADOR
+..........................................                               [100%]
+42 passed in 1.28s
+Se simularon HWND, menús, foco, bloqueo por otra ventana y geometría. Se probaron
+los errores del intérprete, imports, la cola retenida y el uso de FACTURA visible.
+Se comprobó herencia sin cambios de once métodos de captura/facturación/login.
+NO son pruebas visuales contra Windows/Polaris. Los métodos nuevos de interfaz
+se prueban aisladamente, sin importar Gmail ni abrir Tkinter real.
+
+2. COMPARACIÓN DE LAS PRUEBAS ANTIGUAS (9 ARCHIVOS SELECCIONADOS)
+Original intacto: 267 aprobadas, 17 fallidas; 63 subpruebas aprobadas.
+Paquete adaptado: 267 aprobadas, 17 fallidas; 63 subpruebas aprobadas.
+Los nombres de las 17 fallidas son idénticos. No se cambiaron las pruebas antiguas
+ni se eliminaron las que fallan para declarar una aprobación completa.
+Algunos dobles de prueba no inicializan diag/_pasos_factura; otros difieren del
+comportamiento actual del registro/envío. No se concluye sin más que TODOS sean
+problemas de las pruebas: hay que revisar el flujo real antes de producción.
+
+Fallos preexistentes reproducidos:
+FAILED tests/test_captura_factura_v317.py::Dispatch317Tests::test_blank_payment_rejected_not_defaulted - NameError: name 'win32gui' is not defined
+FAILED tests/test_captura_factura_v317.py::Dispatch317Tests::test_default_payment_must_select_not_return - AttributeError: 'PolarisBot' object has no attribute '_pasos_factura'
+FAILED tests/test_captura_factura_v317.py::Dispatch317Tests::test_default_usage_must_select_not_return - AssertionError: Expected 'seleccionar' to be called once. Called 0 times.
+FAILED tests/test_espera_cfdi_v317.py::EsperaTests::test_capture_error_before_accept_cannot_emit - AssertionError: FinalFacturaError not raised
+FAILED tests/test_final_factura_v316.py::FinalTests::test_failed_mail_verification_does_not_send - AssertionError: FinalFacturaError not raised
+FAILED tests/test_final_factura_v316.py::FinalTests::test_full_final_and_send_only_once - AssertionError: 'anterior@example.net' != 'cliente@example.com'
+FAILED tests/test_final_factura_v316.py::FinalTests::test_stale_expected_paste_not_evidence - AssertionError: FinalFacturaError not raised
+FAILED tests/test_final_factura_v316.py::RegistroTests::test_duplicate_leading_zeros_same_record - AssertionError: FinalFacturaError not raised
+FAILED tests/test_final_factura_v316.py::RegistroTests::test_exclusive_create_does_not_overwrite - AssertionError: FinalFacturaError not raised
+FAILED tests/test_final_factura_v316.py::RegistroTests::test_result_uncertain_stays_blocked - AssertionError: FinalFacturaError not raised
+FAILED tests/test_final_factura_v316.py::InvoiceDispatchTests::test_preflight_fail_before_final_no_reservation - AttributeError: 'PolarisBot' object has no attribute 'diag'
+FAILED tests/test_final_factura_v316.py::InvoiceDispatchTests::test_preflight_runs_in_safe_mode_too - AttributeError: 'PolarisBot' object has no attribute 'diag'
+FAILED tests/test_final_factura_v316.py::InvoiceDispatchTests::test_prior_attempt_blocks_before_cleanup_or_station - AttributeError: 'PolarisBot' object has no attribute 'diag'
+FAILED tests/test_final_factura_v316.py::InvoiceDispatchTests::test_production_dispatch_reaches_final - AttributeError: 'PolarisBot' object has no attribute 'diag'
+FAILED tests/test_final_factura_v316.py::InvoiceDispatchTests::test_production_rejects_invalid_email_before_ui - AttributeError: 'PolarisBot' object has no attribute 'diag'
+FAILED tests/test_final_factura_v316.py::InvoiceDispatchTests::test_safe_can_prepare_without_email - AttributeError: 'PolarisBot' object has no attribute 'diag'
+FAILED tests/test_final_factura_v316.py::InvoiceDispatchTests::test_safe_dispatch_never_calls_final - AttributeError: 'PolarisBot' object has no attribute 'diag'
+
+3. ALCANCE Y LIMITACIONES
+- Compilación de los archivos Python: correcta.
+- No se ejecutó Polaris, login de Windows, selección real de estación, alta real,
+  envío de correo ni timbrado real. No se dispone de esa VM en este entorno.
+- No se afirma que la aplicación completa esté libre de fallos.
+- La colección completa de pruebas se detuvo por dependencias de Gmail que no
+  estaban disponibles en el contenedor; se seleccionaron suites sin esa dependencia.
+- La instalación BAT/pip y las API de Windows necesitan su comprobación en la VM.
+- El adaptador no desactiva las barreras de revisión/duplicados de la versión base.
+
+4. CAMBIOS ACOTADOS
+Archivos de negocio originales conservados byte por byte:
+arybot/polaris.py
+arybot/alta_clientes.py
+arybot/factura_captura.py
+arybot/factura_final.py
+arybot/gmail_client.py
+arybot/processor.py
+arybot/cola_local.py
+arybot/cola_operaciones.py
+arybot/parser.py
+arybot/portal_http.py
+requirements.in
+data/arybot.sqlite3
+data/cola_operaciones.sqlite3
+
+Nuevos: arybot/compat_vm.py, ejecutar_vm.py, lanzadores, pruebas y documentación.
+Integración: arybot/gui.py (selección del adaptador, diagnóstico visible y valores
+actuales de configuración) y arybot/portal_gui.py (imprimir excepciones capturadas).
+config.json: sólo usuario=FACTURA y modo_prueba=true. Copia anterior respaldada.
+INICIAR.bat / INSTALAR.bat apuntan al mismo lanzador comprobable.
+Los registros previos se conservaron en respaldo_diagnostico_pc_original.
+No se incluyeron .venv ni cachés Python portados de la otra computadora.
+
+5. REFERENCIAS TÉCNICAS
+Menús y rectángulos visibles, API de Windows (se usan firmas HWND/HMENU completas):
+https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getmenuitemrect
+Tamaño/posición de la ventana, sin cambiar el monitor:
+https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowpos
+Bordes y virtualización de GetWindowRect:
+https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowrect
+Los entornos venv se recrean, no se copian entre computadoras:
+https://docs.python.org/3/library/venv.html
+Requisito de escritorio interactivo para automatización remota:
+https://pywinauto.readthedocs.io/en/latest/remote_execution.html

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#B0187C">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'self'; form-action 'none'; connect-src 'self'; img-src 'self' data:; style-src 'unsafe-inline'; script-src 'sha256-uDIGiMiB26bzJ4d6eDPOOE/WQ7TObUWbz6JZzrhfSZA='">
+<title>Facturación | ARY Super Servicios</title>
+<style>
+:root{--bg:#17000f;--panel:#2a071e;--line:rgba(255,190,222,.17);--text:#fff9fc;--muted:#d9b4ca;--primary:#b0187c;--primary2:#d72a93;--accent:#fcb144;--radius:24px}
+*{box-sizing:border-box}body{margin:0;color:var(--text);background:radial-gradient(circle at 7% 18%,#59063566,transparent 32%),radial-gradient(circle at 100% 35%,#fcb1440d,transparent 28%),linear-gradient(180deg,#17000f,#230416 50%,#120009);font:15px/1.65 "Manrope","Segoe UI",Arial,sans-serif;min-height:100vh}button,input,select{font:inherit}button,a,input,select{touch-action:manipulation}a{color:inherit}button,a{-webkit-tap-highlight-color:transparent}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.55}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #ffd36a;outline-offset:4px}[hidden]{display:none!important}.container{width:min(1190px,calc(100% - 48px));margin:auto}.skip{position:absolute;top:-100px;left:20px;z-index:10;background:#fcb144;color:#17000f;padding:10px}.skip:focus{top:5px}
+.topbar{border-bottom:1px solid var(--line);background:#1a0012e8}.header-inner{min-height:86px;display:flex;align-items:center;justify-content:space-between;gap:24px}.brand{display:flex;gap:11px;align-items:center;text-decoration:none;white-space:nowrap}.brand-mark{display:grid;place-items:center;background:linear-gradient(150deg,#ce1d8d,#780850);width:48px;height:48px;border:1px solid #ed6bb36b;border-radius:15px;font-size:33px;line-height:1;font-weight:900;color:#fff;box-shadow:0 6px 26px #b0187c33}.brand-mark img{width:36px;height:36px;object-fit:contain}.brand strong{display:block;font-size:15px;letter-spacing:-.4px}.brand small{display:block;color:var(--muted);font-size:9px;letter-spacing:2px;text-transform:uppercase}.nav{display:flex;gap:2px;align-items:center;background:#ffffff04;border:1px solid var(--line);padding:5px;border-radius:40px}.nav a{font-size:12px;font-weight:700;padding:9px 10px;white-space:nowrap;text-decoration:none;border-radius:30px}.nav a:hover{background:#b0187c33}.nav a[aria-current]{background:linear-gradient(130deg,#b0187c,#86105e);color:#fff;border:1px solid #dc4faa66}.menu{display:none;border:1px solid var(--line);color:#fff;background:#41092e;border-radius:12px;padding:10px 13px}
+.hero{padding:54px 0 34px;position:relative}.hero-top{display:flex;align-items:center;justify-content:space-between;gap:20px}.eyebrow{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:var(--accent);display:flex;align-items:center;gap:9px}.eyebrow:before{content:"";width:27px;height:1px;background:var(--accent)}.connection{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:30px;padding:7px 12px;display:flex;align-items:center;gap:7px}.connection:before{content:"";height:6px;width:6px;background:var(--accent);border-radius:50%}.connection[data-state="ok"]:before{background:#86deb1}.connection[data-state="error"]:before{background:#ff8eac}.hero h1{font-size:clamp(34px,4.6vw,64px);line-height:1.07;letter-spacing:-2.7px;margin:23px 0 14px;font-weight:800}.hero h1 em{font-style:normal;color:#ffc267}.hero p{color:var(--muted);max-width:700px;margin:0;font-size:15px;line-height:1.8}.mode-banner{border:1px solid #fcb14466;background:#fcb1440c;padding:12px 17px;margin:0 0 20px;border-radius:14px;color:#ffe2a9;font-size:13px}.mode-banner strong{color:#ffe8b8}.notice{margin:0 0 20px;border-radius:14px;padding:14px 18px;border:1px solid #df69a36e;background:#6e15382e;font-size:13px;color:#ffd9e6}
+.workspace{display:grid;grid-template-columns:minmax(0,1fr) 308px;gap:25px;align-items:start;margin-bottom:56px}.form-shell{border:1px solid var(--line);border-radius:var(--radius);background:linear-gradient(140deg,#3c082ad9,#220217f2);box-shadow:0 20px 65px #0003;overflow:hidden;min-width:0}.tabs{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--line);padding:8px;gap:7px;background:#19011188}.tab{border:1px solid transparent;background:none;color:var(--muted);padding:14px 12px;border-radius:16px;display:flex;gap:11px;text-align:left;align-items:center}.tab:hover{background:#ffffff07}.tab[aria-selected="true"]{color:#fff;background:linear-gradient(130deg,#b0187c2e,#b0187c13);border-color:#d72a9366}.tab-badge{height:35px;width:35px;flex:0 0 35px;display:grid;place-items:center;border-radius:11px;border:1px solid var(--line);color:#fcb144;background:#b0187c16}.tab strong{font-size:13px;display:block}.tab small{font-size:10px;display:block;opacity:.75;margin-top:2px}.content{padding:28px 30px 30px}.form-title{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:21px}.form-title h2{margin:0;font-size:23px;letter-spacing:-.7px;line-height:1.3}.form-title p{margin:6px 0 0;color:var(--muted);font-size:12px}.tag{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#fcb144;padding:5px 8px;border:1px solid #fcb14440;border-radius:7px;white-space:nowrap}.fields{margin:0;padding:0;border:0;min-width:0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px 17px}.field{min-width:0}.field.full{grid-column:1/-1}label{display:block;font-size:12px;font-weight:700;color:#fbe7f2;margin-bottom:7px}label .required{color:var(--accent);margin-left:3px}.control{display:block;width:100%;min-height:47px;padding:10px 12px;border-radius:11px;border:1px solid #a7658d66;background:#1d0114;color:#fff;outline:none;transition:border-color .15s,box-shadow .15s;min-width:0}.control:hover{border-color:#db5a9c88}.control:focus{border-color:#ed6bbb;box-shadow:0 0 0 3px #b0187c22}.control::placeholder{color:#ad7e98;opacity:1}.control:disabled{opacity:.55}select.control{color-scheme:dark;padding-right:26px}select.control option{background:#250419;color:#fff}.field small{display:block;margin-top:6px;color:#c399b1;font-size:10px;line-height:1.5}.rfc{text-transform:uppercase}.inline-note{margin:20px 0 0;border-left:2px solid var(--accent);padding:0 0 0 12px;color:#e6bfd4;font-size:12px;line-height:1.7}.check{display:flex;gap:10px;align-items:flex-start;font-size:11px;color:#d9b4ca;font-weight:500;margin:22px 0 0;cursor:pointer;line-height:1.7}.check input{width:17px;height:17px;flex:0 0 17px;accent-color:#b0187c;margin:2px 0 0}.form-bottom{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-top:24px}.form-bottom p{margin:0;max-width:235px;color:#bf93ad;font-size:10px;line-height:1.65}.btn{min-height:46px;border:1px solid #da539c70;border-radius:12px;padding:11px 17px;background:#471030;color:#fff;display:inline-flex;align-items:center;justify-content:center;gap:13px;text-decoration:none;font-size:12px;font-weight:800}.btn-primary{background:linear-gradient(120deg,#b0187c,#cc218d);border-color:#e367ad77;box-shadow:0 7px 23px #b0187c22}.btn:hover{filter:brightness(1.12)}.btn svg{flex:0 0 16px}.error{color:#ffdbdf;background:#651b3455;border:1px solid #ef709a77;border-radius:11px;padding:12px 14px;margin-top:17px;font-size:12px}.trap{position:absolute!important;left:-9999px!important;width:1px;height:1px;overflow:hidden}
+.side-card{padding:24px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(145deg,#3c092aa6,#1b0314c9);margin-bottom:17px}.side-kicker{color:#fcb144;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-weight:800}.side-card h3{font-size:20px;margin:10px 0 18px;line-height:1.35;letter-spacing:-.5px}.steps{margin:0;padding:0;list-style:none;counter-reset:step}.steps li{counter-increment:step;position:relative;padding-left:35px;margin-bottom:20px}.steps li:last-child{margin-bottom:0}.steps li:before{content:counter(step,decimal-leading-zero);position:absolute;left:0;top:1px;font-size:10px;width:25px;height:25px;border:1px solid #fcb14440;border-radius:8px;color:#fcb144;display:grid;place-items:center;background:#fcb14409;font-weight:800}.steps strong{font-size:12px;display:block}.steps p{font-size:11px;color:#c89db5;margin:4px 0 0;line-height:1.7}.help-card{padding:20px 22px;border:1px solid #fcb1442e;border-radius:20px;background:#fcb14405}.help-card strong{font-size:12px;color:#ffdda1}.help-card p{font-size:11px;color:var(--muted);margin:7px 0 14px}.text-link{font-size:11px;font-weight:700;color:#fcb144;text-decoration:none}.text-link:hover{text-decoration:underline}.mini-points{display:flex;flex-wrap:wrap;gap:11px;margin:20px 3px 0;color:#ad7e99;font-size:10px}.mini-points span:before{content:"·";margin-right:5px;color:#d72a93}.site-footer{border-top:1px solid var(--line);padding:25px 0;color:#a87895;font-size:11px}.footer-inner{display:flex;justify-content:space-between;gap:20px}.footer-inner strong{color:#ddb7cd}
+.receipt{padding:34px 30px}.receipt-icon{width:54px;height:54px;border:1px solid #fcb14466;background:#fcb1440c;color:#fcb144;display:grid;place-items:center;border-radius:17px;margin-bottom:20px}.receipt h2{font-size:26px;margin:0 0 8px;letter-spacing:-.7px}.receipt p{font-size:13px;color:var(--muted);margin:10px 0}.reference{padding:17px 20px;background:#15000ebb;border:1px solid var(--line);border-radius:13px;margin:21px 0;display:flex;justify-content:space-between;align-items:center;gap:12px}.reference small{display:block;color:#b989a3;font-size:10px;text-transform:uppercase;letter-spacing:1px}.reference strong{display:block;font-size:20px;letter-spacing:1px;font-family:Consolas,monospace;margin-top:3px}.state-pill{display:inline-block;font-size:10px;border-radius:7px;background:#b0187c22;color:#f9c6e2;border:1px solid #b0187c66;padding:5px 8px;letter-spacing:1px;max-width:100%;overflow-wrap:anywhere}.receipt-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}.receipt .privacy{color:#a77a92;font-size:10px;margin-top:23px}.receipt .new{border:0;background:none;color:#dcb6cb;font-size:11px;padding:14px 0 0;text-decoration:underline}.receipt .copy{font-size:10px;min-height:36px;padding:5px 10px;background:#410e2c}.noscript{margin:20px;color:#ffdda1}.safe-receipt{margin:17px 0 0;border:1px solid #fcb14466;border-radius:10px;padding:11px 13px;font-size:12px;color:#ffe2a9;background:#fcb14407}
+@media(max-width:1100px){.menu{display:block}.header-inner{flex-wrap:wrap;padding:16px 0;min-height:80px}.nav{display:none;flex-basis:100%;border-radius:15px;flex-wrap:wrap;padding:9px;gap:4px}.nav.open{display:flex}.nav a{flex-grow:1;text-align:center;font-size:13px}.workspace{grid-template-columns:minmax(0,1fr) 280px;gap:18px}.content{padding:25px}.hero h1{font-size:51px}}
+@media(max-width:870px){.workspace{grid-template-columns:1fr}.aside{display:grid;grid-template-columns:1fr 1fr;gap:18px}.side-card{margin:0}.mini-points{grid-column:1/-1;margin-top:0}.hero{padding-top:36px}.hero h1{font-size:45px}.form-bottom p{max-width:330px}}
+@media(max-width:560px){.container{width:calc(100% - 28px)}.brand strong{font-size:14px}.brand-mark{width:42px;height:42px;font-size:29px}.brand small{font-size:8px}.hero-top{align-items:flex-start;gap:14px;flex-direction:column}.hero{padding-top:29px;padding-bottom:24px}.hero h1{font-size:38px;letter-spacing:-1.8px;margin-top:20px}.hero p{font-size:13px}.connection{font-size:10px;padding:5px 10px}.workspace{gap:20px;margin-bottom:34px}.form-shell{border-radius:19px}.tab{padding:11px 8px;gap:7px}.tab-badge{width:28px;height:28px;flex-basis:28px;border-radius:8px}.tab strong{font-size:11px}.tab small{font-size:9px}.content{padding:23px 18px}.form-title h2{font-size:21px}.tag{font-size:8px;padding:4px 6px}.grid{grid-template-columns:1fr;gap:17px}.control{font-size:16px;min-height:49px}.form-bottom{flex-direction:column;align-items:stretch;gap:16px}.form-bottom p{max-width:none}.btn{min-height:48px;font-size:13px}.check{font-size:12px}.field small{font-size:11px}.aside{grid-template-columns:1fr}.side-card{padding:22px}.footer-inner{flex-direction:column;gap:7px}.receipt{padding:27px 19px}.reference{padding:16px}.reference strong{font-size:17px}.receipt-actions .btn{flex:1}.connection{max-width:100%}.eyebrow{font-size:9px}.mode-banner{font-size:12px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+</style>
+</head>
+<body>
+<a class="skip" href="#tramites">Ir a facturación</a>
+<header class="topbar"><div class="container header-inner">
+<a class="brand" href="default.htm" aria-label="ARY Super Servicios, inicio"><span class="brand-mark" aria-hidden="true"><span id="brandFallback">A</span><img id="brandLogo" src="images/Arylogo2.png" alt="" hidden></span><span><strong>ARY Super Servicios</strong><small>Experiencia en movimiento</small></span></a>
+<button class="menu" id="menuButton" type="button" aria-controls="mainNav" aria-expanded="false">Menú ☰</button>
+<nav class="nav" id="mainNav" aria-label="Navegación principal"><a href="default.htm">Inicio</a><a href="ary_conoce_nuestra_empresa.htm">Empresa</a><a href="ary_ubica_nuestras_estaciones.htm">Estaciones</a><a href="ary_servicios.htm">Servicios</a><a href="ary_productos.htm">Productos</a><a href="ary_tips_ahorro_combustible.htm">Tips</a><a href="ary_contacto.htm">Contacto</a><a href="ary_facturacion.htm" aria-current="page">Facturación</a></nav>
+</div></header>
+<main class="container" id="tramites">
+<section class="hero" aria-labelledby="pageTitle"><div class="hero-top"><span class="eyebrow">Servicios en línea · Grupo ARY</span><span class="connection" id="connection" role="status">Comprobando conexión</span></div><h1 id="pageTitle">Tu factura,<br><em>sin complicaciones.</em></h1><p>Da de alta tus datos o solicita la factura de tu ticket. Elige tu estación, revisa la información y conserva tu número de solicitud.</p></section>
+<noscript><p class="noscript">Activa JavaScript para enviar y consultar solicitudes en este portal.</p></noscript>
+<div id="modeBanner" class="mode-banner" hidden><strong>Portal en modo de prueba.</strong> Las solicitudes se preparan sin timbrar facturas ni guardar clientes. No se considera un trámite terminado.</div>
+<div id="connectionError" class="notice" role="status" hidden></div>
+<div class="workspace">
+<section class="form-shell" aria-label="Trámites de facturación">
+<div class="tabs" role="tablist" aria-label="Elige tu trámite" id="tabs">
+<button class="tab" type="button" role="tab" id="tab-factura" aria-selected="true" aria-controls="panel-factura"><span class="tab-badge" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 12h7M9 16h7"/></svg></span><span><strong>Facturar ticket</strong><small>Ya estoy registrado</small></span></button>
+<button class="tab" type="button" role="tab" id="tab-alta" aria-selected="false" aria-controls="panel-alta" tabindex="-1"><span class="tab-badge" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="10" cy="7" r="4"/><path d="M3 21v-3a7 7 0 0 1 12-4M19 13v8M15 17h8"/></svg></span><span><strong>Dar de alta cliente</strong><small>Es mi primer registro</small></span></button>
+</div>
+<section class="content" id="panel-factura" role="tabpanel" aria-labelledby="tab-factura">
+<div class="form-title"><div><h2>Factura tu ticket</h2><p>Ten a la mano tu ticket y el RFC registrado.</p></div><span class="tag">01 / Facturación</span></div>
+<form id="form-factura" autocomplete="off"><fieldset class="fields"><legend hidden>Datos para facturar</legend><div class="grid">
+<div class="field full"><label for="factura-estacion">Estación donde cargaste<span class="required">*</span></label><select class="control station" id="factura-estacion" name="estacion" required><option value="">Selecciona tu estación</option></select><small>Debe coincidir con la estación impresa en tu ticket.</small></div>
+<div class="field"><label for="factura-rfc">RFC del cliente<span class="required">*</span></label><input class="control rfc" id="factura-rfc" name="rfc" maxlength="13" minlength="12" placeholder="RFC de 12 o 13 caracteres" autocapitalize="characters" spellcheck="false" required></div>
+<div class="field"><label for="factura-ticket">Folio del ticket<span class="required">*</span></label><input class="control" id="factura-ticket" name="ticket" inputmode="numeric" pattern="[0-9]{1,20}" maxlength="20" placeholder="Escribe el folio" required><small>Un ticket por solicitud. Conserva los ceros iniciales.</small></div>
+<div class="field full"><label for="factura-pago">Forma de pago · ¿Cómo pagaste?<span class="required">*</span></label><select class="control" id="factura-pago" name="forma_pago" required><option value="">Selecciona tu forma de pago</option></select><small>Elige efectivo, tarjeta de crédito, tarjeta de débito o transferencia. No ingreses números de tarjeta.</small></div>
+<div class="field full"><label for="factura-uso">Uso de CFDI<span class="required">*</span></label><select class="control" id="factura-uso" name="uso_cfdi" required></select><small>Se muestra el catálogo del bot. Revisa que tu elección corresponda a tu solicitud.</small></div>
+<div class="field"><label for="factura-correo">Correo para recibir la factura<span class="required">*</span></label><input class="control" id="factura-correo" name="correo" type="email" maxlength="254" placeholder="tu@correo.com" autocomplete="email" spellcheck="false" required></div>
+<div class="field"><label for="factura-confirmacion">Confirma tu correo<span class="required">*</span></label><input class="control" id="factura-confirmacion" name="correo_confirmacion" type="email" maxlength="254" placeholder="Escribe el mismo correo" autocomplete="off" spellcheck="false" required></div>
+</div><p class="inline-note">Si es tu primera solicitud, completa primero <strong>Dar de alta cliente</strong> y espera la confirmación del registro.</p>
+<div class="trap" aria-hidden="true"><label for="factura-web">Deja este campo vacío</label><input id="factura-web" name="sitio_web" tabindex="-1" autocomplete="off"></div>
+<label class="check"><input name="confirmado" type="checkbox" required><span>Revisé la estación, el RFC, el ticket, la forma de pago y el correo. Confirmo que corresponden a mi solicitud.</span></label></fieldset>
+<div id="error-factura" class="error" tabindex="-1" role="alert" hidden></div>
+<div class="form-bottom"><p>Recibir tu solicitud no significa que la factura ya esté emitida. Podrás consultar el avance.</p><button class="btn btn-primary submit" type="submit" disabled>Enviar solicitud <span aria-hidden="true">→</span></button></div>
+</form></section>
+<section class="content" id="panel-alta" role="tabpanel" aria-labelledby="tab-alta" hidden>
+<div class="form-title"><div><h2>Registra tus datos</h2><p>Los cuatro datos que utiliza el alta del bot.</p></div><span class="tag">02 / Alta</span></div>
+<form id="form-alta" autocomplete="off"><fieldset class="fields"><legend hidden>Datos para alta de cliente</legend><div class="grid">
+<div class="field full"><label for="alta-estacion">Estación<span class="required">*</span></label><select class="control station" id="alta-estacion" name="estacion" required><option value="">Selecciona tu estación</option></select><small>Elige la estación en la que vas a solicitar tu factura.</small></div>
+<div class="field"><label for="alta-rfc">RFC<span class="required">*</span></label><input class="control rfc" id="alta-rfc" name="rfc" maxlength="13" minlength="12" placeholder="RFC de 12 o 13 caracteres" autocapitalize="characters" spellcheck="false" required></div>
+<div class="field"><label for="alta-idcif">idCIF<span class="required">*</span></label><input class="control" id="alta-idcif" name="idcif" inputmode="numeric" pattern="[0-9]{11}" minlength="11" maxlength="11" placeholder="11 dígitos" required><small>Captura los 11 dígitos de tu idCIF, sin espacios.</small></div>
+<div class="field full"><label for="alta-telefono">Teléfono<span class="required">*</span></label><input class="control" id="alta-telefono" name="telefono" type="tel" maxlength="24" placeholder="Tu número de contacto" autocomplete="tel" required></div>
+<div class="field"><label for="alta-correo">Correo electrónico<span class="required">*</span></label><input class="control" id="alta-correo" name="correo" type="email" maxlength="254" placeholder="tu@correo.com" autocomplete="email" spellcheck="false" required></div>
+<div class="field"><label for="alta-confirmacion">Confirma tu correo<span class="required">*</span></label><input class="control" id="alta-confirmacion" name="correo_confirmacion" type="email" maxlength="254" placeholder="Escribe el mismo correo" autocomplete="off" spellcheck="false" required></div>
+</div><p class="inline-note">El bot consulta los datos fiscales desde Polaris. El personal revisa el registro antes de guardarlo; este trámite <strong>no emite una factura</strong>.</p>
+<div class="trap" aria-hidden="true"><label for="alta-web">Deja este campo vacío</label><input id="alta-web" name="sitio_web" tabindex="-1" autocomplete="off"></div>
+<label class="check"><input name="confirmado" type="checkbox" required><span>Revisé mi RFC, idCIF, teléfono y correo, y solicito que se atienda mi alta de cliente en la estación seleccionada.</span></label></fieldset>
+<div id="error-alta" class="error" tabindex="-1" role="alert" hidden></div>
+<div class="form-bottom"><p>El registro queda pendiente hasta que el personal confirme el alta en el sistema.</p><button class="btn btn-primary submit" type="submit" disabled>Solicitar alta <span aria-hidden="true">→</span></button></div>
+</form></section>
+<section class="receipt" id="receipt" aria-labelledby="receiptTitle" hidden tabindex="-1">
+<div class="receipt-icon" aria-hidden="true"><svg width="27" height="27" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" fill="none"><path d="m5 12 4 4L19 6"/><path d="M20 13v6H4V4h10"/></svg></div>
+<h2 id="receiptTitle">Solicitud recibida</h2><p>Conserva esta referencia para consultar con el área de facturación.</p>
+<div class="reference"><div><small>Número de solicitud</small><strong id="receiptRef"></strong></div><button id="copyReference" type="button" class="btn copy">Copiar</button></div>
+<div id="receiptSafe" class="safe-receipt" hidden><strong>Solicitud de prueba.</strong> No autoriza timbrar una factura ni guardar un cliente.</div>
+<p><span class="state-pill" id="receiptState"></span></p><p id="receiptMessage" role="status"></p><p id="statusError" class="error" hidden role="status"></p>
+<div class="receipt-actions"><button type="button" class="btn btn-primary" id="refreshStatus">Actualizar estado</button><a href="ary_contacto.htm" class="btn">Contactar a ARY</a></div>
+<p class="privacy">El seguimiento no muestra tus datos fiscales. Guarda la referencia antes de cerrar esta pestaña. La confirmación de recepción no es un CFDI.</p>
+<button id="newRequest" type="button" class="new">Iniciar un trámite diferente</button>
+</section>
+</section>
+<aside class="aside" aria-label="Ayuda para tu solicitud">
+<div class="side-card"><span class="side-kicker">Antes de enviar</span><h3>Un proceso claro,<br>de principio a fin.</h3><ol class="steps"><li><strong>Elige tu trámite</strong><p>Registra tus datos si eres nuevo, o solicita la factura de tu ticket.</p></li><li><strong>Revisa la información</strong><p>La estación y la forma de pago deben corresponder a tu compra.</p></li><li><strong>Conserva el seguimiento</strong><p>Tu solicitud entra a la cola del bot. El personal atiende las revisiones necesarias.</p></li></ol></div>
+<div class="help-card"><strong>¿Ya enviaste este ticket?</strong><p>No lo solicites nuevamente si está pendiente o en revisión. Consulta el estado o contacta al área de facturación con tu referencia.</p><a class="text-link" href="ary_contacto.htm">Necesito ayuda <span aria-hidden="true">↗</span></a></div>
+<div class="mini-points"><span>Alta de clientes</span><span>Facturación</span><span>Seguimiento</span></div>
+</aside>
+</div>
+</main>
+<footer class="site-footer"><div class="container footer-inner"><span><strong>ARY Super Servicios</strong> · Energía para seguir avanzando.</span><span>© <span id="year"></span> Grupo ARY</span></div></footer>
+<script>
+'use strict';
+(() => {
+  const API = '/api/facturacion';
+  // Catálogos tomados del ZIP del bot. El servidor los vuelve a confirmar al conectar.
+  const INITIAL = {"estaciones": [{"valor": "ARY I", "texto": "ARY I · Est. 6953"}, {"valor": "ARY II", "texto": "ARY II · Est. 4376"}, {"valor": "ARY III", "texto": "ARY III · Est. 4837"}, {"valor": "ARY IV", "texto": "ARY IV · Est. 5522"}, {"valor": "SERVICIO APACHE", "texto": "SERVICIO APACHE · Est. 6086"}, {"valor": "ARY V", "texto": "ARY V · Est. 9427"}, {"valor": "ARY VI", "texto": "ARY VI · Est. 11507"}], "formas_pago": [{"valor": "EFECTIVO", "texto": "Efectivo"}, {"valor": "TARJETA DE CREDITO", "texto": "Tarjeta de crédito"}, {"valor": "TARJETA DE DEBITO", "texto": "Tarjeta de débito"}, {"valor": "TRANSFERENCIA ELECTRONICA DE FONDOS", "texto": "Transferencia"}], "usos_cfdi": [{"valor": "G01", "texto": "G01 — ADQUISICIÓN DE MERCANCÍAS."}, {"valor": "G02", "texto": "G02 — DEVOLUCIONES, DESCUENTOS O BONIFICACIONES."}, {"valor": "G03", "texto": "G03 — GASTOS EN GENERAL."}, {"valor": "I01", "texto": "I01 — CONSTRUCCIONES."}, {"valor": "I02", "texto": "I02 — MOBILIARIO Y EQUIPO DE OFICINA POR INVERSIONES."}, {"valor": "I03", "texto": "I03 — EQUIPO DE TRANSPORTE."}, {"valor": "I04", "texto": "I04 — EQUIPO DE CÓMPUTO Y ACCESORIOS."}, {"valor": "I05", "texto": "I05 — DADOS, TROQUELES, MOLDES, MATRICES Y HERRAMENTAL."}, {"valor": "I06", "texto": "I06 — COMUNICACIONES TELEFÓNICAS."}, {"valor": "I07", "texto": "I07 — COMUNICACIONES SATELITALES."}, {"valor": "I08", "texto": "I08 — OTRA MAQUINARIA Y EQUIPO."}, {"valor": "D01", "texto": "D01 — HONORARIOS MÉDICOS, DENTALES Y GASTOS HOSPITALARIOS."}, {"valor": "D02", "texto": "D02 — GASTOS MÉDICOS POR INCAPACIDAD O DISCAPACIDAD."}, {"valor": "D03", "texto": "D03 — GASTOS FUNERALES."}, {"valor": "D04", "texto": "D04 — DONATIVOS."}, {"valor": "D05", "texto": "D05 — INTERESES REALES EFECTIVAMENTE PAGADOS POR CRÉDITOS HIPOTECARIOS."}, {"valor": "D06", "texto": "D06 — APORTACIONES VOLUNTARIAS AL SAR."}, {"valor": "D07", "texto": "D07 — PRIMAS POR SEGUROS DE GASTOS MÉDICOS."}, {"valor": "D08", "texto": "D08 — GASTOS DE TRANSPORTACIÓN ESCOLAR OBLIGATORIA."}, {"valor": "D09", "texto": "D09 — DEPÓSITOS EN CUENTAS PARA EL AHORRO Y PLANES DE PENSIONES."}, {"valor": "D10", "texto": "D10 — PAGOS POR SERVICIOS EDUCATIVOS (COLEGIATURAS)."}, {"valor": "S01", "texto": "S01 — SIN EFECTOS FISCALES."}, {"valor": "CP01", "texto": "CP01 — PAGOS."}, {"valor": "CN01", "texto": "CN01 — NÓMINA."}, {"valor": "P01", "texto": "P01 — POR DEFINIR"}]};
+  const $ = id => document.getElementById(id);
+  const storage = {
+    get(key) { try { return sessionStorage.getItem(key); } catch (_) { return null; } },
+    set(key, value) { try { sessionStorage.setItem(key, value); } catch (_) {} },
+    remove(key) { try { sessionStorage.removeItem(key); } catch (_) {} }
+  };
+  let csrf = '', serverSafe = true, ready = false, active = 'factura', busy = false, poll = null, receipt = null;
+  let snapshots = {factura: null, alta: null};
+  const id = () => { const bytes = new Uint8Array(16); crypto.getRandomValues(bytes); return Array.from(bytes, b => b.toString(16).padStart(2,'0')).join(''); };
+  let ids = {factura: id(), alta: id()};
+  $('year').textContent = String(new Date().getFullYear());
+  const brandLogo = $('brandLogo');
+  const showLogo = () => { if(brandLogo.complete && brandLogo.naturalWidth > 0) { brandLogo.hidden = false; $('brandFallback').hidden = true; } };
+  brandLogo.addEventListener('load', showLogo);
+  showLogo();
+
+  function options(select, rows, placeholder = '', chosen = '') {
+    select.replaceChildren();
+    if (placeholder) select.add(new Option(placeholder, ''));
+    rows.forEach(row => select.add(new Option(row.texto, row.valor)));
+    select.value = chosen;
+  }
+  function setCatalogs(data) {
+    document.querySelectorAll('.station').forEach(select => options(select, data.estaciones, 'Selecciona tu estación', select.value));
+    options($('factura-pago'), data.formas_pago, 'Selecciona tu forma de pago', $('factura-pago').value);
+    options($('factura-uso'), data.usos_cfdi, '', $('factura-uso').value || 'G03');
+  }
+  setCatalogs(INITIAL);
+
+  function selectTab(name, focus = false) {
+    if (busy || snapshots.factura || snapshots.alta) return;
+    active = name;
+    ['factura','alta'].forEach(key => {
+      $('panel-'+key).hidden = key !== name;
+      $('tab-'+key).setAttribute('aria-selected', String(key === name));
+      $('tab-'+key).tabIndex = key === name ? 0 : -1;
+    });
+    if (focus) $('tab-'+name).focus();
+  }
+  ['factura','alta'].forEach(key => $('tab-'+key).addEventListener('click', () => selectTab(key)));
+  $('tabs').addEventListener('keydown', event => {
+    if (['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) {
+      event.preventDefault();
+      selectTab(event.key === 'Home' ? 'factura' : event.key === 'End' ? 'alta' : active === 'factura' ? 'alta' : 'factura', true);
+    }
+  });
+  $('menuButton').addEventListener('click', () => {
+    const open = $('mainNav').classList.toggle('open');
+    $('menuButton').setAttribute('aria-expanded', String(open));
+  });
+  document.addEventListener('keydown', event => { if(event.key==='Escape') { $('mainNav').classList.remove('open'); $('menuButton').setAttribute('aria-expanded','false'); } });
+  document.querySelectorAll('.rfc').forEach(input => input.addEventListener('input', () => { input.value = input.value.toUpperCase(); }));
+  document.querySelectorAll('input[name="correo_confirmacion"]').forEach(input => input.addEventListener('input', () => input.setCustomValidity('')));
+
+  async function call(path, body, headers = {}) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20000);
+    try {
+      const response = await fetch(API+path, { method: body ? 'POST' : 'GET', credentials:'same-origin',
+        cache:'no-store', signal:controller.signal, headers: body ? {'Content-Type':'application/json','X-ARY-CSRF':csrf, ...headers} : headers,
+        ...(body ? {body: JSON.stringify(body)} : {}) });
+      let data;
+      try { data = await response.json(); } catch (_) { throw new Error('El servidor no devolvió una respuesta válida. No envíes el mismo ticket desde otro formulario.'); }
+      if (!response.ok) { const error = new Error(data.error || 'No se confirmó la solicitud.'); error.status = response.status; throw error; }
+      return data;
+    } finally { clearTimeout(timeout); }
+  }
+  function formError(kind, message) {
+    const box = $('error-'+kind); box.textContent = message; box.hidden = false; box.focus();
+  }
+  function storeReceipt(data) {
+    receipt = data;
+    storage.set('ary_portal_seguimiento', JSON.stringify({seguimiento:data.seguimiento, referencia:data.referencia}));
+    storage.remove('ary_portal_pendiente');
+  }
+  function renderReceipt(data) {
+    $('tabs').hidden = true; $('panel-factura').hidden = true; $('panel-alta').hidden = true;
+    $('receipt').hidden = false;
+    $('receiptRef').textContent = data.referencia;
+    $('receiptState').textContent = data.estado.replaceAll('_',' ');
+    $('receiptSafe').hidden = !data.modo_seguro;
+    $('receiptMessage').textContent = data.mensaje;
+    if (poll) clearTimeout(poll);
+    const terminal = ['ALTA_CONFIRMADA','ENVIO_SOLICITADO','CANCELADA','PRUEBA_CERRADA','REVISION_CERRADA'];
+    if (!terminal.includes(data.estado) && !document.hidden) poll = setTimeout(refresh, 12000);
+  }
+  async function refresh() {
+    if(!receipt || !csrf) return;
+    $('refreshStatus').disabled = true;
+    $('statusError').hidden = true;
+    try { renderReceipt(await call('/estado', {seguimiento:receipt.seguimiento})); }
+    catch (error) { $('statusError').textContent = 'No se actualizó el estado. Tu solicitud no se reenvió. '+(error.name==='AbortError' ? 'Revisa la conexión.' : error.message); $('statusError').hidden = false; }
+    finally { $('refreshStatus').disabled = false; }
+  }
+  $('refreshStatus').addEventListener('click', refresh);
+  document.addEventListener('visibilitychange', () => { if(document.hidden && poll) clearTimeout(poll); else if(receipt) refresh(); });
+  $('copyReference').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText($('receiptRef').textContent); $('copyReference').textContent='Copiado'; }
+    catch (_) { const range=document.createRange();range.selectNodeContents($('receiptRef'));const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);$('copyReference').textContent='Seleccionado'; }
+  });
+  $('newRequest').addEventListener('click', () => {
+    if(!window.confirm('Conserva tu referencia. No vuelvas a enviar el mismo ticket o la misma alta pendiente. ¿Iniciar un trámite diferente?')) return;
+    if(poll) clearTimeout(poll); receipt=null; storage.remove('ary_portal_seguimiento');
+    ['factura','alta'].forEach(kind => { const form=$('form-'+kind);form.reset();form.querySelector('fieldset').disabled=false;$('error-'+kind).hidden=true; });
+    snapshots={factura:null,alta:null};ids={factura:id(),alta:id()};
+    setCatalogs(INITIAL);$('receipt').hidden=true;$('tabs').hidden=false;selectTab('factura',true);
+  });
+  async function send(kind, event) {
+    event.preventDefault();
+    if(busy || !ready) return;
+    const form=$('form-'+kind), button=form.querySelector('.submit');
+    if(!snapshots[kind]) {
+      const email=form.elements.correo, confirmation=form.elements.correo_confirmacion;
+      confirmation.setCustomValidity(email.value.trim() === confirmation.value.trim() ? '' : 'Los dos correos deben coincidir.');
+      if(!form.reportValidity()) return;
+      const values=Object.fromEntries(new FormData(form).entries());
+      values.tipo=kind==='factura' ? 'FACTURA' : 'ALTA'; values.confirmado=form.elements.confirmado.checked;
+      values.rfc=values.rfc.trim().toUpperCase();
+      snapshots[kind]=values;
+    }
+    busy=true;button.disabled=true;button.textContent='Enviando…';form.querySelector('fieldset').disabled=true;$('error-'+kind).hidden=true;
+    storage.set('ary_portal_pendiente',ids[kind]);
+    try {
+      const data=await call('/solicitudes',snapshots[kind],{'X-ARY-Request-Id':ids[kind], 'X-ARY-Mode':serverSafe?'seguro':'real'});
+      storeReceipt(data);snapshots[kind]=null;renderReceipt(data);$('receipt').focus();
+    } catch(error) {
+      const certain=error.status && error.status < 500;
+      if(certain || error.status===503) { snapshots[kind]=null;storage.remove('ary_portal_pendiente');form.querySelector('fieldset').disabled=false; }
+      formError(kind, certain || error.status===503 ? error.message : 'No se confirmó la recepción. Conservé el mismo envío para evitar duplicarlo. Pulsa «Confirmar recepción» sin cambiar los datos.');
+    } finally {
+      busy=false;button.disabled=!ready;
+      button.textContent=snapshots[kind] ? 'Confirmar recepción' : kind==='factura' ? 'Enviar solicitud →' : 'Solicitar alta →';
+    }
+  }
+  ['factura','alta'].forEach(kind => $('form-'+kind).addEventListener('submit', event => send(kind,event)));
+  async function connect() {
+    if(location.protocol==='file:') {
+      $('connection').textContent='Vista previa sin conexión';$('connection').dataset.state='error';
+      $('connectionError').hidden=false;$('connectionError').textContent='Esta es una vista previa. Para enviar solicitudes, abre el portal desde el bot o desde el sitio con el API configurado. Abrir el archivo por sí solo no conecta con Polaris.';return;
+    }
+    try {
+      const data=await call('/opciones');
+      if(!data.csrf || !Array.isArray(data.estaciones)) throw new Error('Respuesta del portal no válida.');
+      csrf=data.csrf;serverSafe=data.modo_seguro===true;setCatalogs(data);ready=data.aceptando===true;
+      $('modeBanner').hidden=!data.modo_seguro;
+      $('connection').textContent=ready ? 'Conectado al portal' : 'Recepción pausada';$('connection').dataset.state=ready?'ok':'error';
+      document.querySelectorAll('.submit').forEach(button => button.disabled=!ready);
+      if(!ready){$('connectionError').hidden=false;$('connectionError').textContent='La recepción de nuevas solicitudes está pausada. El seguimiento de las ya registradas continúa disponible.';}
+      const saved=storage.get('ary_portal_seguimiento');
+      if(saved){try{receipt=JSON.parse(saved);if(receipt.seguimiento){const result=await call('/estado',{seguimiento:receipt.seguimiento});renderReceipt(result);return;}}catch(_){receipt=null;storage.remove('ary_portal_seguimiento');}}
+      const pending=storage.get('ary_portal_pendiente');
+      if(pending){
+        try{const result=await call('/recepcion',{request_id:pending});storeReceipt(result);renderReceipt(result);}
+        catch(error){
+          if(error.status===404){storage.remove('ary_portal_pendiente');}
+          else{ready=false;document.querySelectorAll('.submit').forEach(button=>button.disabled=true);throw new Error('Hay un envío pendiente de confirmar. Recarga la página para consultar su recepción antes de iniciar otro.');}
+        }
+      }
+    } catch(error) {
+      ready=false;document.querySelectorAll('.submit').forEach(button=>button.disabled=true);
+      $('connection').textContent='Sin conexión al bot';$('connection').dataset.state='error';
+      $('connectionError').hidden=false;$('connectionError').textContent='No se pudo conectar con el portal de facturación. No se ha registrado una nueva solicitud desde esta pantalla. '+(error.name==='AbortError' ? 'Revisa la conexión.' : error.message);
+    }
+  }
+  connect();
+})();
+</script>
+</body>
+</html>

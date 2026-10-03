@@ -1,0 +1,3 @@
+VM-BASE-ORIGINAL-2026-10-03-R1
+Base: ARY_FACTURACION_BOT(3).zip
+PolarisBot original sin modificar; adaptador en arybot/compat_vm.py.

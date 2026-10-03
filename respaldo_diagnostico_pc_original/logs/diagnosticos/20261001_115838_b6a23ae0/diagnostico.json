@@ -1,0 +1,215 @@
+{
+  "id": "20261001_115838_b6a23ae0",
+  "fecha": "2026-10-01T11:58:38-06:00",
+  "manual": false,
+  "etapa": "FACTURACION: preparar Polaris / estación",
+  "error": "PolarisError: Polaris abrió, pero su ventana principal no quedó estable/lista a tiempo.",
+  "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\AUX_SISTEMAS\\Desktop\\ARY_FACTURACION_BOT\\ARY_FACTURACION_BOT\\arybot\\diagnostico.py\", line 181, in wrapped\n    result=fn(self,*args,**kwargs)\n  File \"C:\\Users\\AUX_SISTEMAS\\Desktop\\ARY_FACTURACION_BOT\\ARY_FACTURACION_BOT\\arybot\\polaris.py\", line 2018, in invoice\n    main=self.ensure_ready()\n  File \"C:\\Users\\AUX_SISTEMAS\\Desktop\\ARY_FACTURACION_BOT\\ARY_FACTURACION_BOT\\arybot\\polaris.py\", line 499, in ensure_ready\n    main=self._esperar_principal_estable(timeout=35.0,stable_seconds=2.0)\n  File \"C:\\Users\\AUX_SISTEMAS\\Desktop\\ARY_FACTURACION_BOT\\ARY_FACTURACION_BOT\\arybot\\polaris.py\", line 402, in _esperar_principal_estable\n    raise PolarisError(\"Polaris abrió, pero su ventana principal no quedó estable/lista a tiempo.\")\narybot.polaris.PolarisError: Polaris abrió, pero su ventana principal no quedó estable/lista a tiempo.\n",
+  "contexto": {
+    "operacion": "FACTURACION"
+  },
+  "ultimo_evento": {
+    "fecha": "2026-10-01T11:58:03.551-06:00",
+    "etapa": "LOG",
+    "estado": "INFO",
+    "detalle": "Aviso de seguimiento aceptado por Gmail. Recepción en buzón no verificada.",
+    "datos": {}
+  },
+  "ventanas": [
+    {
+      "nivel": 0,
+      "hwnd": 201112,
+      "parent": 0,
+      "clase": "TForm_Login",
+      "titulo": "Entrada al Sistema de Polaris Facturacion",
+      "rect": [
+        600,
+        320,
+        1000,
+        532
+      ],
+      "habilitado": true,
+      "foco": true
+    },
+    {
+      "nivel": 1,
+      "hwnd": 201108,
+      "parent": 201112,
+      "clase": "TcxGroupBox",
+      "titulo": "",
+      "rect": [
+        752,
+        346,
+        997,
+        489
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1642442,
+      "parent": 201112,
+      "clase": "TcxLabel",
+      "titulo": "Contraseña",
+      "rect": [
+        772,
+        402,
+        832,
+        419
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 266386,
+      "parent": 201112,
+      "clase": "TcxTextEdit",
+      "titulo": "(valor omitido)",
+      "rect": [
+        836,
+        402,
+        986,
+        423
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 397496,
+      "parent": 201112,
+      "clase": "TcxCustomInnerTextEdit",
+      "titulo": "(valor omitido)",
+      "rect": [
+        839,
+        405,
+        984,
+        417
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1707998,
+      "parent": 201112,
+      "clase": "TcxTextEdit",
+      "titulo": "(valor omitido)",
+      "rect": [
+        836,
+        366,
+        986,
+        387
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 2560176,
+      "parent": 201112,
+      "clase": "TcxCustomInnerTextEdit",
+      "titulo": "(valor omitido)",
+      "rect": [
+        839,
+        369,
+        984,
+        382
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 10357988,
+      "parent": 201112,
+      "clase": "TcxLabel",
+      "titulo": "Usuario",
+      "rect": [
+        785,
+        369,
+        828,
+        385
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 397448,
+      "parent": 201112,
+      "clase": "TcxImage",
+      "titulo": "",
+      "rect": [
+        603,
+        346,
+        755,
+        489
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 397440,
+      "parent": 201112,
+      "clase": "TPanel",
+      "titulo": "",
+      "rect": [
+        603,
+        488,
+        997,
+        529
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 2691186,
+      "parent": 201112,
+      "clase": "TBitBtn",
+      "titulo": "&Salir",
+      "rect": [
+        913,
+        493,
+        994,
+        524
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1707772,
+      "parent": 201112,
+      "clase": "TBitBtn",
+      "titulo": "&Aceptar",
+      "rect": [
+        830,
+        493,
+        907,
+        524
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 725098,
+      "parent": 0,
+      "clase": "TApplication",
+      "titulo": "Polaris Facturacion",
+      "rect": [
+        800,
+        450,
+        800,
+        450
+      ],
+      "habilitado": false,
+      "foco": false
+    }
+  ]
+}

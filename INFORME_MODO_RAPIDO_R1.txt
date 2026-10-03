@@ -1,0 +1,67 @@
+VERIFICACIÓN — MODO RÁPIDO OPCIONAL R1
+Fecha: 03/oct/2026
+Base: ARY_FACTURACION_BOT_BASE_VM_R1.zip
+SHA256 de la base: 260451d6400b2c3b0d7bc80170a14cf7bd649575e2b7c1184d695acd94505c13
+
+CAMBIO ENTREGADO
+Parche aditivo. Se conserva el arranque normal 2_INICIAR_VM.bat.
+Se agregan INICIAR_RAPIDO.bat, iniciar_rapido.py y arybot/compat_vm_rapido.py,
+además de documentación y pruebas. El perfil rápido se selecciona en memoria
+antes de crear App; no se reescribe gui.py ni polaris.py.
+No se incluyen datos, credenciales, una .venv ni dependencias nuevas.
+El código existente de captura, folios, timbrado, correo y cola no cambia.
+Se verificaron 231 archivos originales de R1: todos idénticos byte por byte.
+
+EVIDENCIA REVISADA
+20261003-1629-22.7400244.mp4: duración 19.4 s, 1860x1046, 30 fps.
+Se inspeccionaron 20 fotogramas (0 a 19 s). Aproximadamente:
+- 3-6 s: ventana de login.
+- 8-12 s: ventana "Accesos al Sistema".
+- 13-19 s: principal de Polaris, sin la ventana anterior.
+No aparece una factura completa. El video no establece tiempo total de
+facturación ni permite atribuir cada demora a CPU, red o disco.
+
+HALLAZGOS DE CÓDIGO Y OPTIMIZACIONES
+En arybot/polaris.py, _login ya espera 1.8 s de estabilidad y ensure_ready
+repite inmediatamente esa comprobación. Ahora se reutiliza sólo una validación
+recién terminada, de menos de un segundo, con misma ventana/PID/clase/título/
+geometría, visible y habilitada, sin login, misma sesión/permisos. Se invalida
+al comenzar cada operación; si algo cambia se vuelve al método normal.
+También se evita la pausa de activación sólo para la principal EXACTA ya en
+primer plano y sin cambio de geometría. Los formularios MDI y login mantienen
+activación normal. Tras redimensionar se conserva la espera original de 1.2 s.
+Pausa adicional de menú: 0.40 -> 0.12 s. Se conservan las comprobaciones de
+foco/oclusión, espera real de submenú, catálogo y formulario. No hay clics
+ciegos de respaldo nuevos. No se alteran los tiempos globales de PyAutoGUI.
+El ahorro real se debe medir en la VM; no se promete porcentaje ni segundos
+por factura. Revisión/cierre de ventanas y cambio de estación sólo añaden
+medición; su lógica no se acelera ni se omiten confirmaciones.
+
+PRUEBAS EJECUTADAS
+python -m pytest -q pruebas_rapido/test_perfil_rapido.py tests/test_compat_vm_20261003.py
+........................................................................ [ 74%]
+.........................                                                [100%]
+97 passed in 1.22s
+
+Son 55 pruebas nuevas del perfil rápido y 42 existentes del adaptador R1.
+Cubren caducidad/cambio de ventana, permisos, foco, oclusión, menú, conservación
+de métodos de negocio, registro de errores, recuperación normal y rechazo de
+bases diferentes. Son pruebas con dobles simulados, NO automatización real
+de Polaris/Windows. Sintaxis correcta de los tres archivos Python nuevos.
+El lanzador comprueba en lectura cuatro hashes de R1 antes de activar el perfil.
+
+LÍMITES
+No se ejecutó el BAT en Windows ni una factura en la VM del usuario.
+No se certifica el funcionamiento completo ni la corrección fiscal.
+No se repitió la suite completa de facturación original. Los 17 fallos
+preexistentes documentados en INFORME_ARY_VM_R1.txt NO se consideran resueltos
+por este parche de rendimiento. Conviene probar primero en MODO SEGURO.
+No se modifica config.json ni se fuerza el valor actual de ese modo.
+
+DOCUMENTACIÓN TÉCNICA CONSULTADA
+Esperar aparición/estado de ventanas en vez de asumir que ya están listas:
+https://pywinauto.readthedocs.io/en/latest/wait_long_operations.html
+Tiempos globales; este parche NO usa Timings.fast():
+https://pywinauto.readthedocs.io/en/latest/code/pywinauto.timings.html
+Parada de emergencia y pausa global de PyAutoGUI, conservadas:
+https://pyautogui.readthedocs.io/

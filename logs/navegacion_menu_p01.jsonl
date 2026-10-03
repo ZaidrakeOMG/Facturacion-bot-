@@ -1,0 +1,4 @@
+{"parche": "P01-MENU-VERIFICADO", "fecha": "2026-10-03 11:10:20", "evento": "clic_enviado", "opcion": "Utilerías", "nivel": 0}
+{"parche": "P01-MENU-VERIFICADO", "fecha": "2026-10-03 11:10:20", "evento": "error", "ruta": ["Utilerías", "Cambio de estación"], "error": "No se localizó una única opción \"Cambio de estación\". Menú visible: "}
+{"parche": "P01-MENU-VERIFICADO", "fecha": "2026-10-03 11:55:29", "evento": "clic_enviado", "opcion": "Utilerías", "nivel": 0}
+{"parche": "P01-MENU-VERIFICADO", "fecha": "2026-10-03 11:55:29", "evento": "error", "ruta": ["Utilerías", "Cambio de estación"], "error": "No se localizó una única opción \"Cambio de estación\". Menú visible: "}

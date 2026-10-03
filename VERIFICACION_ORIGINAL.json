@@ -1,0 +1,54 @@
+{
+  "arybot/polaris.py": {
+    "sin_cambios": true,
+    "sha256": "71d047742cf5653ede07f6609f9e542be657623244176959933d9a430f3b6767"
+  },
+  "arybot/alta_clientes.py": {
+    "sin_cambios": true,
+    "sha256": "761cd4a32cbfacc622c612e1ededad046df0ef216ac558707ea194d392ef43d1"
+  },
+  "arybot/factura_captura.py": {
+    "sin_cambios": true,
+    "sha256": "b3247291e96221691b52b2eadac71056a22d411b85bbb7b651f335d033261e0d"
+  },
+  "arybot/factura_final.py": {
+    "sin_cambios": true,
+    "sha256": "1e4eb86d2c9435d7df15e75e2995ddc6e67c5033b4c0937897e3f0040046ef32"
+  },
+  "arybot/gmail_client.py": {
+    "sin_cambios": true,
+    "sha256": "d215857502d674406a5fd4ed70b60a67b7b491123a746f213b846abe3bbcae3d"
+  },
+  "arybot/processor.py": {
+    "sin_cambios": true,
+    "sha256": "8ea8eb3adc8c6e6f7129debd79365fbfd01cf08f73849b49fbbc141ed12e54ec"
+  },
+  "arybot/cola_local.py": {
+    "sin_cambios": true,
+    "sha256": "392888df2f8b25865059b1893bbbaf8fd9c2433514f179edb3d0196d78e08212"
+  },
+  "arybot/cola_operaciones.py": {
+    "sin_cambios": true,
+    "sha256": "9fb44e5a00a245eb1c1ff56880e9a18ff7ed873cb7566d1688c29e68cdd7d524"
+  },
+  "arybot/parser.py": {
+    "sin_cambios": true,
+    "sha256": "231d84d20992076e1d95a58476c1da7cef16e2e9cdde46578c075db5dafa75d6"
+  },
+  "arybot/portal_http.py": {
+    "sin_cambios": true,
+    "sha256": "10ba1c6fd3eaadc33a4b6ca2be56fba10a014cf1b23a2d901082d959a35941ba"
+  },
+  "requirements.in": {
+    "sin_cambios": true,
+    "sha256": "c89c7605ca2b0865f73d26bf8c7b63bd2ee6fe166c41138e70d1f3aa06c64e28"
+  },
+  "data/arybot.sqlite3": {
+    "sin_cambios": true,
+    "sha256": "b3847bc0982ab83a9e48d836f41828abf188b7ed8dc5d921918fe5bd5e68944d"
+  },
+  "data/cola_operaciones.sqlite3": {
+    "sin_cambios": true,
+    "sha256": "688b5293c2d3a75895cab1074bca3ee3ea2780d2ba9844ee8d36601647d9240a"
+  }
+}

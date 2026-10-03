@@ -1,0 +1,23 @@
+{
+  "id": "P01-MENU-VERIFICADO",
+  "base": "ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO.zip",
+  "files": {
+    "arybot/compat_vm.py": {
+      "before": "a0a24f796d9d111baabd842915901fc66901c3b954c089c14fef5ad091c6a828",
+      "after": "79d130f2c19ebee66c2354d7ce09a62bcff1c41fb5007db42991d2bc15c73317"
+    },
+    "arybot/compat_vm_rapido.py": {
+      "before": "6a7cb625619371f76f3fec708c2d6947ba18abf2356a379af3f86342f33dc399",
+      "after": "88ffb0749d373bdd34db903c08cb3f6fd833ea6c223c20a3aacb8c371ff87771"
+    },
+    "iniciar_rapido.py": {
+      "before": "187c093843af6005db39272de38852cf340991716fdc8e30aa4ddaa85a2ca935",
+      "after": "25baeb1615714f0a3ac5f78465e2cee2144dc6c63399415ea0e035c61d0d1d3e"
+    }
+  },
+  "anchors": {
+    "arybot/polaris.py": "71d047742cf5653ede07f6609f9e542be657623244176959933d9a430f3b6767",
+    "arybot/gui.py": "07b7a49f4f3d166d8738e6d7235f135e45ae53048d7ad6677ece970662c44b35",
+    "ejecutar_vm.py": "94c9a58498b69fcd67d9bbfd5c7a27eb0d990741cc24747afd41b01a77efb91c"
+  }
+}

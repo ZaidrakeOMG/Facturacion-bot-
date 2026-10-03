@@ -1,0 +1,28 @@
+{
+  "version": "5.0",
+  "nombre": "Arranque Polaris + diálogo CFDI corregidos",
+  "base": "proyecto exacto enviado por el usuario",
+  "cambios": [
+    "abrir el portal ya no pausa la cola",
+    "cancelar cuadros de configuración ya no deja una pausa persistente",
+    "ver detalles de cola no pausa el procesamiento",
+    "cerrar el bot no guarda una pausa manual",
+    "solicitudes EN_COLA existentes arrancan automáticamente al iniciar",
+    "una solicitud nueva despierta inmediatamente al consumidor",
+    "solo el botón Pausar después de la actual crea una pausa manual durante esa sesión",
+    "errores del coordinador no congelan globalmente la cola"
+  ],
+  "cambios_fecha": [
+    "permite seleccionar la fecha de hoy",
+    "conserva los 3 días anteriores",
+    "fechas futuras siguen bloqueadas"
+  ],
+  "cambios_v5": [
+    "El arranque espera hasta 90 s la primera ventana de Polaris y después exige Entrada al Sistema o una principal realmente estable; no confunde splash/ventanas transitorias.",
+    "Después del login la principal puede tardar hasta 60 s y tras maximizar se valida nuevamente.",
+    "El diálogo pequeño de Envío e Impresión de CFDI se detecta con el detector específico de Polaris, no con el filtro legado de ventanas grandes.",
+    "Durante el timbrado se reconocen avisos y progreso sin volver a pulsar Aceptar.",
+    "La espera de timbrado robusta tiene un piso de 90 s.",
+    "Se conserva el clic final verificado y el flujo de correo estable v3.1."
+  ]
+}

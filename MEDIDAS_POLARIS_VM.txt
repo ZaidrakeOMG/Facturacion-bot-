@@ -1,0 +1,956 @@
+
+======================================================================
+CAPTURA: 2026-10-03T11:22:09
+PYTHON: C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\.venv\Scripts\python.exe 3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]
+WINDOWS: Windows-10-10.0.19045-SP0
+PROCESOS: [10896]
+
+VENTANA: 'Polaris Facturacion --> ARY SUPER EXPRESS V, S.A. DE C.V.'
+PID: 10896 HANDLE: 0xd047c
+CLASE: TForm_Menu
+VISIBLE: True
+HABILITADA: True
+RECTANGULO: (L-8, T-8, R1928, B1048)
+AREA INTERIOR: (L0, T0, R1920, B997)
+MENUS:
+{'menu_items': [{'index': 0,
+                 'item_id': 1,
+                 'item_type': 0,
+                 'menu_items': {'menu_items': [{'index': 0, 'item_id': 2, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 1, 'item_id': 3, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 2, 'item_id': 4, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 3, 'item_id': 5, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 4, 'item_id': 6, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 5, 'item_id': 7, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 6, 'item_id': 8, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 7, 'item_id': 9, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 8, 'item_id': 10, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 9, 'item_id': 11, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 10, 'item_id': 12, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 11, 'item_id': 13, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 12, 'item_id': 14, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 13, 'item_id': 16, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 14, 'item_id': 17, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 15, 'item_id': 18, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 16, 'item_id': 19, 'item_type': 256, 'state': 0, 'text': ''}]},
+                 'state': 0,
+                 'text': '&Archivos'},
+                {'index': 1,
+                 'item_id': 20,
+                 'item_type': 0,
+                 'menu_items': {'menu_items': [{'index': 0, 'item_id': 21, 'item_type': 256, 'state': 3, 'text': ''},
+                                               {'index': 1, 'item_id': 22, 'item_type': 256, 'state': 3, 'text': ''},
+                                               {'index': 2, 'item_id': 23, 'item_type': 256, 'state': 3, 'text': ''}]},
+                 'state': 0,
+                 'text': '&Editar'},
+                {'index': 2,
+                 'item_id': 24,
+                 'item_type': 0,
+                 'menu_items': {'menu_items': [{'index': 0, 'item_id': 25, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 1, 'item_id': 26, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 2, 'item_id': 27, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 3, 'item_id': 28, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 4,
+                                                'item_id': 31,
+                                                'item_type': 256,
+                                                'menu_items': {'menu_items': [{'index': 0,
+                                                                               'item_id': 32,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''},
+                                                                              {'index': 1,
+                                                                               'item_id': 33,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''},
+                                                                              {'index': 2,
+                                                                               'item_id': 34,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''}]},
+                                                'state': 0,
+                                                'text': ''},
+                                               {'index': 5, 'item_id': 35, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 6, 'item_id': 36, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 7, 'item_id': 37, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 8, 'item_id': 38, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 9, 'item_id': 39, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 10, 'item_id': 40, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 11, 'item_id': 41, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 12, 'item_id': 42, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 13, 'item_id': 43, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 14, 'item_id': 44, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 15, 'item_id': 45, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 16, 'item_id': 46, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 17, 'item_id': 47, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 18, 'item_id': 48, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 19,
+                                                'item_id': 49,
+                                                'item_type': 256,
+                                                'menu_items': {'menu_items': [{'index': 0,
+                                                                               'item_id': 50,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''},
+                                                                              {'index': 1,
+                                                                               'item_id': 51,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''},
+                                                                              {'index': 2,
+                                                                               'item_id': 52,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''},
+                                                                              {'index': 3,
+                                                                               'item_id': 53,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''},
+                                                                              {'index': 4,
+                                                                               'item_id': 54,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''},
+                                                                              {'index': 5,
+                                                                               'item_id': 55,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''},
+                                                                              {'index': 6,
+                                                                               'item_id': 56,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''},
+                                                                              {'index': 7,
+                                                                               'item_id': 57,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''},
+                                                                              {'index': 8,
+                                                                               'item_id': 58,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''}]},
+                                                'state': 0,
+                                                'text': ''},
+                                               {'index': 20,
+                                                'item_id': 59,
+                                                'item_type': 256,
+                                                'menu_items': {'menu_items': [{'index': 0,
+                                                                               'item_id': 60,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''},
+                                                                              {'index': 1,
+                                                                               'item_id': 61,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''}]},
+                                                'state': 0,
+                                                'text': ''}]},
+                 'state': 0,
+                 'text': '&Procesos'},
+                {'index': 3,
+                 'item_id': 62,
+                 'item_type': 0,
+                 'menu_items': {'menu_items': [{'index': 0, 'item_id': 63, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 1, 'item_id': 64, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 2, 'item_id': 65, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 3, 'item_id': 66, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 4, 'item_id': 67, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 5, 'item_id': 68, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 6, 'item_id': 69, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 7,
+                                                'item_id': 70,
+                                                'item_type': 256,
+                                                'menu_items': {'menu_items': [{'index': 0,
+                                                                               'item_id': 71,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''},
+                                                                              {'index': 1,
+                                                                               'item_id': 72,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''},
+                                                                              {'index': 2,
+                                                                               'item_id': 73,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''},
+                                                                              {'index': 3,
+                                                                               'item_id': 74,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''}]},
+                                                'state': 0,
+                                                'text': ''},
+                                               {'index': 8, 'item_id': 75, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 9, 'item_id': 76, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 10, 'item_id': 78, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 11, 'item_id': 79, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 12, 'item_id': 80, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 13, 'item_id': 81, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 14,
+                                                'item_id': 82,
+                                                'item_type': 256,
+                                                'menu_items': {'menu_items': [{'index': 0,
+                                                                               'item_id': 83,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''},
+                                                                              {'index': 1,
+                                                                               'item_id': 84,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''}]},
+                                                'state': 0,
+                                                'text': ''}]},
+                 'state': 0,
+                 'text': '&Facturacion'},
+                {'index': 4,
+                 'item_id': 86,
+                 'item_type': 0,
+                 'menu_items': {'menu_items': [{'index': 0, 'item_id': 87, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 1, 'item_id': 88, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 2, 'item_id': 89, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 3, 'item_id': 90, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 4, 'item_id': 91, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 5, 'item_id': 92, 'item_type': 256, 'state': 0, 'text': ''}]},
+                 'state': 0,
+                 'text': '&Recibos'},
+                {'index': 5,
+                 'item_id': 93,
+                 'item_type': 0,
+                 'menu_items': {'menu_items': [{'index': 0, 'item_id': 94, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 1, 'item_id': 95, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 2, 'item_id': 96, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 3, 'item_id': 97, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 4, 'item_id': 98, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 5, 'item_id': 99, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 6, 'item_id': 100, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 7, 'item_id': 101, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 8, 'item_id': 102, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 9, 'item_id': 103, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 10, 'item_id': 104, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 11, 'item_id': 105, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 12, 'item_id': 106, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 13, 'item_id': 107, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 14, 'item_id': 108, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 15, 'item_id': 109, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 16, 'item_id': 110, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 17, 'item_id': 111, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 18, 'item_id': 112, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 19, 'item_id': 113, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 20, 'item_id': 114, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 21, 'item_id': 115, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 22, 'item_id': 116, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 23, 'item_id': 117, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 24, 'item_id': 118, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 25, 'item_id': 119, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 26, 'item_id': 120, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 27, 'item_id': 121, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 28, 'item_id': 122, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 29, 'item_id': 123, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 30, 'item_id': 124, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 31, 'item_id': 125, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 32, 'item_id': 126, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 33, 'item_id': 127, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 34,
+                                                'item_id': 128,
+                                                'item_type': 256,
+                                                'state': 0,
+                                                'text': ''}]},
+                 'state': 0,
+                 'text': 'Rep&ortes'},
+                {'index': 6,
+                 'item_id': 129,
+                 'item_type': 0,
+                 'menu_items': {'menu_items': [{'index': 0, 'item_id': 131, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 1, 'item_id': 132, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 2, 'item_id': 133, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 3, 'item_id': 134, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 4, 'item_id': 136, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 5, 'item_id': 139, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 6, 'item_id': 140, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 7, 'item_id': 141, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 8, 'item_id': 142, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 9, 'item_id': 143, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 10, 'item_id': 144, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 11, 'item_id': 145, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 12, 'item_id': 146, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 13,
+                                                'item_id': 147,
+                                                'item_type': 256,
+                                                'state': 0,
+                                                'text': ''}]},
+                 'state': 0,
+                 'text': '&Utilerias'},
+                {'index': 7,
+                 'item_id': 148,
+                 'item_type': 0,
+                 'menu_items': {'menu_items': [{'index': 0, 'item_id': 149, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 1, 'item_id': 150, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 2, 'item_id': 151, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 3, 'item_id': 152, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 4, 'item_id': 153, 'item_type': 256, 'state': 0, 'text': ''}]},
+                 'state': 0,
+                 'text': '&Ventanas'},
+                {'index': 8,
+                 'item_id': 154,
+                 'item_type': 0,
+                 'menu_items': {'menu_items': [{'index': 0, 'item_id': 155, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 1, 'item_id': 156, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 2, 'item_id': 157, 'item_type': 256, 'state': 0, 'text': ''}]},
+                 'state': 0,
+                 'text': 'A&yuda'}]}
+MENU SUPERIOR: '&Archivos' (L0, T23, R60, B42)
+MENU SUPERIOR: '&Editar' (L60, T23, R104, B42)
+MENU SUPERIOR: '&Procesos' (L104, T23, R165, B42)
+MENU SUPERIOR: '&Facturacion' (L165, T23, R241, B42)
+MENU SUPERIOR: '&Recibos' (L241, T23, R296, B42)
+MENU SUPERIOR: 'Rep&ortes' (L296, T23, R356, B42)
+MENU SUPERIOR: '&Utilerias' (L356, T23, R412, B42)
+MENU SUPERIOR: '&Ventanas' (L412, T23, R473, B42)
+MENU SUPERIOR: 'A&yuda' (L473, T23, R521, B42)
+CONTROLES:
+Control Identifiers:
+
+TForm_Menu - 'Polaris Facturacion --> ARY SUPER EXPRESS V, S.A. DE C.V.'    (L-8, T-8, R1928, B1048)
+['TForm_Menu', 'Polaris Facturacion --> ARY SUPER EXPRESS V, S.A. DE C.V.', 'Polaris Facturacion --> ARY SUPER EXPRESS V, S.A. DE C.V.TForm_Menu']
+child_window(title="Polaris Facturacion --> ARY SUPER EXPRESS V, S.A. DE C.V.", class_name="TForm_Menu")
+   | 
+   | Toolbar - 'ToolBar1'    (L0, T43, R1920, B87)
+   | ['Toolbar', 'ToolBar1Toolbar', 'ToolBar1']
+   | child_window(title="ToolBar1", class_name="TToolBar")
+   | 
+   | StatusBar - 'Usuario: FACTURA'    (L0, T1021, R1920, B1040)
+   | ['Usuario: FACTURA', 'Usuario: FACTURAStatusBar', 'StatusBar']
+   | child_window(title="Usuario: FACTURA", class_name="TStatusBar")
+   | 
+   | MDIClient - ''    (L0, T87, R1920, B1021)
+   | ['Polaris Facturacion --> ARY SUPER EXPRESS V, S.A. DE C.V.MDIClient', 'MDIClient']
+   | child_window(class_name="MDIClient")
+
+VENTANA: 'Entrada al Sistema de Polaris Facturacion'
+PID: 10896 HANDLE: 0x110696
+CLASE: TForm_Login
+VISIBLE: False
+HABILITADA: True
+RECTANGULO: (L760, T414, R1160, B626)
+AREA INTERIOR: (L0, T0, R394, B183)
+
+VENTANA: 'Polaris Facturacion'
+PID: 10896 HANDLE: 0xc05a4
+CLASE: TApplication
+VISIBLE: True
+HABILITADA: True
+RECTANGULO: (L960, T540, R960, B540)
+AREA INTERIOR: (L0, T0, R0, B0)
+MENUS:
+Sin menu nativo en esta ventana.
+CONTROLES:
+Control Identifiers:
+
+TApplication - 'Polaris Facturacion'    (L960, T540, R960, B540)
+['TApplication', 'Polaris FacturacionTApplication', 'Polaris Facturacion']
+child_window(title="Polaris Facturacion", class_name="TApplication")
+
+VENTANA: ''
+PID: 10896 HANDLE: 0x806ec
+CLASE: TPUtilWindow
+VISIBLE: False
+HABILITADA: True
+RECTANGULO: (L0, T0, R0, B0)
+AREA INTERIOR: (L0, T0, R0, B0)
+
+VENTANA: ''
+PID: 10896 HANDLE: 0x806d0
+CLASE: ADODB.AsyncEventMessenger
+VISIBLE: False
+HABILITADA: True
+RECTANGULO: (L0, T0, R136, B39)
+AREA INTERIOR: (L0, T0, R130, B10)
+
+VENTANA: ''
+PID: 10896 HANDLE: 0x1402a4
+CLASE: ADODB.AsyncEventMessenger
+VISIBLE: False
+HABILITADA: True
+RECTANGULO: (L0, T0, R136, B39)
+AREA INTERIOR: (L0, T0, R130, B10)
+
+VENTANA: ''
+PID: 10896 HANDLE: 0x280426
+CLASE: TPUtilWindow
+VISIBLE: False
+HABILITADA: True
+RECTANGULO: (L0, T0, R0, B0)
+AREA INTERIOR: (L0, T0, R0, B0)
+
+VENTANA: ''
+PID: 10896 HANDLE: 0xc0718
+CLASE: TPUtilWindow
+VISIBLE: False
+HABILITADA: True
+RECTANGULO: (L0, T0, R0, B0)
+AREA INTERIOR: (L0, T0, R0, B0)
+
+VENTANA: ''
+PID: 10896 HANDLE: 0x140498
+CLASE: TPUtilWindow
+VISIBLE: False
+HABILITADA: True
+RECTANGULO: (L0, T0, R0, B0)
+AREA INTERIOR: (L0, T0, R0, B0)
+
+VENTANA: ''
+PID: 10896 HANDLE: 0xc0714
+CLASE: TPUtilWindow
+VISIBLE: False
+HABILITADA: True
+RECTANGULO: (L0, T0, R0, B0)
+AREA INTERIOR: (L0, T0, R0, B0)
+
+VENTANA: ''
+PID: 10896 HANDLE: 0x3c04ec
+CLASE: TPUtilWindow
+VISIBLE: False
+HABILITADA: True
+RECTANGULO: (L0, T0, R0, B0)
+AREA INTERIOR: (L0, T0, R0, B0)
+
+VENTANA: 'GDI+ Window (PolarisFacturacion.exe)'
+PID: 10896 HANDLE: 0x80532
+CLASE: GDI+ Hook Window Class
+VISIBLE: False
+HABILITADA: True
+RECTANGULO: (L0, T0, R1, B1)
+AREA INTERIOR: (L0, T0, R1, B1)
+
+VENTANA: ''
+PID: 10896 HANDLE: 0x1406a4
+CLASE: TPUtilWindow
+VISIBLE: False
+HABILITADA: True
+RECTANGULO: (L0, T0, R0, B0)
+AREA INTERIOR: (L0, T0, R0, B0)
+
+VENTANA: ''
+PID: 10896 HANDLE: 0xb04d2
+CLASE: TPUtilWindow
+VISIBLE: False
+HABILITADA: True
+RECTANGULO: (L0, T0, R0, B0)
+AREA INTERIOR: (L0, T0, R0, B0)
+
+VENTANA: ''
+PID: 10896 HANDLE: 0x16055c
+CLASE: TPUtilWindow
+VISIBLE: False
+HABILITADA: True
+RECTANGULO: (L0, T0, R0, B0)
+AREA INTERIOR: (L0, T0, R0, B0)
+
+VENTANA: ''
+PID: 10896 HANDLE: 0x906fe
+CLASE: TPUtilWindow
+VISIBLE: False
+HABILITADA: True
+RECTANGULO: (L0, T0, R0, B0)
+AREA INTERIOR: (L0, T0, R0, B0)
+
+VENTANA: 'M'
+PID: 10896 HANDLE: 0xe04b6
+CLASE: MSCTFIME UI
+VISIBLE: False
+HABILITADA: False
+RECTANGULO: (L0, T0, R0, B0)
+AREA INTERIOR: (L0, T0, R0, B0)
+
+VENTANA: 'Default IME'
+PID: 10896 HANDLE: 0x806ca
+CLASE: IME
+VISIBLE: False
+HABILITADA: False
+RECTANGULO: (L0, T0, R0, B0)
+AREA INTERIOR: (L0, T0, R0, B0)
+
+======================================================================
+CAPTURA: 2026-10-03T11:22:20
+PYTHON: C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\.venv\Scripts\python.exe 3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]
+WINDOWS: Windows-10-10.0.19045-SP0
+PROCESOS: [10896]
+
+VENTANA: 'Polaris Facturacion --> ARY SUPER EXPRESS V, S.A. DE C.V.'
+PID: 10896 HANDLE: 0xd047c
+CLASE: TForm_Menu
+VISIBLE: True
+HABILITADA: True
+RECTANGULO: (L-8, T-8, R1928, B1048)
+AREA INTERIOR: (L0, T0, R1920, B997)
+MENUS:
+{'menu_items': [{'index': 0,
+                 'item_id': 1,
+                 'item_type': 0,
+                 'menu_items': {'menu_items': [{'index': 0, 'item_id': 2, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 1, 'item_id': 3, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 2, 'item_id': 4, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 3, 'item_id': 5, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 4, 'item_id': 6, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 5, 'item_id': 7, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 6, 'item_id': 8, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 7, 'item_id': 9, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 8, 'item_id': 10, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 9, 'item_id': 11, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 10, 'item_id': 12, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 11, 'item_id': 13, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 12, 'item_id': 14, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 13, 'item_id': 16, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 14, 'item_id': 17, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 15, 'item_id': 18, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 16, 'item_id': 19, 'item_type': 256, 'state': 0, 'text': ''}]},
+                 'state': 0,
+                 'text': '&Archivos'},
+                {'index': 1,
+                 'item_id': 20,
+                 'item_type': 0,
+                 'menu_items': {'menu_items': [{'index': 0, 'item_id': 21, 'item_type': 256, 'state': 3, 'text': ''},
+                                               {'index': 1, 'item_id': 22, 'item_type': 256, 'state': 3, 'text': ''},
+                                               {'index': 2, 'item_id': 23, 'item_type': 256, 'state': 3, 'text': ''}]},
+                 'state': 0,
+                 'text': '&Editar'},
+                {'index': 2,
+                 'item_id': 24,
+                 'item_type': 0,
+                 'menu_items': {'menu_items': [{'index': 0, 'item_id': 25, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 1, 'item_id': 26, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 2, 'item_id': 27, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 3, 'item_id': 28, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 4,
+                                                'item_id': 31,
+                                                'item_type': 256,
+                                                'menu_items': {'menu_items': [{'index': 0,
+                                                                               'item_id': 32,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''},
+                                                                              {'index': 1,
+                                                                               'item_id': 33,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''},
+                                                                              {'index': 2,
+                                                                               'item_id': 34,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''}]},
+                                                'state': 0,
+                                                'text': ''},
+                                               {'index': 5, 'item_id': 35, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 6, 'item_id': 36, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 7, 'item_id': 37, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 8, 'item_id': 38, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 9, 'item_id': 39, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 10, 'item_id': 40, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 11, 'item_id': 41, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 12, 'item_id': 42, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 13, 'item_id': 43, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 14, 'item_id': 44, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 15, 'item_id': 45, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 16, 'item_id': 46, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 17, 'item_id': 47, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 18, 'item_id': 48, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 19,
+                                                'item_id': 49,
+                                                'item_type': 256,
+                                                'menu_items': {'menu_items': [{'index': 0,
+                                                                               'item_id': 50,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''},
+                                                                              {'index': 1,
+                                                                               'item_id': 51,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''},
+                                                                              {'index': 2,
+                                                                               'item_id': 52,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''},
+                                                                              {'index': 3,
+                                                                               'item_id': 53,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''},
+                                                                              {'index': 4,
+                                                                               'item_id': 54,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''},
+                                                                              {'index': 5,
+                                                                               'item_id': 55,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''},
+                                                                              {'index': 6,
+                                                                               'item_id': 56,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''},
+                                                                              {'index': 7,
+                                                                               'item_id': 57,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''},
+                                                                              {'index': 8,
+                                                                               'item_id': 58,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''}]},
+                                                'state': 0,
+                                                'text': ''},
+                                               {'index': 20,
+                                                'item_id': 59,
+                                                'item_type': 256,
+                                                'menu_items': {'menu_items': [{'index': 0,
+                                                                               'item_id': 60,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''},
+                                                                              {'index': 1,
+                                                                               'item_id': 61,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''}]},
+                                                'state': 0,
+                                                'text': ''}]},
+                 'state': 0,
+                 'text': '&Procesos'},
+                {'index': 3,
+                 'item_id': 62,
+                 'item_type': 0,
+                 'menu_items': {'menu_items': [{'index': 0, 'item_id': 63, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 1, 'item_id': 64, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 2, 'item_id': 65, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 3, 'item_id': 66, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 4, 'item_id': 67, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 5, 'item_id': 68, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 6, 'item_id': 69, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 7,
+                                                'item_id': 70,
+                                                'item_type': 256,
+                                                'menu_items': {'menu_items': [{'index': 0,
+                                                                               'item_id': 71,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''},
+                                                                              {'index': 1,
+                                                                               'item_id': 72,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''},
+                                                                              {'index': 2,
+                                                                               'item_id': 73,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''},
+                                                                              {'index': 3,
+                                                                               'item_id': 74,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''}]},
+                                                'state': 0,
+                                                'text': ''},
+                                               {'index': 8, 'item_id': 75, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 9, 'item_id': 76, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 10, 'item_id': 78, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 11, 'item_id': 79, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 12, 'item_id': 80, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 13, 'item_id': 81, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 14,
+                                                'item_id': 82,
+                                                'item_type': 256,
+                                                'menu_items': {'menu_items': [{'index': 0,
+                                                                               'item_id': 83,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''},
+                                                                              {'index': 1,
+                                                                               'item_id': 84,
+                                                                               'item_type': 256,
+                                                                               'state': 0,
+                                                                               'text': ''}]},
+                                                'state': 0,
+                                                'text': ''}]},
+                 'state': 0,
+                 'text': '&Facturacion'},
+                {'index': 4,
+                 'item_id': 86,
+                 'item_type': 0,
+                 'menu_items': {'menu_items': [{'index': 0, 'item_id': 87, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 1, 'item_id': 88, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 2, 'item_id': 89, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 3, 'item_id': 90, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 4, 'item_id': 91, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 5, 'item_id': 92, 'item_type': 256, 'state': 0, 'text': ''}]},
+                 'state': 0,
+                 'text': '&Recibos'},
+                {'index': 5,
+                 'item_id': 93,
+                 'item_type': 0,
+                 'menu_items': {'menu_items': [{'index': 0, 'item_id': 94, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 1, 'item_id': 95, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 2, 'item_id': 96, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 3, 'item_id': 97, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 4, 'item_id': 98, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 5, 'item_id': 99, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 6, 'item_id': 100, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 7, 'item_id': 101, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 8, 'item_id': 102, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 9, 'item_id': 103, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 10, 'item_id': 104, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 11, 'item_id': 105, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 12, 'item_id': 106, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 13, 'item_id': 107, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 14, 'item_id': 108, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 15, 'item_id': 109, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 16, 'item_id': 110, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 17, 'item_id': 111, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 18, 'item_id': 112, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 19, 'item_id': 113, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 20, 'item_id': 114, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 21, 'item_id': 115, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 22, 'item_id': 116, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 23, 'item_id': 117, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 24, 'item_id': 118, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 25, 'item_id': 119, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 26, 'item_id': 120, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 27, 'item_id': 121, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 28, 'item_id': 122, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 29, 'item_id': 123, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 30, 'item_id': 124, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 31, 'item_id': 125, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 32, 'item_id': 126, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 33, 'item_id': 127, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 34,
+                                                'item_id': 128,
+                                                'item_type': 256,
+                                                'state': 0,
+                                                'text': ''}]},
+                 'state': 0,
+                 'text': 'Rep&ortes'},
+                {'index': 6,
+                 'item_id': 129,
+                 'item_type': 0,
+                 'menu_items': {'menu_items': [{'index': 0, 'item_id': 131, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 1, 'item_id': 132, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 2, 'item_id': 133, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 3, 'item_id': 134, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 4, 'item_id': 136, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 5, 'item_id': 139, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 6, 'item_id': 140, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 7, 'item_id': 141, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 8, 'item_id': 142, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 9, 'item_id': 143, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 10, 'item_id': 144, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 11, 'item_id': 145, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 12, 'item_id': 146, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 13,
+                                                'item_id': 147,
+                                                'item_type': 256,
+                                                'state': 0,
+                                                'text': ''}]},
+                 'state': 0,
+                 'text': '&Utilerias'},
+                {'index': 7,
+                 'item_id': 148,
+                 'item_type': 0,
+                 'menu_items': {'menu_items': [{'index': 0, 'item_id': 149, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 1, 'item_id': 150, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 2, 'item_id': 151, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 3, 'item_id': 152, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 4, 'item_id': 153, 'item_type': 256, 'state': 0, 'text': ''}]},
+                 'state': 0,
+                 'text': '&Ventanas'},
+                {'index': 8,
+                 'item_id': 154,
+                 'item_type': 0,
+                 'menu_items': {'menu_items': [{'index': 0, 'item_id': 155, 'item_type': 256, 'state': 0, 'text': ''},
+                                               {'index': 1, 'item_id': 156, 'item_type': 2304, 'state': 3, 'text': ''},
+                                               {'index': 2, 'item_id': 157, 'item_type': 256, 'state': 0, 'text': ''}]},
+                 'state': 0,
+                 'text': 'A&yuda'}]}
+MENU SUPERIOR: '&Archivos' (L0, T23, R60, B42)
+MENU SUPERIOR: '&Editar' (L60, T23, R104, B42)
+MENU SUPERIOR: '&Procesos' (L104, T23, R165, B42)
+MENU SUPERIOR: '&Facturacion' (L165, T23, R241, B42)
+MENU SUPERIOR: '&Recibos' (L241, T23, R296, B42)
+MENU SUPERIOR: 'Rep&ortes' (L296, T23, R356, B42)
+MENU SUPERIOR: '&Utilerias' (L356, T23, R412, B42)
+MENU SUPERIOR: '&Ventanas' (L412, T23, R473, B42)
+MENU SUPERIOR: 'A&yuda' (L473, T23, R521, B42)
+CONTROLES:
+Control Identifiers:
+
+TForm_Menu - 'Polaris Facturacion --> ARY SUPER EXPRESS V, S.A. DE C.V.'    (L-8, T-8, R1928, B1048)
+['TForm_Menu', 'Polaris Facturacion --> ARY SUPER EXPRESS V, S.A. DE C.V.', 'Polaris Facturacion --> ARY SUPER EXPRESS V, S.A. DE C.V.TForm_Menu']
+child_window(title="Polaris Facturacion --> ARY SUPER EXPRESS V, S.A. DE C.V.", class_name="TForm_Menu")
+   | 
+   | Toolbar - 'ToolBar1'    (L0, T43, R1920, B87)
+   | ['Toolbar', 'ToolBar1Toolbar', 'ToolBar1']
+   | child_window(title="ToolBar1", class_name="TToolBar")
+   | 
+   | StatusBar - 'Usuario: FACTURA'    (L0, T1021, R1920, B1040)
+   | ['Usuario: FACTURAStatusBar', 'Usuario: FACTURA', 'StatusBar']
+   | child_window(title="Usuario: FACTURA", class_name="TStatusBar")
+   | 
+   | MDIClient - ''    (L0, T87, R1920, B1021)
+   | ['MDIClient', 'Polaris Facturacion --> ARY SUPER EXPRESS V, S.A. DE C.V.MDIClient']
+   | child_window(class_name="MDIClient")
+
+VENTANA: 'Entrada al Sistema de Polaris Facturacion'
+PID: 10896 HANDLE: 0x110696
+CLASE: TForm_Login
+VISIBLE: False
+HABILITADA: True
+RECTANGULO: (L760, T414, R1160, B626)
+AREA INTERIOR: (L0, T0, R394, B183)
+
+VENTANA: 'Polaris Facturacion'
+PID: 10896 HANDLE: 0xc05a4
+CLASE: TApplication
+VISIBLE: True
+HABILITADA: True
+RECTANGULO: (L960, T540, R960, B540)
+AREA INTERIOR: (L0, T0, R0, B0)
+MENUS:
+Sin menu nativo en esta ventana.
+CONTROLES:
+Control Identifiers:
+
+TApplication - 'Polaris Facturacion'    (L960, T540, R960, B540)
+['TApplication', 'Polaris Facturacion', 'Polaris FacturacionTApplication']
+child_window(title="Polaris Facturacion", class_name="TApplication")
+
+VENTANA: ''
+PID: 10896 HANDLE: 0x806ec
+CLASE: TPUtilWindow
+VISIBLE: False
+HABILITADA: True
+RECTANGULO: (L0, T0, R0, B0)
+AREA INTERIOR: (L0, T0, R0, B0)
+
+VENTANA: ''
+PID: 10896 HANDLE: 0x806d0
+CLASE: ADODB.AsyncEventMessenger
+VISIBLE: False
+HABILITADA: True
+RECTANGULO: (L0, T0, R136, B39)
+AREA INTERIOR: (L0, T0, R130, B10)
+
+VENTANA: ''
+PID: 10896 HANDLE: 0x1402a4
+CLASE: ADODB.AsyncEventMessenger
+VISIBLE: False
+HABILITADA: True
+RECTANGULO: (L0, T0, R136, B39)
+AREA INTERIOR: (L0, T0, R130, B10)
+
+VENTANA: ''
+PID: 10896 HANDLE: 0x280426
+CLASE: TPUtilWindow
+VISIBLE: False
+HABILITADA: True
+RECTANGULO: (L0, T0, R0, B0)
+AREA INTERIOR: (L0, T0, R0, B0)
+
+VENTANA: ''
+PID: 10896 HANDLE: 0xc0718
+CLASE: TPUtilWindow
+VISIBLE: False
+HABILITADA: True
+RECTANGULO: (L0, T0, R0, B0)
+AREA INTERIOR: (L0, T0, R0, B0)
+
+VENTANA: ''
+PID: 10896 HANDLE: 0x140498
+CLASE: TPUtilWindow
+VISIBLE: False
+HABILITADA: True
+RECTANGULO: (L0, T0, R0, B0)
+AREA INTERIOR: (L0, T0, R0, B0)
+
+VENTANA: ''
+PID: 10896 HANDLE: 0xc0714
+CLASE: TPUtilWindow
+VISIBLE: False
+HABILITADA: True
+RECTANGULO: (L0, T0, R0, B0)
+AREA INTERIOR: (L0, T0, R0, B0)
+
+VENTANA: ''
+PID: 10896 HANDLE: 0x3c04ec
+CLASE: TPUtilWindow
+VISIBLE: False
+HABILITADA: True
+RECTANGULO: (L0, T0, R0, B0)
+AREA INTERIOR: (L0, T0, R0, B0)
+
+VENTANA: 'GDI+ Window (PolarisFacturacion.exe)'
+PID: 10896 HANDLE: 0x80532
+CLASE: GDI+ Hook Window Class
+VISIBLE: False
+HABILITADA: True
+RECTANGULO: (L0, T0, R1, B1)
+AREA INTERIOR: (L0, T0, R1, B1)
+
+VENTANA: ''
+PID: 10896 HANDLE: 0x1406a4
+CLASE: TPUtilWindow
+VISIBLE: False
+HABILITADA: True
+RECTANGULO: (L0, T0, R0, B0)
+AREA INTERIOR: (L0, T0, R0, B0)
+
+VENTANA: ''
+PID: 10896 HANDLE: 0xb04d2
+CLASE: TPUtilWindow
+VISIBLE: False
+HABILITADA: True
+RECTANGULO: (L0, T0, R0, B0)
+AREA INTERIOR: (L0, T0, R0, B0)
+
+VENTANA: ''
+PID: 10896 HANDLE: 0x16055c
+CLASE: TPUtilWindow
+VISIBLE: False
+HABILITADA: True
+RECTANGULO: (L0, T0, R0, B0)
+AREA INTERIOR: (L0, T0, R0, B0)
+
+VENTANA: ''
+PID: 10896 HANDLE: 0x906fe
+CLASE: TPUtilWindow
+VISIBLE: False
+HABILITADA: True
+RECTANGULO: (L0, T0, R0, B0)
+AREA INTERIOR: (L0, T0, R0, B0)
+
+VENTANA: 'M'
+PID: 10896 HANDLE: 0xe04b6
+CLASE: MSCTFIME UI
+VISIBLE: False
+HABILITADA: False
+RECTANGULO: (L0, T0, R0, B0)
+AREA INTERIOR: (L0, T0, R0, B0)
+
+VENTANA: 'Default IME'
+PID: 10896 HANDLE: 0x806ca
+CLASE: IME
+VISIBLE: False
+HABILITADA: False
+RECTANGULO: (L0, T0, R0, B0)
+AREA INTERIOR: (L0, T0, R0, B0)

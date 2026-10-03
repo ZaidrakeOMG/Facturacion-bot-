@@ -1,0 +1,41 @@
+{
+  "app": {
+    "nombre": "ARY Facturacion Bot",
+    "correo": "emisioncfdi@grupoary.com",
+    "intervalo_segundos": 20,
+    "modo_prueba": true,
+    "auto_responder_faltantes": false,
+    "auto_responder_completada": false,
+    "asunto_palabras": [
+      "FACTURA",
+      "CFDI"
+    ]
+  },
+  "gmail": {
+    "credentials_file": "credentials.json",
+    "token_file": "token.json",
+    "labels": {
+      "procesando": "ARYBOT_PROCESANDO",
+      "esperando": "ARYBOT_ESPERANDO_DATOS",
+      "prueba_ok": "ARYBOT_PRUEBA_OK",
+      "procesado": "ARYBOT_PROCESADO",
+      "error": "ARYBOT_ERROR"
+    },
+    "cuenta_esperada": "emisioncfdi@grupoary.com"
+  },
+  "polaris": {
+    "executable": "C:/Polaris/PolarisFacturacion.exe",
+    "usuario": "FACTURA",
+    "servicio_credencial_windows": "ARY_FACTURACION_BOT_POLARIS",
+    "ventana_principal_regex": ".*Polaris Facturacion.*",
+    "ventana_login_regex": ".*Entrada al Sistema.*Polaris.*",
+    "espera_corta": 0.5,
+    "espera_media": 1.5,
+    "espera_larga": 6.0,
+    "espera_timbrado": 45.0
+  },
+  "ocr": {
+    "tesseract_cmd": "",
+    "idiomas": "spa+eng"
+  }
+}

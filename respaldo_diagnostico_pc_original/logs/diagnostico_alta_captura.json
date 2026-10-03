@@ -1,0 +1,20 @@
+{
+  "version": "3.1.5",
+  "campo": "idcif",
+  "resultado": "CONFIRMADA_WM_GETTEXT",
+  "clase_control": "TcxCustomInnerTextEdit",
+  "longitud_esperada": 11,
+  "lecturas": [
+    {
+      "canal": "WM_GETTEXT",
+      "longitud": 11,
+      "coincide": true
+    },
+    {
+      "canal": "WM_GETTEXT",
+      "longitud": 11,
+      "coincide": true
+    }
+  ],
+  "nota": "Sin valores ni hashes de datos del cliente. No prueba alta guardada."
+}

@@ -1,0 +1,13 @@
+{
+  "puerto": 8765,
+  "origenes_permitidos": [
+    "http://127.0.0.1:8765",
+    "http://localhost:8765"
+  ],
+  "https_publico": false,
+  "proxy_confiable": "",
+  "permitir_facturacion_real": false,
+  "max_solicitudes_pendientes": 100,
+  "limite_envios_10_minutos": 8,
+  "escuchar_en": "127.0.0.1"
+}

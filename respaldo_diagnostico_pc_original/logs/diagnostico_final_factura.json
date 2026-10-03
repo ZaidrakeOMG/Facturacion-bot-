@@ -1,0 +1,765 @@
+{
+  "version": "3.1.6",
+  "controles": [
+    {
+      "clase": "#32770",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        594,
+        367,
+        1011,
+        536
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "Button",
+      "etiqueta": "ACEPTAR",
+      "rect": [
+        918,
+        500,
+        993,
+        523
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "Static",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        618,
+        416,
+        650,
+        448
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "Static",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        659,
+        416,
+        980,
+        470
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TForm_MuestraAvance",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        563,
+        376,
+        1037,
+        476
+      ],
+      "habilitado": false
+    },
+    {
+      "clase": "TPanel",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        563,
+        376,
+        1037,
+        476
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TPanel",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        749,
+        474,
+        934,
+        515
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxProgressBar",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        578,
+        407,
+        1020,
+        442
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TForm_Menu",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        -8,
+        -8,
+        1608,
+        860
+      ],
+      "habilitado": false
+    },
+    {
+      "clase": "TToolBar",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        0,
+        43,
+        1600,
+        87
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TStatusBar",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        0,
+        833,
+        1600,
+        852
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "MDIClient",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        0,
+        87,
+        1600,
+        833
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TForm_FacturacionF",
+      "etiqueta": "FACTURACIONDEEFECTIVO",
+      "rect": [
+        385,
+        166,
+        1218,
+        804
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxPageControl",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        393,
+        197,
+        1210,
+        502
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxTabSheet",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        394,
+        217,
+        1209,
+        501
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxLookupComboBox",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        619,
+        289,
+        921,
+        310
+      ],
+      "habilitado": false
+    },
+    {
+      "clase": "TcxCustomComboBoxInnerEdit",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        622,
+        292,
+        902,
+        305
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxLookupComboBox",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        658,
+        359,
+        921,
+        380
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxCustomComboBoxInnerEdit",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        661,
+        362,
+        902,
+        375
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxLabel",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        494,
+        393,
+        921,
+        414
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxLabel",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        409,
+        395,
+        483,
+        412
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TdxCheckGroupBox",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        408,
+        422,
+        921,
+        486
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxButton",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        728,
+        447,
+        754,
+        471
+      ],
+      "habilitado": false
+    },
+    {
+      "clase": "TcxTextEdit",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        636,
+        449,
+        723,
+        470
+      ],
+      "habilitado": false
+    },
+    {
+      "clase": "TcxCustomInnerTextEdit",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        639,
+        452,
+        721,
+        465
+      ],
+      "habilitado": false
+    },
+    {
+      "clase": "TcxLabel",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        582,
+        450,
+        626,
+        467
+      ],
+      "habilitado": false
+    },
+    {
+      "clase": "TcxLookupComboBox",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        457,
+        449,
+        566,
+        470
+      ],
+      "habilitado": false
+    },
+    {
+      "clase": "TcxCustomComboBoxInnerEdit",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        460,
+        452,
+        547,
+        465
+      ],
+      "habilitado": false
+    },
+    {
+      "clase": "TcxLabel",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        425,
+        450,
+        453,
+        467
+      ],
+      "habilitado": false
+    },
+    {
+      "clase": "TcxLabel",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        511,
+        319,
+        567,
+        350
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxLookupComboBox",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        575,
+        323,
+        762,
+        344
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxCustomComboBoxInnerEdit",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        578,
+        326,
+        743,
+        339
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxLookupComboBox",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        460,
+        359,
+        580,
+        380
+      ],
+      "habilitado": false
+    },
+    {
+      "clase": "TcxCustomComboBoxInnerEdit",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        463,
+        362,
+        561,
+        375
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxLabel",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        409,
+        361,
+        451,
+        378
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxLabel",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        599,
+        361,
+        648,
+        378
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxTextEdit",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        827,
+        323,
+        921,
+        344
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxCustomInnerTextEdit",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        830,
+        326,
+        919,
+        339
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxLabel",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        778,
+        325,
+        817,
+        342
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxLabel",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        549,
+        284,
+        611,
+        314
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxLabel",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        458,
+        289,
+        535,
+        310
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxCheckBox",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        409,
+        321,
+        506,
+        342
+      ],
+      "habilitado": false
+    },
+    {
+      "clase": "TcxMemo",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        949,
+        351,
+        1180,
+        486
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxCustomInnerMemo",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        949,
+        351,
+        1180,
+        486
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TDateTimePicker",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        955,
+        309,
+        1051,
+        330
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TPanel",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        949,
+        241,
+        1181,
+        284
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxLabel",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        950,
+        242,
+        1180,
+        265
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxLabel",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        950,
+        264,
+        1180,
+        283
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxLabel",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        458,
+        261,
+        921,
+        283
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxLabel",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        629,
+        233,
+        755,
+        254
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxTextEdit",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        458,
+        233,
+        535,
+        254
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxCustomInnerTextEdit",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        461,
+        236,
+        533,
+        249
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxPageControl",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        393,
+        502,
+        1210,
+        738
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxTabSheet",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        394,
+        524,
+        1209,
+        737
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxGrid",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        394,
+        574,
+        1209,
+        737
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxGridSite",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        396,
+        576,
+        1207,
+        735
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TPanel",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        394,
+        524,
+        1209,
+        574
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxTextEdit",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        525,
+        545,
+        578,
+        566
+      ],
+      "habilitado": false
+    },
+    {
+      "clase": "TcxCustomInnerTextEdit",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        528,
+        548,
+        576,
+        561
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxTextEdit",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        408,
+        545,
+        516,
+        566
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TcxCustomInnerTextEdit",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        411,
+        548,
+        514,
+        561
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TBitBtn",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        687,
+        535,
+        790,
+        566
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TBitBtn",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        585,
+        535,
+        686,
+        566
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TStatusBar",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        393,
+        779,
+        1210,
+        796
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TPanel",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        393,
+        738,
+        1210,
+        779
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TBitBtn",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        1029,
+        742,
+        1120,
+        776
+      ],
+      "habilitado": false
+    },
+    {
+      "clase": "TBitBtn",
+      "etiqueta": "ACEPTAR",
+      "rect": [
+        935,
+        742,
+        1026,
+        776
+      ],
+      "habilitado": false
+    },
+    {
+      "clase": "TBitBtn",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        1123,
+        742,
+        1207,
+        776
+      ],
+      "habilitado": true
+    },
+    {
+      "clase": "TApplication",
+      "etiqueta": "(valor omitido)",
+      "rect": [
+        -3,
+        -3,
+        1603,
+        903
+      ],
+      "habilitado": false
+    }
+  ],
+  "nota": "Sin correos, RFC, folios, valores de campos ni contraseñas."
+}

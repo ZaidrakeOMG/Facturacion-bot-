@@ -1,0 +1,54 @@
+ARY — MODO RÁPIDO INTEGRADO EN EL PAQUETE COMPLETO R1
+====================================================
+
+Este paquete YA INCLUYE el proyecto R1 y el modo rápido.
+No necesitas descargar ni aplicar un parche por separado.
+Lee primero 00_LEEME_ZIP_COMPLETO.txt.
+
+1. Cierra las otras versiones del bot.
+2. En una carpeta nueva, ejecuta 1_PREPARAR_VM.bat una vez.
+3. Cuando indique ENTORNO OK, abre INICIAR_RAPIDO.bat.
+4. Conserva MODO SEGURO para la primera prueba.
+
+Al abrir aparecerá "MODO RÁPIDO R1 activo" en el registro del bot.
+Usa la .venv, configuración, contraseña y datos ya existentes de esa carpeta.
+El parche no cambia la opción MODO SEGURO: conserva tu configuración actual.
+
+PARA VOLVER AL ANTERIOR
+Cierra el bot y abre 2_INICIAR_VM.bat. No debes desinstalar ni borrar nada.
+El perfil rápido se carga sólo al abrir INICIAR_RAPIDO.bat; no modifica los
+archivos originales ni deja ajustes persistentes en Windows.
+
+QUÉ SE AGILIZA
+- Si el login acaba de validar la principal y ésta sigue idéntica, no se repite
+  inmediatamente la misma espera de estabilidad de 1.8 segundos.
+- Si Polaris ya está al frente y su ventana no cambió, no se vuelve a activar
+  ni se añade la pausa fija de activación.
+- Las pulsaciones de menú conservan foco/oclusión y esperan submenús y cuadros
+  reales, con una pausa adicional de 0.12 s en vez de 0.40 s.
+- Si Polaris se mueve, se redimensiona, cambia de título, se bloquea o aparece
+  el login, NO se reutiliza la validación: se conservan las esperas normales.
+
+QUÉ NO SE TOCA
+No se cambian coordenadas, resolución, escala, registro, login/escritura,
+lectura de campos, fecha, RFC, cliente, folio, series, cierre de ventanas,
+confirmaciones, timbrado, correo, cola, base de datos ni credenciales.
+No se activa Timings.fast ni se pone time.sleep a cero.
+No se cambia PyAutoGUI.PAUSE ni su parada de emergencia.
+La revisión de ventanas y cambio de estación se mide, pero conserva su lógica.
+
+SI SIGUE LENTO
+El archivo logs\tiempos_rapido.jsonl guarda paso/duración/resultado, sin valores
+de clientes o contraseñas. Muestra en qué parte se gastó realmente el tiempo.
+Los tiempos de "Confirmar estación" incluyen la revisión de ventanas: no se
+suman como si fueran duraciones independientes.
+Si no abre, consulta logs\arranque_rapido.txt. Se muestran errores de entorno.
+El parche verifica que cuatro archivos base sean los de R1 para no mezclarse
+silenciosamente con los otros ZIP que se probaron antes.
+
+ALCANCE
+Se verificaron pruebas con ventanas simuladas; no se ejecutó contra la VM real.
+No se promete un porcentaje de mejora ni un tiempo por factura. El video
+compartido muestra sólo el arranque y ventanas iniciales, no una factura completa.
+Las validaciones existentes se conservan; esto no certifica ausencia de fallos
+en la aplicación original. Ver INFORME_MODO_RAPIDO_R1.txt.

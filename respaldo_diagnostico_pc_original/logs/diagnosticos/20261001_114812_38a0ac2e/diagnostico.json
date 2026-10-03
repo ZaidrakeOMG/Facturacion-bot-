@@ -1,0 +1,3757 @@
+{
+  "id": "20261001_114812_38a0ac2e",
+  "fecha": "2026-10-01T11:48:12-06:00",
+  "manual": false,
+  "etapa": "FACTURACION: preparar Polaris / estación",
+  "error": "PolarisError: Polaris abrió, pero su ventana principal no quedó estable/lista a tiempo.",
+  "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\AUX_SISTEMAS\\Desktop\\ARY_FACTURACION_BOT\\ARY_FACTURACION_BOT\\arybot\\cola_operaciones.py\", line 119, in ejecutar_una\n    result=self.polaris.invoice(como_solicitud(data),test_mode=safe)\n  File \"C:\\Users\\AUX_SISTEMAS\\Desktop\\ARY_FACTURACION_BOT\\ARY_FACTURACION_BOT\\arybot\\diagnostico.py\", line 181, in wrapped\n    result=fn(self,*args,**kwargs)\n  File \"C:\\Users\\AUX_SISTEMAS\\Desktop\\ARY_FACTURACION_BOT\\ARY_FACTURACION_BOT\\arybot\\polaris.py\", line 2018, in invoice\n    main=self.ensure_ready()\n  File \"C:\\Users\\AUX_SISTEMAS\\Desktop\\ARY_FACTURACION_BOT\\ARY_FACTURACION_BOT\\arybot\\polaris.py\", line 499, in ensure_ready\n    main=self._esperar_principal_estable(timeout=35.0,stable_seconds=2.0)\n  File \"C:\\Users\\AUX_SISTEMAS\\Desktop\\ARY_FACTURACION_BOT\\ARY_FACTURACION_BOT\\arybot\\polaris.py\", line 402, in _esperar_principal_estable\n    raise PolarisError(\"Polaris abrió, pero su ventana principal no quedó estable/lista a tiempo.\")\narybot.polaris.PolarisError: Polaris abrió, pero su ventana principal no quedó estable/lista a tiempo.\n",
+  "contexto": {
+    "tipo": "FACTURA",
+    "id_solicitud": "8d5b81fe04ed4a3d8158bc2c6a3d0e50",
+    "origen": "Portal web"
+  },
+  "ultimo_evento": {
+    "fecha": "2026-10-01T11:48:12.968-06:00",
+    "etapa": "LOG",
+    "estado": "INFO",
+    "detalle": "DIAGNÓSTICO 20261001_114812_ebe15fbd: PolarisError: Polaris abrió, pero su ventana principal no quedó estable/lista a tiempo.",
+    "datos": {}
+  },
+  "ventanas": [
+    {
+      "nivel": 0,
+      "hwnd": 722670,
+      "parent": 0,
+      "clase": "ThumbnailDeviceHelperWnd",
+      "titulo": "",
+      "rect": [
+        0,
+        0,
+        1,
+        1
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 591078,
+      "parent": 0,
+      "clase": "ThumbnailDeviceHelperWnd",
+      "titulo": "",
+      "rect": [
+        0,
+        0,
+        1,
+        1
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 394662,
+      "parent": 0,
+      "clase": "ThumbnailDeviceHelperWnd",
+      "titulo": "",
+      "rect": [
+        0,
+        0,
+        1,
+        1
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 65758,
+      "parent": 0,
+      "clase": "Shell_TrayWnd",
+      "titulo": "",
+      "rect": [
+        0,
+        852,
+        1600,
+        900
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 66072,
+      "parent": 65758,
+      "clase": "Windows.UI.Composition.DesktopWindowContentBridge",
+      "titulo": "DesktopWindowXamlSource",
+      "rect": [
+        0,
+        852,
+        1600,
+        900
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 66074,
+      "parent": 65758,
+      "clase": "Windows.UI.Input.InputSite.WindowClass",
+      "titulo": "",
+      "rect": [
+        0,
+        852,
+        0,
+        852
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 65764,
+      "parent": 65758,
+      "clase": "TrayDummySearchControl",
+      "titulo": "",
+      "rect": [
+        0,
+        852,
+        0,
+        852
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 65766,
+      "parent": 65758,
+      "clase": "TrayNotifyWnd",
+      "titulo": "",
+      "rect": [
+        1386,
+        852,
+        1600,
+        900
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 65772,
+      "parent": 65758,
+      "clase": "ReBarWindow32",
+      "titulo": "",
+      "rect": [
+        267,
+        852,
+        844,
+        900
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 65774,
+      "parent": 65758,
+      "clase": "MSTaskSwWClass",
+      "titulo": "Aplicaciones en ejecución",
+      "rect": [
+        267,
+        852,
+        844,
+        900
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 65784,
+      "parent": 0,
+      "clase": "Shell_SecondaryTrayWnd",
+      "titulo": "",
+      "rect": [
+        1600,
+        1032,
+        3520,
+        1080
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 66106,
+      "parent": 65784,
+      "clase": "Windows.UI.Composition.DesktopWindowContentBridge",
+      "titulo": "DesktopWindowXamlSource",
+      "rect": [
+        1600,
+        1032,
+        3520,
+        1080
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 66108,
+      "parent": 65784,
+      "clase": "Windows.UI.Input.InputSite.WindowClass",
+      "titulo": "",
+      "rect": [
+        1600,
+        1032,
+        1600,
+        1032
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 65788,
+      "parent": 65784,
+      "clase": "WorkerW",
+      "titulo": "",
+      "rect": [
+        2029,
+        1032,
+        2606,
+        1080
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 65790,
+      "parent": 65784,
+      "clase": "MSTaskListWClass",
+      "titulo": "",
+      "rect": [
+        2029,
+        1032,
+        2606,
+        1080
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 460098,
+      "parent": 0,
+      "clase": "Chrome_WidgetWin_1",
+      "titulo": "Descargar TXT Facturación - Google Chrome",
+      "rect": [
+        1593,
+        0,
+        2567,
+        1039
+      ],
+      "habilitado": true,
+      "foco": true
+    },
+    {
+      "nivel": 1,
+      "hwnd": 656908,
+      "parent": 460098,
+      "clase": "Chrome_RenderWidgetHostHWND",
+      "titulo": "Chrome Legacy Window",
+      "rect": [
+        1601,
+        87,
+        2559,
+        1031
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 67112,
+      "parent": 460098,
+      "clase": "Intermediate D3D Window",
+      "titulo": "",
+      "rect": [
+        1601,
+        0,
+        2559,
+        1031
+      ],
+      "habilitado": false,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 4326342,
+      "parent": 0,
+      "clase": "TkTopLevel",
+      "titulo": "ARY Facturación Bot v4.3 fecha + Portal integrado 1.2",
+      "rect": [
+        -8,
+        -8,
+        1608,
+        860
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1836270,
+      "parent": 4326342,
+      "clase": "TkChild",
+      "titulo": "",
+      "rect": [
+        0,
+        23,
+        1600,
+        852
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 330616,
+      "parent": 4326342,
+      "clase": "TkChild",
+      "titulo": "",
+      "rect": [
+        0,
+        23,
+        1600,
+        852
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 265144,
+      "parent": 4326342,
+      "clase": "TkChild",
+      "titulo": "",
+      "rect": [
+        12,
+        108,
+        1588,
+        840
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 265148,
+      "parent": 4326342,
+      "clase": "TkChild",
+      "titulo": "",
+      "rect": [
+        13,
+        131,
+        1585,
+        837
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1050750,
+      "parent": 4326342,
+      "clase": "TkChild",
+      "titulo": "",
+      "rect": [
+        23,
+        217,
+        1575,
+        827
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 265112,
+      "parent": 4326342,
+      "clase": "TkChild",
+      "titulo": "",
+      "rect": [
+        23,
+        188,
+        135,
+        212
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 265110,
+      "parent": 4326342,
+      "clase": "TkChild",
+      "titulo": "",
+      "rect": [
+        23,
+        176,
+        1575,
+        178
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 265106,
+      "parent": 4326342,
+      "clase": "TkChild",
+      "titulo": "",
+      "rect": [
+        23,
+        141,
+        1575,
+        166
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 265108,
+      "parent": 4326342,
+      "clase": "TkChild",
+      "titulo": "",
+      "rect": [
+        445,
+        141,
+        611,
+        166
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 265104,
+      "parent": 4326342,
+      "clase": "TkChild",
+      "titulo": "",
+      "rect": [
+        303,
+        141,
+        433,
+        166
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 265102,
+      "parent": 4326342,
+      "clase": "TkChild",
+      "titulo": "",
+      "rect": [
+        215,
+        141,
+        291,
+        166
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 265058,
+      "parent": 4326342,
+      "clase": "TkChild",
+      "titulo": "",
+      "rect": [
+        127,
+        141,
+        203,
+        166
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 265162,
+      "parent": 4326342,
+      "clase": "TkChild",
+      "titulo": "",
+      "rect": [
+        23,
+        141,
+        115,
+        166
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 265086,
+      "parent": 4326342,
+      "clase": "TkChild",
+      "titulo": "",
+      "rect": [
+        12,
+        81,
+        1588,
+        100
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 265150,
+      "parent": 4326342,
+      "clase": "TkChild",
+      "titulo": "",
+      "rect": [
+        397,
+        81,
+        539,
+        100
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 265154,
+      "parent": 4326342,
+      "clase": "TkChild",
+      "titulo": "",
+      "rect": [
+        221,
+        81,
+        377,
+        100
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 265088,
+      "parent": 4326342,
+      "clase": "TkChild",
+      "titulo": "",
+      "rect": [
+        12,
+        81,
+        201,
+        100
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 265076,
+      "parent": 4326342,
+      "clase": "TkChild",
+      "titulo": "",
+      "rect": [
+        12,
+        35,
+        1588,
+        71
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 265084,
+      "parent": 4326342,
+      "clase": "TkChild",
+      "titulo": "",
+      "rect": [
+        1338,
+        42,
+        1588,
+        63
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 265078,
+      "parent": 4326342,
+      "clase": "TkChild",
+      "titulo": "",
+      "rect": [
+        262,
+        42,
+        596,
+        63
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 265056,
+      "parent": 4326342,
+      "clase": "TkChild",
+      "titulo": "",
+      "rect": [
+        12,
+        35,
+        250,
+        71
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 2556990,
+      "parent": 0,
+      "clase": "TscShellContainerClass",
+      "titulo": "10.20.20.154 - Conexión a Escritorio remoto",
+      "rect": [
+        0,
+        0,
+        1600,
+        900
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1182130,
+      "parent": 2556990,
+      "clase": "TscShellAxHostClass",
+      "titulo": "",
+      "rect": [
+        0,
+        0,
+        1600,
+        900
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 920400,
+      "parent": 2556990,
+      "clase": "ATL:00007FFE8E1CF010",
+      "titulo": "",
+      "rect": [
+        0,
+        0,
+        1600,
+        900
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 2033490,
+      "parent": 2556990,
+      "clase": "UIMainClass",
+      "titulo": "10.20.20.154 - Conexión a Escritorio remoto",
+      "rect": [
+        0,
+        0,
+        1600,
+        900
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 134160,
+      "parent": 2556990,
+      "clase": "UIContainerClass",
+      "titulo": "",
+      "rect": [
+        0,
+        0,
+        1600,
+        900
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 134166,
+      "parent": 2556990,
+      "clase": "IHWindowClass",
+      "titulo": "Input Capture Window",
+      "rect": [
+        0,
+        0,
+        1600,
+        900
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 134176,
+      "parent": 2556990,
+      "clase": "OPContainerClass",
+      "titulo": "Output Painter Window",
+      "rect": [
+        0,
+        0,
+        1600,
+        900
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 265324,
+      "parent": 2556990,
+      "clase": "OPWindowClass",
+      "titulo": "Output Painter DX Child Window",
+      "rect": [
+        0,
+        0,
+        1600,
+        900
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 395294,
+      "parent": 0,
+      "clase": "Chrome_WidgetWin_1",
+      "titulo": "INICIAR.bat - ARY_FACTURACION_BOT - Visual Studio Code",
+      "rect": [
+        -8,
+        -8,
+        1608,
+        860
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 526330,
+      "parent": 395294,
+      "clase": "Chrome_RenderWidgetHostHWND",
+      "titulo": "Chrome Legacy Window",
+      "rect": [
+        0,
+        0,
+        1600,
+        852
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1246788,
+      "parent": 395294,
+      "clase": "Intermediate D3D Window",
+      "titulo": "",
+      "rect": [
+        0,
+        0,
+        1600,
+        852
+      ],
+      "habilitado": false,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 461898,
+      "parent": 0,
+      "clase": "CabinetWClass",
+      "titulo": "Descargas - Explorador de archivos",
+      "rect": [
+        339,
+        52,
+        1551,
+        688
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 68768,
+      "parent": 461898,
+      "clase": "TITLE_BAR_SCAFFOLDING_WINDOW_CLASS",
+      "titulo": "",
+      "rect": [
+        634,
+        52,
+        1543,
+        87
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 396380,
+      "parent": 461898,
+      "clase": "ShellTabWindowClass",
+      "titulo": "Descargas",
+      "rect": [
+        347,
+        188,
+        1543,
+        680
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 134280,
+      "parent": 461898,
+      "clase": "DUIViewWndClassName",
+      "titulo": "",
+      "rect": [
+        347,
+        188,
+        1543,
+        680
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 134278,
+      "parent": 461898,
+      "clase": "DirectUIHWND",
+      "titulo": "",
+      "rect": [
+        347,
+        188,
+        1543,
+        680
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 134274,
+      "parent": 461898,
+      "clase": "CtrlNotifySink",
+      "titulo": "",
+      "rect": [
+        349,
+        188,
+        657,
+        656
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 134272,
+      "parent": 461898,
+      "clase": "NamespaceTreeControl",
+      "titulo": "Control de árbol de espacios de nombres",
+      "rect": [
+        349,
+        188,
+        657,
+        656
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 134268,
+      "parent": 461898,
+      "clase": "SysTreeView32",
+      "titulo": "Panel de navegación",
+      "rect": [
+        349,
+        188,
+        657,
+        656
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 396336,
+      "parent": 461898,
+      "clase": "CtrlNotifySink",
+      "titulo": "",
+      "rect": [
+        661,
+        188,
+        1241,
+        656
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1050984,
+      "parent": 461898,
+      "clase": "SHELLDLL_DefView",
+      "titulo": "ShellView",
+      "rect": [
+        661,
+        188,
+        1241,
+        656
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1509258,
+      "parent": 461898,
+      "clase": "DirectUIHWND",
+      "titulo": "",
+      "rect": [
+        661,
+        188,
+        1241,
+        656
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1968824,
+      "parent": 461898,
+      "clase": "CtrlNotifySink",
+      "titulo": "",
+      "rect": [
+        1224,
+        188,
+        1241,
+        656
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 985382,
+      "parent": 461898,
+      "clase": "ScrollBar",
+      "titulo": "",
+      "rect": [
+        1224,
+        188,
+        1241,
+        656
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 134292,
+      "parent": 461898,
+      "clase": "CtrlNotifySink",
+      "titulo": "",
+      "rect": [
+        1244,
+        188,
+        1543,
+        656
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 199820,
+      "parent": 461898,
+      "clase": "DetailsPaneHwndHostClass",
+      "titulo": "Panel de detalles",
+      "rect": [
+        1244,
+        188,
+        1543,
+        656
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 461908,
+      "parent": 461898,
+      "clase": "Microsoft.UI.Content.DesktopChildSiteBridge",
+      "titulo": "",
+      "rect": [
+        1244,
+        188,
+        1543,
+        656
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 200354,
+      "parent": 461898,
+      "clase": "Microsoft.UI.Content.DesktopChildSiteBridge",
+      "titulo": "",
+      "rect": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 68776,
+      "parent": 461898,
+      "clase": "InputNonClientPointerSource",
+      "titulo": "Non Client Input Sink Window",
+      "rect": [
+        347,
+        52,
+        347,
+        52
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 68772,
+      "parent": 461898,
+      "clase": "Microsoft.UI.Content.DesktopChildSiteBridge",
+      "titulo": "",
+      "rect": [
+        347,
+        54,
+        1543,
+        188
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 132278,
+      "parent": 0,
+      "clase": "Chrome_WidgetWin_1",
+      "titulo": "[Doblado]Encontré a un genio sin hogar para salvar mi empresa#Venganza#Superación#CEO$Traición - YouTube - Brave",
+      "rect": [
+        2553,
+        0,
+        3527,
+        1039
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 263360,
+      "parent": 132278,
+      "clase": "Chrome_RenderWidgetHostHWND",
+      "titulo": "Chrome Legacy Window",
+      "rect": [
+        2561,
+        81,
+        3519,
+        1031
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 66786,
+      "parent": 132278,
+      "clase": "Intermediate D3D Window",
+      "titulo": "",
+      "rect": [
+        2561,
+        0,
+        3519,
+        1031
+      ],
+      "habilitado": false,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 3475658,
+      "parent": 0,
+      "clase": "TppPrintPreview",
+      "titulo": "Presentación Preliminar",
+      "rect": [
+        -8,
+        -8,
+        1608,
+        860
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 659098,
+      "parent": 3475658,
+      "clase": "TppEdit",
+      "titulo": "(valor omitido)",
+      "rect": [
+        0,
+        23,
+        0,
+        44
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 330906,
+      "parent": 3475658,
+      "clase": "TPanel",
+      "titulo": "",
+      "rect": [
+        184,
+        50,
+        1600,
+        830
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 2295418,
+      "parent": 3475658,
+      "clase": "TppViewer",
+      "titulo": "",
+      "rect": [
+        186,
+        52,
+        1598,
+        828
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1443266,
+      "parent": 3475658,
+      "clase": "TPanel",
+      "titulo": "",
+      "rect": [
+        0,
+        50,
+        182,
+        830
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1837260,
+      "parent": 3475658,
+      "clase": "TppAlignmentPanel",
+      "titulo": "",
+      "rect": [
+        0,
+        50,
+        182,
+        830
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 2166102,
+      "parent": 3475658,
+      "clase": "TNotebook",
+      "titulo": "",
+      "rect": [
+        3,
+        53,
+        179,
+        827
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 331458,
+      "parent": 3475658,
+      "clase": "TPage",
+      "titulo": "Miniaturas",
+      "rect": [
+        3,
+        53,
+        179,
+        827
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 985804,
+      "parent": 3475658,
+      "clase": "TppThumbnailViewer",
+      "titulo": "",
+      "rect": [
+        3,
+        53,
+        179,
+        827
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 920406,
+      "parent": 3475658,
+      "clase": "TppDock",
+      "titulo": "",
+      "rect": [
+        0,
+        23,
+        1600,
+        50
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 985828,
+      "parent": 3475658,
+      "clase": "TppToolbar",
+      "titulo": "",
+      "rect": [
+        0,
+        23,
+        608,
+        50
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 985440,
+      "parent": 3475658,
+      "clase": "TppTBXStatusBar",
+      "titulo": "",
+      "rect": [
+        0,
+        830,
+        1600,
+        852
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 1508718,
+      "parent": 0,
+      "clase": "TForm_Menu",
+      "titulo": "Control de Flotillas--> ARY GASOLINERIAS",
+      "rect": [
+        -8,
+        -8,
+        1608,
+        860
+      ],
+      "habilitado": false,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 919960,
+      "parent": 1508718,
+      "clase": "TStatusBar",
+      "titulo": "",
+      "rect": [
+        0,
+        833,
+        1600,
+        852
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 2361362,
+      "parent": 1508718,
+      "clase": "TToolBar",
+      "titulo": "",
+      "rect": [
+        0,
+        43,
+        1600,
+        81
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1116596,
+      "parent": 1508718,
+      "clase": "MDIClient",
+      "titulo": "",
+      "rect": [
+        0,
+        81,
+        1600,
+        833
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1378702,
+      "parent": 1508718,
+      "clase": "TForm_CodigoBarras",
+      "titulo": "Generar Codigo de Barras",
+      "rect": [
+        428,
+        238,
+        1175,
+        676
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 396026,
+      "parent": 1508718,
+      "clase": "TStatusBar",
+      "titulo": "",
+      "rect": [
+        436,
+        651,
+        1167,
+        668
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1706772,
+      "parent": 1508718,
+      "clase": "TcxGrid",
+      "titulo": "",
+      "rect": [
+        436,
+        321,
+        1167,
+        554
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 396028,
+      "parent": 1508718,
+      "clase": "TcxGridSite",
+      "titulo": "",
+      "rect": [
+        438,
+        323,
+        1165,
+        552
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 2165422,
+      "parent": 1508718,
+      "clase": "TPanel",
+      "titulo": "",
+      "rect": [
+        436,
+        554,
+        1167,
+        604
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 2689290,
+      "parent": 1508718,
+      "clase": "TcxCheckBox",
+      "titulo": "&Solo Vehículos Nuevos",
+      "rect": [
+        1021,
+        570,
+        1149,
+        591
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1247706,
+      "parent": 1508718,
+      "clase": "TcxButton",
+      "titulo": "Buscar Vehículo",
+      "rect": [
+        437,
+        562,
+        552,
+        595
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 657716,
+      "parent": 1508718,
+      "clase": "TPanel",
+      "titulo": "",
+      "rect": [
+        436,
+        604,
+        1167,
+        651
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 2689508,
+      "parent": 1508718,
+      "clase": "TcxTextEdit",
+      "titulo": "(valor omitido)",
+      "rect": [
+        482,
+        616,
+        895,
+        637
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 3671728,
+      "parent": 1508718,
+      "clase": "TcxCustomInnerTextEdit",
+      "titulo": "(valor omitido)",
+      "rect": [
+        485,
+        619,
+        893,
+        632
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 854328,
+      "parent": 1508718,
+      "clase": "TBitBtn",
+      "titulo": "&Cerrar",
+      "rect": [
+        1077,
+        612,
+        1153,
+        645
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1444462,
+      "parent": 1508718,
+      "clase": "TBitBtn",
+      "titulo": "&Imprimir",
+      "rect": [
+        989,
+        612,
+        1074,
+        645
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 723170,
+      "parent": 1508718,
+      "clase": "TPanel",
+      "titulo": "",
+      "rect": [
+        436,
+        269,
+        1167,
+        321
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 657968,
+      "parent": 1508718,
+      "clase": "TcxLabel",
+      "titulo": "TRANSPORTES GARZA LEAL",
+      "rect": [
+        563,
+        286,
+        925,
+        307
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 723502,
+      "parent": 1508718,
+      "clase": "TcxTextEdit",
+      "titulo": "(valor omitido)",
+      "rect": [
+        495,
+        286,
+        562,
+        307
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 723500,
+      "parent": 1508718,
+      "clase": "TcxCustomInnerTextEdit",
+      "titulo": "(valor omitido)",
+      "rect": [
+        498,
+        289,
+        560,
+        302
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 1182262,
+      "parent": 0,
+      "clase": "TForm_AcercaDe",
+      "titulo": "",
+      "rect": [
+        489,
+        236,
+        1111,
+        616
+      ],
+      "habilitado": false,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1378586,
+      "parent": 1182262,
+      "clase": "TPanel",
+      "titulo": "",
+      "rect": [
+        497,
+        267,
+        1103,
+        608
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 2689472,
+      "parent": 0,
+      "clase": "TApplication",
+      "titulo": "Polaris Flotillas",
+      "rect": [
+        800,
+        450,
+        800,
+        450
+      ],
+      "habilitado": false,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 69294,
+      "parent": 0,
+      "clase": "WinUIDesktopWin32WindowClass",
+      "titulo": "WhatsApp Image 2026-09-29 at 10.30.09 AM (002).jpeg",
+      "rect": [
+        156,
+        156,
+        1356,
+        774
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 69306,
+      "parent": 69294,
+      "clase": "InputNonClientPointerSource",
+      "titulo": "Non Client Input Sink Window",
+      "rect": [
+        164,
+        156,
+        1348,
+        204
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 69310,
+      "parent": 69294,
+      "clase": "ReunionWindowingCaptionControls",
+      "titulo": "ReunionCaptionControlsWindow",
+      "rect": [
+        1204,
+        156,
+        1348,
+        204
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 69300,
+      "parent": 69294,
+      "clase": "Microsoft.UI.Content.DesktopChildSiteBridge",
+      "titulo": "",
+      "rect": [
+        164,
+        156,
+        1348,
+        766
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 3868380,
+      "parent": 0,
+      "clase": "rctrl_renwnd32",
+      "titulo": "Bandeja de entrada - sistemas1@grupoary.com.mx - Outlook",
+      "rect": [
+        -32000,
+        -32000,
+        -31840,
+        -31972
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 134382,
+      "parent": 3868380,
+      "clase": "NetUINativeHWNDHost",
+      "titulo": "NUIDocumentWindow",
+      "rect": [
+        -32000,
+        -31952,
+        -31952,
+        -31170
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 2099706,
+      "parent": 3868380,
+      "clase": "NetUIHWND",
+      "titulo": "",
+      "rect": [
+        -32000,
+        -31952,
+        -31952,
+        -31170
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 134400,
+      "parent": 3868380,
+      "clase": "AfxWndW",
+      "titulo": "FolderBar",
+      "rect": [
+        -31894,
+        -31910,
+        -31594,
+        -31867
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 134326,
+      "parent": 3868380,
+      "clase": "NetUINativeHWNDHost",
+      "titulo": "NUIDocumentWindow",
+      "rect": [
+        -31894,
+        -31910,
+        -31594,
+        -31867
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 134380,
+      "parent": 3868380,
+      "clase": "NetUIHWND",
+      "titulo": "",
+      "rect": [
+        -31894,
+        -31910,
+        -31594,
+        -31867
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 134322,
+      "parent": 3868380,
+      "clase": "NetUINativeHWNDHost",
+      "titulo": "NUIDocumentWindow",
+      "rect": [
+        -31938,
+        -31910,
+        -31896,
+        -31170
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 4196852,
+      "parent": 3868380,
+      "clase": "NetUIHWND",
+      "titulo": "",
+      "rect": [
+        -31938,
+        -31910,
+        -31896,
+        -31170
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 7406394,
+      "parent": 3868380,
+      "clase": "NetUINativeHWNDHost",
+      "titulo": "NUIDocumentWindow",
+      "rect": [
+        -32000,
+        -32000,
+        -32000,
+        -32000
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1903114,
+      "parent": 3868380,
+      "clase": "NetUIHWND",
+      "titulo": "",
+      "rect": [
+        -32000,
+        -32000,
+        -32000,
+        -32000
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 592982,
+      "parent": 3868380,
+      "clase": "rctrl_renwnd32",
+      "titulo": "",
+      "rect": [
+        -31583,
+        -31909,
+        -30415,
+        -31171
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 2033660,
+      "parent": 3868380,
+      "clase": "AfxWndW",
+      "titulo": "",
+      "rect": [
+        -31583,
+        -31909,
+        -30415,
+        -31171
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 69186,
+      "parent": 3868380,
+      "clase": "#32770",
+      "titulo": "",
+      "rect": [
+        -31583,
+        -31909,
+        -30415,
+        -31171
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 69190,
+      "parent": 3868380,
+      "clase": "Static",
+      "titulo": "Nombre de archivo",
+      "rect": [
+        -31583,
+        -31909,
+        -31583,
+        -31909
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 69206,
+      "parent": 3868380,
+      "clase": "Static",
+      "titulo": "Dimensiones de la imagen:",
+      "rect": [
+        -31577,
+        -31876,
+        -31435,
+        -31861
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 69208,
+      "parent": 3868380,
+      "clase": "RichEdit20WPT",
+      "titulo": "(valor omitido)",
+      "rect": [
+        -31426,
+        -31876,
+        -30421,
+        -31862
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 69216,
+      "parent": 3868380,
+      "clase": "Button",
+      "titulo": "&Volver al mensaje",
+      "rect": [
+        -31577,
+        -31902,
+        -31450,
+        -31879
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 69222,
+      "parent": 3868380,
+      "clase": "Static",
+      "titulo": "",
+      "rect": [
+        -31577,
+        -31858,
+        -30421,
+        -31857
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 69224,
+      "parent": 3868380,
+      "clase": "Static",
+      "titulo": "Datos adjuntos",
+      "rect": [
+        -31583,
+        -31909,
+        -31583,
+        -31909
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 69236,
+      "parent": 3868380,
+      "clase": "rctrl_renwnd32",
+      "titulo": "",
+      "rect": [
+        -31577,
+        -31854,
+        -30421,
+        -31807
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 69238,
+      "parent": 3868380,
+      "clase": "NetUINativeHWNDHost",
+      "titulo": "Datos adjuntos",
+      "rect": [
+        -31577,
+        -31854,
+        -30421,
+        -31807
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 69240,
+      "parent": 3868380,
+      "clase": "NetUIHWND",
+      "titulo": "",
+      "rect": [
+        -31577,
+        -31854,
+        -30421,
+        -31807
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 69228,
+      "parent": 3868380,
+      "clase": "Static",
+      "titulo": "",
+      "rect": [
+        -31577,
+        -31804,
+        -30421,
+        -31803
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 69230,
+      "parent": 3868380,
+      "clase": "Static",
+      "titulo": "",
+      "rect": [
+        -31577,
+        -31800,
+        -30421,
+        -31178
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 331502,
+      "parent": 3868380,
+      "clase": "OPH Previewer Parent Window",
+      "titulo": "",
+      "rect": [
+        -31577,
+        -31800,
+        -30421,
+        -31178
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 200530,
+      "parent": 3868380,
+      "clase": "OPH Previewer Window",
+      "titulo": "",
+      "rect": [
+        -31577,
+        -31800,
+        -30421,
+        -31178
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1313360,
+      "parent": 3868380,
+      "clase": "OlkPicturePreviewer",
+      "titulo": "",
+      "rect": [
+        -31577,
+        -31800,
+        -30421,
+        -31178
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 199948,
+      "parent": 3868380,
+      "clase": "OutlookGrid",
+      "titulo": "Vista de tabla",
+      "rect": [
+        -31894,
+        -31867,
+        -31594,
+        -31170
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 68902,
+      "parent": 3868380,
+      "clase": "NUIScrollbar",
+      "titulo": "Vertical",
+      "rect": [
+        -31611,
+        -31867,
+        -31594,
+        -31170
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 68904,
+      "parent": 3868380,
+      "clase": "NetUIHWND",
+      "titulo": "",
+      "rect": [
+        -31611,
+        -31867,
+        -31594,
+        -31170
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 134458,
+      "parent": 3868380,
+      "clase": "MsoCommandBarDock",
+      "titulo": "MsoDockLeft",
+      "rect": [
+        -32000,
+        -31922,
+        -31952,
+        -31170
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 68930,
+      "parent": 3868380,
+      "clase": "MsoCommandBar",
+      "titulo": "",
+      "rect": [
+        -32000,
+        -31922,
+        -31952,
+        -31170
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 68948,
+      "parent": 3868380,
+      "clase": "MsoWorkPane",
+      "titulo": "",
+      "rect": [
+        -32000,
+        -31922,
+        -31952,
+        -31170
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 134356,
+      "parent": 3868380,
+      "clase": "NUIPane",
+      "titulo": "",
+      "rect": [
+        -32000,
+        -31922,
+        -31952,
+        -31170
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 134362,
+      "parent": 3868380,
+      "clase": "NetUIHWND",
+      "titulo": "",
+      "rect": [
+        -32000,
+        -31922,
+        -31952,
+        -31170
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 134460,
+      "parent": 3868380,
+      "clase": "MsoCommandBarDock",
+      "titulo": "MsoDockTop",
+      "rect": [
+        -32000,
+        -32000,
+        -30400,
+        -31922
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 68932,
+      "parent": 3868380,
+      "clase": "MsoCommandBar",
+      "titulo": "Ribbon",
+      "rect": [
+        -32000,
+        -32000,
+        -30400,
+        -31922
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 68944,
+      "parent": 3868380,
+      "clase": "MsoWorkPane",
+      "titulo": "Ribbon",
+      "rect": [
+        -32000,
+        -32000,
+        -30400,
+        -31922
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 134392,
+      "parent": 3868380,
+      "clase": "NUIPane",
+      "titulo": "",
+      "rect": [
+        -32000,
+        -32000,
+        -30400,
+        -31922
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 134352,
+      "parent": 3868380,
+      "clase": "NetUIHWND",
+      "titulo": "",
+      "rect": [
+        -32000,
+        -32000,
+        -30400,
+        -31922
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 68928,
+      "parent": 3868380,
+      "clase": "MsoCommandBarDock",
+      "titulo": "MsoDockBottom",
+      "rect": [
+        -32000,
+        -31170,
+        -30400,
+        -31148
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 134470,
+      "parent": 3868380,
+      "clase": "MsoCommandBar",
+      "titulo": "Barra de estado",
+      "rect": [
+        -32000,
+        -31170,
+        -30400,
+        -31148
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 68946,
+      "parent": 3868380,
+      "clase": "MsoWorkPane",
+      "titulo": "Barra de estado",
+      "rect": [
+        -32000,
+        -31170,
+        -30400,
+        -31148
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 8848586,
+      "parent": 3868380,
+      "clase": "NUIPane",
+      "titulo": "",
+      "rect": [
+        -32000,
+        -31170,
+        -30400,
+        -31148
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 134324,
+      "parent": 3868380,
+      "clase": "NetUIHWND",
+      "titulo": "",
+      "rect": [
+        -32000,
+        -31170,
+        -30400,
+        -31148
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 1183776,
+      "parent": 0,
+      "clase": "Notepad",
+      "titulo": "ary_facturacion_corregido.htm: Bloc de notas",
+      "rect": [
+        -32000,
+        -32000,
+        -31840,
+        -31972
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 200618,
+      "parent": 1183776,
+      "clase": "Microsoft.UI.Content.DesktopChildSiteBridge",
+      "titulo": "",
+      "rect": [
+        -31443,
+        -31925,
+        -31429,
+        -31482
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 265974,
+      "parent": 1183776,
+      "clase": "InputNonClientPointerSource",
+      "titulo": "Non Client Input Sink Window",
+      "rect": [
+        -31994,
+        -32000,
+        -31994,
+        -32000
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 265972,
+      "parent": 1183776,
+      "clase": "NotepadTextBox",
+      "titulo": "",
+      "rect": [
+        -31994,
+        -31925,
+        -31427,
+        -31482
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 790238,
+      "parent": 1183776,
+      "clase": "RichEditD2DPT",
+      "titulo": "(valor omitido)",
+      "rect": [
+        -31994,
+        -31925,
+        -31427,
+        -31482
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 331464,
+      "parent": 1183776,
+      "clase": "Microsoft.UI.Content.DesktopChildSiteBridge",
+      "titulo": "",
+      "rect": [
+        -31954,
+        -31990,
+        -31603,
+        -31958
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 265944,
+      "parent": 1183776,
+      "clase": "Microsoft.UI.Content.DesktopChildSiteBridge",
+      "titulo": "",
+      "rect": [
+        -31994,
+        -31958,
+        -31427,
+        -31925
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 331462,
+      "parent": 1183776,
+      "clase": "Microsoft.UI.Content.DesktopChildSiteBridge",
+      "titulo": "",
+      "rect": [
+        -31994,
+        -31482,
+        -31427,
+        -31450
+      ],
+      "habilitado": false,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 132056,
+      "parent": 0,
+      "clase": "WinUIDesktopWin32WindowClass",
+      "titulo": "WhatsApp",
+      "rect": [
+        -32000,
+        -32000,
+        -31840,
+        -31972
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 66546,
+      "parent": 132056,
+      "clase": "InputNonClientPointerSource",
+      "titulo": "Non Client Input Sink Window",
+      "rect": [
+        -32000,
+        -32000,
+        -31848,
+        -31968
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 66554,
+      "parent": 132056,
+      "clase": "ReunionWindowingCaptionControls",
+      "titulo": "ReunionCaptionControlsWindow",
+      "rect": [
+        -31986,
+        -32000,
+        -31986,
+        -31968
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 132076,
+      "parent": 132056,
+      "clase": "Microsoft.UI.Content.DesktopChildSiteBridge",
+      "titulo": "",
+      "rect": [
+        -32000,
+        -32000,
+        -30400,
+        -31148
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 593840,
+      "parent": 0,
+      "clase": "Chrome_WidgetWin_1",
+      "titulo": "(4) WhatsApp - Google Chrome",
+      "rect": [
+        -32000,
+        -32000,
+        -31840,
+        -31972
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 397190,
+      "parent": 593840,
+      "clase": "Intermediate D3D Window",
+      "titulo": "",
+      "rect": [
+        -31992,
+        -32000,
+        -30392,
+        -31148
+      ],
+      "habilitado": false,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 592204,
+      "parent": 0,
+      "clase": "CabinetWClass",
+      "titulo": "ARY_FACTURACION_BOT - Explorador de archivos",
+      "rect": [
+        -32000,
+        -32000,
+        -31840,
+        -31972
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1902382,
+      "parent": 592204,
+      "clase": "InputNonClientPointerSource",
+      "titulo": "Non Client Input Sink Window",
+      "rect": [
+        -32000,
+        -32000,
+        -32000,
+        -32000
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 854470,
+      "parent": 592204,
+      "clase": "TITLE_BAR_SCAFFOLDING_WINDOW_CLASS",
+      "titulo": "",
+      "rect": [
+        -32188,
+        -32000,
+        -32000,
+        -31965
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 656898,
+      "parent": 592204,
+      "clase": "ShellTabWindowClass",
+      "titulo": "ARY_FACTURACION_BOT",
+      "rect": [
+        -32000,
+        -31864,
+        -32000,
+        -31864
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 461124,
+      "parent": 592204,
+      "clase": "DUIViewWndClassName",
+      "titulo": "",
+      "rect": [
+        -32000,
+        -31864,
+        -32000,
+        -31864
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 461128,
+      "parent": 592204,
+      "clase": "DirectUIHWND",
+      "titulo": "",
+      "rect": [
+        -32000,
+        -31864,
+        -32000,
+        -31864
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 854398,
+      "parent": 592204,
+      "clase": "Microsoft.UI.Content.DesktopChildSiteBridge",
+      "titulo": "",
+      "rect": [
+        -32295,
+        -32000,
+        -32295,
+        -32000
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 592162,
+      "parent": 592204,
+      "clase": "Microsoft.UI.Content.DesktopChildSiteBridge",
+      "titulo": "",
+      "rect": [
+        -32000,
+        -31998,
+        -32000,
+        -31864
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 3280064,
+      "parent": 0,
+      "clase": "WinUIDesktopWin32WindowClass",
+      "titulo": "WhatsApp Image 2026-09-29 at 10.30.09 AM (002).jpeg",
+      "rect": [
+        -32000,
+        -32000,
+        -31840,
+        -31972
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 528014,
+      "parent": 3280064,
+      "clase": "InputNonClientPointerSource",
+      "titulo": "Non Client Input Sink Window",
+      "rect": [
+        -32000,
+        -32000,
+        -30968,
+        -31952
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 69268,
+      "parent": 3280064,
+      "clase": "ReunionWindowingCaptionControls",
+      "titulo": "ReunionCaptionControlsWindow",
+      "rect": [
+        -31992,
+        -32000,
+        -31992,
+        -31952
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 2099968,
+      "parent": 3280064,
+      "clase": "Microsoft.UI.Content.DesktopChildSiteBridge",
+      "titulo": "",
+      "rect": [
+        -32000,
+        -32000,
+        -30816,
+        -31390
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 8128580,
+      "parent": 0,
+      "clase": "CabinetWClass",
+      "titulo": "ARY_FACTURACION_BOT - Explorador de archivos",
+      "rect": [
+        -32000,
+        -32000,
+        -31840,
+        -31972
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 592704,
+      "parent": 8128580,
+      "clase": "InputNonClientPointerSource",
+      "titulo": "Non Client Input Sink Window",
+      "rect": [
+        -32000,
+        -32000,
+        -32000,
+        -32000
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 789292,
+      "parent": 8128580,
+      "clase": "TITLE_BAR_SCAFFOLDING_WINDOW_CLASS",
+      "titulo": "",
+      "rect": [
+        -32188,
+        -32000,
+        -32000,
+        -31965
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 854624,
+      "parent": 8128580,
+      "clase": "ShellTabWindowClass",
+      "titulo": "ARY_FACTURACION_BOT",
+      "rect": [
+        -32000,
+        -31864,
+        -32000,
+        -31864
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1443752,
+      "parent": 8128580,
+      "clase": "DUIViewWndClassName",
+      "titulo": "",
+      "rect": [
+        -32000,
+        -31864,
+        -32000,
+        -31864
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 789208,
+      "parent": 8128580,
+      "clase": "DirectUIHWND",
+      "titulo": "",
+      "rect": [
+        -32000,
+        -31864,
+        -32000,
+        -31864
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 3475396,
+      "parent": 8128580,
+      "clase": "Microsoft.UI.Content.DesktopChildSiteBridge",
+      "titulo": "",
+      "rect": [
+        -32321,
+        -32026,
+        -32321,
+        -32026
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 265170,
+      "parent": 8128580,
+      "clase": "Microsoft.UI.Content.DesktopChildSiteBridge",
+      "titulo": "",
+      "rect": [
+        -32000,
+        -31998,
+        -32000,
+        -31864
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 197790,
+      "parent": 0,
+      "clase": "Chrome_WidgetWin_1",
+      "titulo": "tec lerdo escudo - Buscar con Google - Google Chrome",
+      "rect": [
+        -32000,
+        -32000,
+        -31840,
+        -31972
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 132576,
+      "parent": 197790,
+      "clase": "Intermediate D3D Window",
+      "titulo": "",
+      "rect": [
+        -31992,
+        -32000,
+        -30072,
+        -30968
+      ],
+      "habilitado": false,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 2100030,
+      "parent": 0,
+      "clase": "CASCADIA_HOSTING_WINDOW_CLASS",
+      "titulo": "C:\\Windows\\System32\\cmd.exe",
+      "rect": [
+        122,
+        130,
+        1251,
+        765
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1248072,
+      "parent": 2100030,
+      "clase": "DRAG_BAR_WINDOW_CLASS",
+      "titulo": "",
+      "rect": [
+        447,
+        131,
+        1243,
+        171
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1313460,
+      "parent": 2100030,
+      "clase": "Windows.UI.Composition.DesktopWindowContentBridge",
+      "titulo": "DesktopWindowXamlSource",
+      "rect": [
+        130,
+        131,
+        1243,
+        757
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 396142,
+      "parent": 2100030,
+      "clase": "Windows.UI.Input.InputSite.WindowClass",
+      "titulo": "",
+      "rect": [
+        130,
+        131,
+        130,
+        131
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 1182402,
+      "parent": 0,
+      "clase": "PseudoConsoleWindow",
+      "titulo": "",
+      "rect": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 853392,
+      "parent": 0,
+      "clase": "Chrome_WidgetWin_1",
+      "titulo": "Facturación | ARY Super Servicios - Brave",
+      "rect": [
+        1593,
+        0,
+        2567,
+        1039
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 2164912,
+      "parent": 853392,
+      "clase": "Intermediate D3D Window",
+      "titulo": "",
+      "rect": [
+        1601,
+        0,
+        2559,
+        1031
+      ],
+      "habilitado": false,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 853242,
+      "parent": 0,
+      "clase": "CabinetWClass",
+      "titulo": "ARY_FACTURACION_BOT - Explorador de archivos",
+      "rect": [
+        110,
+        106,
+        1322,
+        742
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 132996,
+      "parent": 853242,
+      "clase": "TITLE_BAR_SCAFFOLDING_WINDOW_CLASS",
+      "titulo": "",
+      "rect": [
+        405,
+        106,
+        1314,
+        141
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1900720,
+      "parent": 853242,
+      "clase": "ShellTabWindowClass",
+      "titulo": "ARY_FACTURACION_BOT",
+      "rect": [
+        118,
+        242,
+        1314,
+        734
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 132990,
+      "parent": 853242,
+      "clase": "DUIViewWndClassName",
+      "titulo": "",
+      "rect": [
+        118,
+        242,
+        1314,
+        734
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 132988,
+      "parent": 853242,
+      "clase": "DirectUIHWND",
+      "titulo": "",
+      "rect": [
+        118,
+        242,
+        1314,
+        734
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 132980,
+      "parent": 853242,
+      "clase": "CtrlNotifySink",
+      "titulo": "",
+      "rect": [
+        120,
+        242,
+        428,
+        710
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 67464,
+      "parent": 853242,
+      "clase": "NamespaceTreeControl",
+      "titulo": "Control de árbol de espacios de nombres",
+      "rect": [
+        120,
+        242,
+        428,
+        710
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 67470,
+      "parent": 853242,
+      "clase": "SysTreeView32",
+      "titulo": "Panel de navegación",
+      "rect": [
+        120,
+        242,
+        428,
+        710
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1902268,
+      "parent": 853242,
+      "clase": "CtrlNotifySink",
+      "titulo": "",
+      "rect": [
+        432,
+        242,
+        1012,
+        710
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 4719738,
+      "parent": 853242,
+      "clase": "SHELLDLL_DefView",
+      "titulo": "ShellView",
+      "rect": [
+        432,
+        242,
+        1012,
+        710
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 722172,
+      "parent": 853242,
+      "clase": "DirectUIHWND",
+      "titulo": "",
+      "rect": [
+        432,
+        242,
+        1012,
+        710
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 4130582,
+      "parent": 853242,
+      "clase": "CtrlNotifySink",
+      "titulo": "",
+      "rect": [
+        432,
+        693,
+        995,
+        710
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 984468,
+      "parent": 853242,
+      "clase": "ScrollBar",
+      "titulo": "",
+      "rect": [
+        432,
+        693,
+        995,
+        710
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 853394,
+      "parent": 853242,
+      "clase": "CtrlNotifySink",
+      "titulo": "",
+      "rect": [
+        995,
+        242,
+        1012,
+        693
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1378350,
+      "parent": 853242,
+      "clase": "ScrollBar",
+      "titulo": "",
+      "rect": [
+        995,
+        242,
+        1012,
+        693
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 329648,
+      "parent": 853242,
+      "clase": "CtrlNotifySink",
+      "titulo": "",
+      "rect": [
+        1015,
+        242,
+        1314,
+        710
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1638890,
+      "parent": 853242,
+      "clase": "DetailsPaneHwndHostClass",
+      "titulo": "Panel de detalles",
+      "rect": [
+        1015,
+        242,
+        1314,
+        710
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 10159820,
+      "parent": 853242,
+      "clase": "Microsoft.UI.Content.DesktopChildSiteBridge",
+      "titulo": "",
+      "rect": [
+        1015,
+        242,
+        1314,
+        710
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 919732,
+      "parent": 853242,
+      "clase": "Microsoft.UI.Content.DesktopChildSiteBridge",
+      "titulo": "",
+      "rect": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 132974,
+      "parent": 853242,
+      "clase": "InputNonClientPointerSource",
+      "titulo": "Non Client Input Sink Window",
+      "rect": [
+        118,
+        106,
+        118,
+        106
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 132970,
+      "parent": 853242,
+      "clase": "Microsoft.UI.Content.DesktopChildSiteBridge",
+      "titulo": "",
+      "rect": [
+        118,
+        108,
+        1314,
+        242
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 657982,
+      "parent": 0,
+      "clase": "CabinetWClass",
+      "titulo": "ARY_FACTURACION_BOT - Explorador de archivos",
+      "rect": [
+        -32000,
+        -32000,
+        -31840,
+        -31972
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 526924,
+      "parent": 657982,
+      "clase": "InputNonClientPointerSource",
+      "titulo": "Non Client Input Sink Window",
+      "rect": [
+        -32000,
+        -32000,
+        -32000,
+        -32000
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 2557322,
+      "parent": 657982,
+      "clase": "TITLE_BAR_SCAFFOLDING_WINDOW_CLASS",
+      "titulo": "",
+      "rect": [
+        -32188,
+        -32000,
+        -32000,
+        -31965
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 789032,
+      "parent": 657982,
+      "clase": "ShellTabWindowClass",
+      "titulo": "ARY_FACTURACION_BOT",
+      "rect": [
+        -32000,
+        -31864,
+        -32000,
+        -31864
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 788896,
+      "parent": 657982,
+      "clase": "DUIViewWndClassName",
+      "titulo": "",
+      "rect": [
+        -32000,
+        -31864,
+        -32000,
+        -31864
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 789012,
+      "parent": 657982,
+      "clase": "DirectUIHWND",
+      "titulo": "",
+      "rect": [
+        -32000,
+        -31864,
+        -32000,
+        -31864
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 2295118,
+      "parent": 657982,
+      "clase": "Microsoft.UI.Content.DesktopChildSiteBridge",
+      "titulo": "",
+      "rect": [
+        -32170,
+        -32158,
+        -32170,
+        -32158
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1051082,
+      "parent": 657982,
+      "clase": "Microsoft.UI.Content.DesktopChildSiteBridge",
+      "titulo": "",
+      "rect": [
+        -32000,
+        -31998,
+        -32000,
+        -31864
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 395888,
+      "parent": 0,
+      "clase": "ApplicationFrameWindow",
+      "titulo": "",
+      "rect": [
+        0,
+        0,
+        1600,
+        852
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 330238,
+      "parent": 395888,
+      "clase": "ApplicationFrameTitleBarWindow",
+      "titulo": "",
+      "rect": [
+        8,
+        1,
+        1592,
+        33
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 330310,
+      "parent": 395888,
+      "clase": "ApplicationFrameInputSinkWindow",
+      "titulo": "",
+      "rect": [
+        8,
+        33,
+        1592,
+        844
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 853720,
+      "parent": 0,
+      "clase": "Chrome_WidgetWin_1",
+      "titulo": "Nueva pestaña - Google Chrome",
+      "rect": [
+        1593,
+        0,
+        2567,
+        1039
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 460550,
+      "parent": 853720,
+      "clase": "Intermediate D3D Window",
+      "titulo": "",
+      "rect": [
+        1601,
+        0,
+        2559,
+        1031
+      ],
+      "habilitado": false,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 132862,
+      "parent": 0,
+      "clase": "Windows.UI.Core.CoreWindow",
+      "titulo": "Configuración",
+      "rect": [
+        0,
+        8,
+        1600,
+        860
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 329292,
+      "parent": 0,
+      "clase": "ApplicationFrameWindow",
+      "titulo": "Configuración",
+      "rect": [
+        -8,
+        -8,
+        1608,
+        860
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 198216,
+      "parent": 329292,
+      "clase": "ApplicationFrameTitleBarWindow",
+      "titulo": "",
+      "rect": [
+        0,
+        0,
+        1600,
+        32
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 198242,
+      "parent": 329292,
+      "clase": "ApplicationFrameInputSinkWindow",
+      "titulo": "",
+      "rect": [
+        0,
+        32,
+        1600,
+        852
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 66382,
+      "parent": 0,
+      "clase": "Windows.UI.Core.CoreWindow",
+      "titulo": "Experiencia de entrada de Windows",
+      "rect": [
+        0,
+        0,
+        1600,
+        900
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 65934,
+      "parent": 0,
+      "clase": "DummyDWMListenerWindow",
+      "titulo": "",
+      "rect": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 65928,
+      "parent": 0,
+      "clase": "EdgeUiInputTopWndClass",
+      "titulo": "",
+      "rect": [
+        1615,
+        0,
+        3520,
+        4
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 65910,
+      "parent": 0,
+      "clase": "EdgeUiInputTopWndClass",
+      "titulo": "",
+      "rect": [
+        15,
+        0,
+        1600,
+        4
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 65878,
+      "parent": 0,
+      "clase": "DummyDWMListenerWindow",
+      "titulo": "",
+      "rect": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 65876,
+      "parent": 0,
+      "clase": "DummyDWMListenerWindow",
+      "titulo": "",
+      "rect": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 65874,
+      "parent": 0,
+      "clase": "DummyDWMListenerWindow",
+      "titulo": "",
+      "rect": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 65872,
+      "parent": 0,
+      "clase": "DummyDWMListenerWindow",
+      "titulo": "",
+      "rect": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 65806,
+      "parent": 0,
+      "clase": "Progman",
+      "titulo": "Program Manager",
+      "rect": [
+        0,
+        0,
+        3520,
+        1080
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 65814,
+      "parent": 65806,
+      "clase": "SHELLDLL_DefView",
+      "titulo": "",
+      "rect": [
+        0,
+        0,
+        3520,
+        1080
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 65816,
+      "parent": 65806,
+      "clase": "SysListView32",
+      "titulo": "FolderView",
+      "rect": [
+        0,
+        0,
+        3520,
+        1080
+      ],
+      "habilitado": true,
+      "foco": false
+    }
+  ]
+}

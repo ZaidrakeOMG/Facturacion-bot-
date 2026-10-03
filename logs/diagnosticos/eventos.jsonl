@@ -1,0 +1,119 @@
+{"fecha": "2026-10-03T10:57:04.388-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Bot y portal activos en una sola instancia. Se utiliza la misma Cola y avisos.", "datos": {}}
+{"fecha": "2026-10-03T10:57:06.857-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Gmail conectado como emisioncfdi@grupoary.com", "datos": {}}
+{"fecha": "2026-10-03T10:57:22.545-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Polaris no está abierto. Iniciándolo mediante Windows Shell (modo usuario)...", "datos": {}}
+{"fecha": "2026-10-03T10:57:22.607-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Esperando Entrada al Sistema o ventana principal; no se automatiza durante la carga...", "datos": {}}
+{"fecha": "2026-10-03T10:57:24.449-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T10:57:24.449-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T10:57:24.449-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Entrada al Sistema detectada durante el arranque; se continuará con el login.", "datos": {}}
+{"fecha": "2026-10-03T10:57:24.449-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Iniciando sesión en Polaris como usuario interactivo...", "datos": {}}
+{"fecha": "2026-10-03T10:57:24.449-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T10:57:31.561-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T10:57:31.561-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Polaris principal estable: 1936x1056; título='Polaris Facturacion --> ARY SUPER EXPRESS V, S.A. DE C.V.'.", "datos": {}}
+{"fecha": "2026-10-03T10:57:33.380-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T10:57:33.380-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Polaris principal estable: 1936x1056; título='Polaris Facturacion --> ARY SUPER EXPRESS V, S.A. DE C.V.'.", "datos": {}}
+{"fecha": "2026-10-03T10:57:33.701-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "VM: ventana principal ajustada a 1616x868; no se cambió la pantalla.", "datos": {}}
+{"fecha": "2026-10-03T10:57:33.701-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T10:57:35.495-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T10:57:35.498-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Polaris principal estable: 1616x868; título='Polaris Facturacion --> ARY SUPER EXPRESS V, S.A. DE C.V.'.", "datos": {}}
+{"fecha": "2026-10-03T10:57:35.498-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Polaris listo para automatización. Origen=shell_login. Arranque validado sin automatizar splash/ventanas transitorias.", "datos": {}}
+{"fecha": "2026-10-03T10:57:35.498-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Limpieza v3.1.1: cerrando ventanas de Polaris antes de cambiar estación...", "datos": {}}
+{"fecha": "2026-10-03T10:57:35.498-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Cerrando ventana de Polaris: 'Accesos al Sistema'...", "datos": {}}
+{"fecha": "2026-10-03T10:57:36.220-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Polaris listo. Ventanas cerradas: Accesos al Sistema", "datos": {}}
+{"fecha": "2026-10-03T10:57:36.220-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Cambiando estación en Polaris -> ARY I (6953). Actual: Polaris Facturacion --> ARY SUPER EXPRESS V, S.A. DE C.V.", "datos": {}}
+{"fecha": "2026-10-03T10:57:36.220-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T10:57:36.783-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Menú real: Utilerías; rectángulo 520,187,576,206.", "datos": {}}
+{"fecha": "2026-10-03T10:57:37.795-06:00", "etapa": "CAMBIO DE ESTACIÓN: abrir menú real", "estado": "ERROR", "detalle": "PolarisError: No se localizó una única opción \"Cambio de estación\". Menú visible: ", "datos": {"id": "20261003_105737_06947c49"}}
+{"fecha": "2026-10-03T10:57:37.795-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "DIAGNÓSTICO 20261003_105737_06947c49: PolarisError: No se localizó una única opción \"Cambio de estación\". Menú visible: ", "datos": {}}
+{"fecha": "2026-10-03T10:57:38.060-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "ALERTA INTERNA c4e37b0a3f: PENDIENTE.", "datos": {}}
+{"fecha": "2026-10-03T10:57:38.060-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Polaris requiere revisión en esta solicitud. Se apartó el caso y la cola continúa con trabajos distintos.", "datos": {}}
+{"fecha": "2026-10-03T10:57:39.764-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "ALERTA INTERNA c4e37b0a3f: aceptada por Gmail; recepción no verificada.", "datos": {}}
+{"fecha": "2026-10-03T10:58:09.342-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Polaris no está abierto. Iniciándolo mediante Windows Shell (modo usuario)...", "datos": {}}
+{"fecha": "2026-10-03T10:58:09.358-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Esperando Entrada al Sistema o ventana principal; no se automatiza durante la carga...", "datos": {}}
+{"fecha": "2026-10-03T10:58:10.998-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T10:58:10.998-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T10:58:10.998-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Entrada al Sistema detectada durante el arranque; se continuará con el login.", "datos": {}}
+{"fecha": "2026-10-03T10:58:10.998-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Iniciando sesión en Polaris como usuario interactivo...", "datos": {}}
+{"fecha": "2026-10-03T10:58:10.998-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T10:58:17.891-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T10:58:17.891-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Polaris principal estable: 1936x1056; título='Polaris Facturacion --> ARY SUPER EXPRESS V, S.A. DE C.V.'.", "datos": {}}
+{"fecha": "2026-10-03T10:58:19.717-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T10:58:19.717-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Polaris principal estable: 1936x1056; título='Polaris Facturacion --> ARY SUPER EXPRESS V, S.A. DE C.V.'.", "datos": {}}
+{"fecha": "2026-10-03T10:58:20.014-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "VM: ventana principal ajustada a 1616x868; no se cambió la pantalla.", "datos": {}}
+{"fecha": "2026-10-03T10:58:20.014-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T10:58:21.815-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T10:58:21.815-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Polaris principal estable: 1616x868; título='Polaris Facturacion --> ARY SUPER EXPRESS V, S.A. DE C.V.'.", "datos": {}}
+{"fecha": "2026-10-03T10:58:21.815-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Polaris listo para automatización. Origen=shell_login. Arranque validado sin automatizar splash/ventanas transitorias.", "datos": {}}
+{"fecha": "2026-10-03T10:58:21.815-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Limpieza v3.1.1: cerrando ventanas de Polaris antes de cambiar estación...", "datos": {}}
+{"fecha": "2026-10-03T10:58:21.815-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Cerrando ventana de Polaris: 'Accesos al Sistema'...", "datos": {}}
+{"fecha": "2026-10-03T10:58:22.539-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Polaris listo. Ventanas cerradas: Accesos al Sistema", "datos": {}}
+{"fecha": "2026-10-03T10:58:22.539-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Cambiando estación en Polaris -> ARY I (6953). Actual: Polaris Facturacion --> ARY SUPER EXPRESS V, S.A. DE C.V.", "datos": {}}
+{"fecha": "2026-10-03T10:58:22.539-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T10:58:23.100-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Menú real: Utilerías; rectángulo 572,203,628,222.", "datos": {}}
+{"fecha": "2026-10-03T10:58:24.092-06:00", "etapa": "CAMBIO DE ESTACIÓN: abrir menú real", "estado": "ERROR", "detalle": "PolarisError: No se localizó una única opción \"Cambio de estación\". Menú visible: ", "datos": {"id": "20261003_105823_f2d91546"}}
+{"fecha": "2026-10-03T10:58:24.092-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "DIAGNÓSTICO 20261003_105823_f2d91546: PolarisError: No se localizó una única opción \"Cambio de estación\". Menú visible: ", "datos": {}}
+{"fecha": "2026-10-03T10:58:24.342-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "ALERTA INTERNA 577cb558e8: PENDIENTE.", "datos": {}}
+{"fecha": "2026-10-03T10:58:24.342-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Polaris requiere revisión en esta solicitud. Se apartó el caso y la cola continúa con trabajos distintos.", "datos": {}}
+{"fecha": "2026-10-03T10:58:25.967-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "ALERTA INTERNA 577cb558e8: aceptada por Gmail; recepción no verificada.", "datos": {}}
+{"fecha": "2026-10-03T11:04:35.904-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Cerrando hilos. Las solicitudes pendientes quedan guardadas y se reanudarán automáticamente al abrir.", "datos": {}}
+{"fecha": "2026-10-03T11:09:31.670-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Bot y portal activos en una sola instancia. Se utiliza la misma Cola y avisos.", "datos": {}}
+{"fecha": "2026-10-03T11:09:33.733-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Gmail conectado como emisioncfdi@grupoary.com", "datos": {}}
+{"fecha": "2026-10-03T11:10:06.264-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Polaris no está abierto. Iniciándolo mediante Windows Shell (modo usuario)...", "datos": {}}
+{"fecha": "2026-10-03T11:10:06.310-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Esperando Entrada al Sistema o ventana principal; no se automatiza durante la carga...", "datos": {}}
+{"fecha": "2026-10-03T11:10:07.764-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T11:10:07.764-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T11:10:07.764-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Entrada al Sistema detectada durante el arranque; se continuará con el login.", "datos": {}}
+{"fecha": "2026-10-03T11:10:07.764-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Iniciando sesión en Polaris como usuario interactivo...", "datos": {}}
+{"fecha": "2026-10-03T11:10:07.764-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T11:10:14.842-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T11:10:14.842-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Polaris principal estable: 1936x1056; título='Polaris Facturacion --> ARY SUPER EXPRESS V, S.A. DE C.V.'.", "datos": {}}
+{"fecha": "2026-10-03T11:10:16.669-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T11:10:16.669-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Polaris principal estable: 1936x1056; título='Polaris Facturacion --> ARY SUPER EXPRESS V, S.A. DE C.V.'.", "datos": {}}
+{"fecha": "2026-10-03T11:10:16.982-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "VM: ventana principal ajustada a 1616x868; no se cambió la pantalla.", "datos": {}}
+{"fecha": "2026-10-03T11:10:16.982-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T11:10:18.775-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T11:10:18.775-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Polaris principal estable: 1616x868; título='Polaris Facturacion --> ARY SUPER EXPRESS V, S.A. DE C.V.'.", "datos": {}}
+{"fecha": "2026-10-03T11:10:18.779-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Polaris listo para automatización. Origen=shell_login. Arranque validado sin automatizar splash/ventanas transitorias.", "datos": {}}
+{"fecha": "2026-10-03T11:10:18.779-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Limpieza v3.1.1: cerrando ventanas de Polaris antes de cambiar estación...", "datos": {}}
+{"fecha": "2026-10-03T11:10:18.779-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Cerrando ventana de Polaris: 'Accesos al Sistema'...", "datos": {}}
+{"fecha": "2026-10-03T11:10:19.502-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Polaris listo. Ventanas cerradas: Accesos al Sistema", "datos": {}}
+{"fecha": "2026-10-03T11:10:19.502-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Cambiando estación en Polaris -> ARY I (6953). Actual: Polaris Facturacion --> ARY SUPER EXPRESS V, S.A. DE C.V.", "datos": {}}
+{"fecha": "2026-10-03T11:10:19.502-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T11:10:20.063-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Menú real: Utilerías; rectángulo 598,203,654,222.", "datos": {}}
+{"fecha": "2026-10-03T11:10:20.936-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "P01: navegación detenida; captura: C:\\Users\\admin\\Desktop\\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\\ARY_FACTURACION_BOT\\capturas_error\\20261003_111020_p01_menu_no_verificado.png", "datos": {}}
+{"fecha": "2026-10-03T11:10:21.326-06:00", "etapa": "CAMBIO DE ESTACIÓN: abrir menú real", "estado": "ERROR", "detalle": "PolarisError: No se localizó una única opción \"Cambio de estación\". Menú visible: ", "datos": {"id": "20261003_111021_c48ff422"}}
+{"fecha": "2026-10-03T11:10:21.326-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "DIAGNÓSTICO 20261003_111021_c48ff422: PolarisError: No se localizó una única opción \"Cambio de estación\". Menú visible: ", "datos": {}}
+{"fecha": "2026-10-03T11:10:21.623-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "ALERTA INTERNA 6598ce63ba: PENDIENTE.", "datos": {}}
+{"fecha": "2026-10-03T11:10:21.623-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Polaris requiere revisión en esta solicitud. Se apartó el caso y la cola continúa con trabajos distintos.", "datos": {}}
+{"fecha": "2026-10-03T11:10:23.248-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "ALERTA INTERNA 6598ce63ba: aceptada por Gmail; recepción no verificada.", "datos": {}}
+{"fecha": "2026-10-03T11:19:08.873-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Cerrando hilos. Las solicitudes pendientes quedan guardadas y se reanudarán automáticamente al abrir.", "datos": {}}
+{"fecha": "2026-10-03T11:53:35.545-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Bot y portal activos en una sola instancia. Se utiliza la misma Cola y avisos.", "datos": {}}
+{"fecha": "2026-10-03T11:53:37.576-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Gmail conectado como emisioncfdi@grupoary.com", "datos": {}}
+{"fecha": "2026-10-03T11:55:14.092-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Polaris no está abierto. Iniciándolo mediante Windows Shell (modo usuario)...", "datos": {}}
+{"fecha": "2026-10-03T11:55:14.154-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Esperando Entrada al Sistema o ventana principal; no se automatiza durante la carga...", "datos": {}}
+{"fecha": "2026-10-03T11:55:16.186-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T11:55:16.186-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T11:55:16.186-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Entrada al Sistema detectada durante el arranque; se continuará con el login.", "datos": {}}
+{"fecha": "2026-10-03T11:55:16.186-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Iniciando sesión en Polaris como usuario interactivo...", "datos": {}}
+{"fecha": "2026-10-03T11:55:16.186-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T11:55:23.244-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T11:55:23.244-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Polaris principal estable: 1936x1056; título='Polaris Facturacion --> ARY SUPER EXPRESS V, S.A. DE C.V.'.", "datos": {}}
+{"fecha": "2026-10-03T11:55:25.068-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T11:55:25.068-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Polaris principal estable: 1936x1056; título='Polaris Facturacion --> ARY SUPER EXPRESS V, S.A. DE C.V.'.", "datos": {}}
+{"fecha": "2026-10-03T11:55:25.404-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "VM: ventana principal ajustada a 1616x868; no se cambió la pantalla.", "datos": {}}
+{"fecha": "2026-10-03T11:55:25.404-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T11:55:27.183-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T11:55:27.186-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Polaris principal estable: 1616x868; título='Polaris Facturacion --> ARY SUPER EXPRESS V, S.A. DE C.V.'.", "datos": {}}
+{"fecha": "2026-10-03T11:55:27.186-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Polaris listo para automatización. Origen=shell_login. Arranque validado sin automatizar splash/ventanas transitorias.", "datos": {}}
+{"fecha": "2026-10-03T11:55:27.186-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Limpieza v3.1.1: cerrando ventanas de Polaris antes de cambiar estación...", "datos": {}}
+{"fecha": "2026-10-03T11:55:27.186-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Cerrando ventana de Polaris: 'Accesos al Sistema'...", "datos": {}}
+{"fecha": "2026-10-03T11:55:27.910-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Polaris listo. Ventanas cerradas: Accesos al Sistema", "datos": {}}
+{"fecha": "2026-10-03T11:55:27.910-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Cambiando estación en Polaris -> ARY I (6953). Actual: Polaris Facturacion --> ARY SUPER EXPRESS V, S.A. DE C.V.", "datos": {}}
+{"fecha": "2026-10-03T11:55:27.910-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Sesión Windows verificada: bot y Polaris comparten escritorio; administrador=False.", "datos": {}}
+{"fecha": "2026-10-03T11:55:28.472-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Menú real: Utilerías; rectángulo 390,57,446,76.", "datos": {}}
+{"fecha": "2026-10-03T11:55:29.295-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "P01: navegación detenida; captura: C:\\Users\\admin\\Desktop\\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\\ARY_FACTURACION_BOT\\capturas_error\\20261003_115529_p01_menu_no_verificado.png", "datos": {}}
+{"fecha": "2026-10-03T11:55:29.670-06:00", "etapa": "CAMBIO DE ESTACIÓN: abrir menú real", "estado": "ERROR", "detalle": "PolarisError: No se localizó una única opción \"Cambio de estación\". Menú visible: ", "datos": {"id": "20261003_115529_9713803d"}}
+{"fecha": "2026-10-03T11:55:29.670-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "DIAGNÓSTICO 20261003_115529_9713803d: PolarisError: No se localizó una única opción \"Cambio de estación\". Menú visible: ", "datos": {}}
+{"fecha": "2026-10-03T11:55:30.123-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "ALERTA INTERNA 6c44139ff7: PENDIENTE.", "datos": {}}
+{"fecha": "2026-10-03T11:55:30.123-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Polaris requiere revisión en esta solicitud. Se apartó el caso y la cola continúa con trabajos distintos.", "datos": {}}
+{"fecha": "2026-10-03T11:55:31.748-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "ALERTA INTERNA 6c44139ff7: aceptada por Gmail; recepción no verificada.", "datos": {}}
+{"fecha": "2026-10-03T12:02:44.920-06:00", "etapa": "LOG", "estado": "INFO", "detalle": "Cerrando hilos. Las solicitudes pendientes quedan guardadas y se reanudarán automáticamente al abrir.", "datos": {}}

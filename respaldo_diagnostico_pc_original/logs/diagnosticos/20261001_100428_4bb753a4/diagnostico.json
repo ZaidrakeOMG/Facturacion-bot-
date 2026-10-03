@@ -1,0 +1,175 @@
+{
+  "id": "20261001_100428_4bb753a4",
+  "fecha": "2026-10-01T10:04:28-06:00",
+  "manual": false,
+  "etapa": "FACTURACION: agregar folio",
+  "error": "PolarisError: No apareció 'Seleccione el registro deseado'. El bot NO continuó ni abrió Respaldar.",
+  "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\AUX_SISTEMAS\\Desktop\\ARY_FACTURACION_BOT\\ARY_FACTURACION_BOT\\arybot\\cola_operaciones.py\", line 142, in ejecutar_una\n    if kind=='ESTACION':result=self.polaris.test_station_only(data['estacion'])\n                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\AUX_SISTEMAS\\Desktop\\ARY_FACTURACION_BOT\\ARY_FACTURACION_BOT\\arybot\\polaris.py\", line 902, in test_station_only\n    self._change_station(main,station,force=True)\n    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\AUX_SISTEMAS\\Desktop\\ARY_FACTURACION_BOT\\ARY_FACTURACION_BOT\\arybot\\polaris.py\", line 854, in _change_station\n    raise PolarisError(\n    ...<2 lines>...\n    )\narybot.polaris.PolarisError: No apareció 'Seleccione el registro deseado'. El bot NO continuó ni abrió Respaldar.\n",
+  "contexto": {
+    "tipo": "ESTACION",
+    "id_solicitud": "e40acd8fabe44f63888e0437dbaeaab2",
+    "origen": "Formulario"
+  },
+  "ultimo_evento": {
+    "fecha": "2026-10-01T10:04:19.432-06:00",
+    "etapa": "LOG",
+    "estado": "INFO",
+    "detalle": "No apareció el catálogo con clic directo; reintentando por teclado (6 DOWN)...",
+    "datos": {}
+  },
+  "ventanas": [
+    {
+      "nivel": 0,
+      "hwnd": 592302,
+      "parent": 0,
+      "clase": "TForm_Menu",
+      "titulo": "Polaris Facturacion --> ARY SUPER SERVICIOS VI, SA DE  CV",
+      "rect": [
+        -8,
+        -8,
+        1608,
+        860
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 2164106,
+      "parent": 592302,
+      "clase": "TToolBar",
+      "titulo": "",
+      "rect": [
+        0,
+        43,
+        1600,
+        87
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 395680,
+      "parent": 592302,
+      "clase": "TStatusBar",
+      "titulo": "",
+      "rect": [
+        0,
+        833,
+        1600,
+        852
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 1,
+      "hwnd": 1442470,
+      "parent": 592302,
+      "clase": "MDIClient",
+      "titulo": "",
+      "rect": [
+        0,
+        87,
+        1600,
+        833
+      ],
+      "habilitado": true,
+      "foco": false
+    },
+    {
+      "nivel": 0,
+      "hwnd": 3737170,
+      "parent": 0,
+      "clase": "TApplication",
+      "titulo": "Polaris Facturacion",
+      "rect": [
+        -3,
+        -3,
+        1603,
+        903
+      ],
+      "habilitado": true,
+      "foco": false
+    }
+  ],
+  "captura_factura_eventos": [
+    {
+      "campo": "rfc",
+      "etapa": "CONTROL_ANIDADO_RESUELTO",
+      "clase": "TcxCustomInnerTextEdit",
+      "coincidencias": 2
+    },
+    {
+      "campo": "rfc",
+      "etapa": "CONTROL_IDENTIFICADO",
+      "clase": "TcxCustomInnerTextEdit"
+    },
+    {
+      "campo": "rfc",
+      "etapa": "ANTES_DE_ESCRIBIR",
+      "vacio": false,
+      "longitud": 13,
+      "clase": "TcxCustomInnerTextEdit"
+    },
+    {
+      "campo": "rfc",
+      "etapa": "TECLADO_ENVIADO",
+      "longitud": 13
+    },
+    {
+      "campo": "rfc",
+      "etapa": "SALIDA_DE_CAMPO_CONFIRMADA"
+    },
+    {
+      "campo": "rfc",
+      "etapa": "LECTURA_CONFIRMADA",
+      "coincide": true
+    },
+    {
+      "campo": "rfc",
+      "etapa": "CAMPO_CONFIRMADO_NO_VACIO",
+      "vacio": false,
+      "longitud": 13
+    },
+    {
+      "campo": "folio",
+      "etapa": "CONTROL_ANIDADO_RESUELTO",
+      "clase": "TcxCustomInnerTextEdit",
+      "coincidencias": 2
+    },
+    {
+      "campo": "folio",
+      "etapa": "CONTROL_IDENTIFICADO",
+      "clase": "TcxCustomInnerTextEdit"
+    },
+    {
+      "campo": "folio",
+      "etapa": "ANTES_DE_ESCRIBIR",
+      "vacio": false,
+      "longitud": 10,
+      "clase": "TcxCustomInnerTextEdit"
+    },
+    {
+      "campo": "folio",
+      "etapa": "TECLADO_ENVIADO",
+      "longitud": 10
+    },
+    {
+      "campo": "folio",
+      "etapa": "SALIDA_DE_CAMPO_CONFIRMADA"
+    },
+    {
+      "campo": "folio",
+      "etapa": "LECTURA_CONFIRMADA",
+      "coincide": true
+    },
+    {
+      "campo": "folio",
+      "etapa": "CAMPO_CONFIRMADO_NO_VACIO",
+      "vacio": false,
+      "longitud": 10
+    }
+  ]
+}

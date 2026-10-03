@@ -1,0 +1,20 @@
+<!-- FRAGMENTO: insertar la regla dentro de configuration/system.webServer/rewrite/rules.
+NO es un web.config completo. NO sustituir las otras reglas.
+Requiere ARR (Enable Proxy) y URL Rewrite. Colocar después de HTTP->HTTPS
+(y del dominio canónico) y antes de reglas generales. No publicar /salud.
+Autorizar HTTP_X_ARY_CLIENT_IP y HTTP_X_ARY_PROXY_HTTPS en View Server Variables.
+IIS DEBE sobrescribir ambos headers, nunca aceptar los enviados por el cliente.
+El tramo a 10.20.20.182 es HTTP privado: aislarlo; para cifrar usar HTTPS o IPsec/VPN.
+-->
+<rule name="ARY Portal Facturacion API" stopProcessing="true">
+  <match url="^api/facturacion/(opciones|solicitudes|estado|recepcion)$" />
+  <conditions logicalGrouping="MatchAll">
+    <add input="{HTTPS}" pattern="^on$" />
+    <add input="{HTTP_HOST}" pattern="^www\.grupoary\.com\.mx(:443)?$" />
+  </conditions>
+  <serverVariables>
+    <set name="HTTP_X_ARY_CLIENT_IP" value="{REMOTE_ADDR}" replace="true" />
+    <set name="HTTP_X_ARY_PROXY_HTTPS" value="on" replace="true" />
+  </serverVariables>
+  <action type="Rewrite" url="http://10.20.20.182:8765/api/facturacion/{R:1}" appendQueryString="false" />
+</rule>

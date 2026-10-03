@@ -1,0 +1,74 @@
+ARY - BASE ORIGINAL CON ADAPTADOR PARA LA VM (R1)
+================================================
+
+Esta carpeta parte ÚNICAMENTE de ARY_FACTURACION_BOT(3).zip.
+No contiene los parches anteriores de navegación, ni cambia Windows a otra
+resolución ni altera el registro o el DPI global.
+
+USO
+1. Cierra las otras versiones del bot. No borres la carpeta que funcionaba.
+2. Extrae esta carpeta en una ubicación NUEVA de la VM, por ejemplo C:\ARY_VM_R1.
+   No copies .venv de otra carpeta o computadora. No abras el bot dentro del ZIP.
+3. Abre 1_PREPARAR_VM.bat. Instala en .venv local y verifica todos los imports.
+   Al terminar debe decir ENTORNO OK. La consola se conserva si hay un error.
+4. Abre 2_INICIAR_VM.bat. También puedes usar INICIAR.bat: llaman al mismo lanzador.
+5. En Configuración verifica la ruta de Polaris y usuario FACTURA. La contraseña
+   se guarda en Windows y no viaja dentro del ZIP. Guarda la contraseña en esta
+   VM si todavía no está guardada para FACTURA bajo el usuario Windows actual.
+6. Conserva MODO SEGURO y prueba Probar SOLO cambio de estación.
+   Después revisa la estación seleccionada y prueba una captura SIN TIMBRAR.
+   No habilites producción hasta comprobar visualmente estación, cliente,
+   fecha, folio, forma de pago, uso CFDI y correo en tu Polaris real.
+
+PRUEBA TERMINADA NO SIGNIFICA COLA LIBRE
+El flujo original deja una prueba/captura preparada en revisión.
+La franja nueva indica COLA EN REVISIÓN cuando pasa esto. En Cola y avisos,
+selecciona la operación y usa Liberar revisión sólo después de revisar o
+resolver manualmente la pantalla. No se liberan altas o facturas automáticamente.
+
+QUÉ SE ADAPTA
+- Selección de TForm_Menu por delante de TApplication. No se toma la ventana
+  auxiliar ni el login como ventana principal; se rechazan dos principales.
+- Menús reales: se localiza el texto y Windows entrega el rectángulo del menú.
+  Se comprueba que el submenú esté visible y pertenezca a Polaris antes del clic.
+  No usa WM_COMMAND, posiciones porcentuales para menús, ni seis flechas a ciegas.
+- En un escritorio suficientemente grande se restaura y ajusta SÓLO la ventana
+  principal a 1616x868, tamaño medido en los registros de la PC original.
+  No significa que el monitor cambie a 1616x868. En escritorios más pequeños
+  conserva la maximización original y continúa localizando los menús nativos.
+- Arranque con un .venv comprobado; no cambia silenciosamente al Python global.
+- Error visible cuando falta Polaris, una DLL, una ruta, una contraseña o cuando
+  una captura bloquea la cola. Los errores de interfaz y arranque quedan registrados.
+- Configuración de este paquete: usuario FACTURA y MODO SEGURO activado.
+
+QUÉ SE CONSERVA
+PolarisBot, login, selección de cliente, captura fiscal, calendario, altas,
+validaciones, cola, Gmail, PDF y lógica de envío NO fueron reescritos.
+Los archivos centrales son idénticos al ZIP recibido; VERIFICACION_ORIGINAL.json
+contiene sus hashes. El adaptador hereda la clase original y sobreescribe sólo
+localización de principal, geometría/activación, lectura de permisos y apertura
+de los dos menús. GUI y portal sólo reciben integración/visibilidad de errores.
+Los datos, tokens y configuración de conexión del ZIP se conservaron.
+Se respaldó config.json antes de cambiar el usuario y activar modo seguro.
+
+DIAGNÓSTICO SIN PEGAR COMANDOS
+Si aparece un error o no avanza, ejecuta COMPROBAR_VM.bat en ESTA carpeta.
+Genera SOPORTE_VM.zip en esta misma carpeta con el Python efectivo, errores de
+importación, clases/posiciones de Polaris y el error resumido reciente.
+No adjunta bases de datos, tokens, claves ni capturas; revísalo antes de enviarlo.
+El diagnóstico es de lectura: no hace clics, no factura y no guarda clientes.
+
+LÍMITES DE LA VERIFICACIÓN
+Se realizaron pruebas de código y simulaciones; no se dispuso de Windows con
+Polaris real en este entorno. PRUEBAS_VM.txt distingue pruebas nuevas de los
+fallos que YA están en las pruebas del ZIP original. No se certifica timbrado.
+El bot sigue necesitando una sesión de Windows abierta y desbloqueada. Durante
+la prueba mantén visible la conexión a la VM y no uses el ratón/teclado en ella.
+No fuerza privilegios de administrador: bot y Polaris deben usar el mismo nivel.
+
+RESPALDO
+INICIAR_ORIGINAL.bat usa la clase original, sin el adaptador, con el mismo entorno
+verificado. No es el lanzador recomendado para la VM: se incluye para comparar.
+respaldo_original_vm contiene los archivos sustituidos; los registros viejos
+están en respaldo_diagnostico_pc_original para no confundirlos con errores nuevos.
+El ZIP contiene tus archivos de cuenta/datos originales. No lo publiques.

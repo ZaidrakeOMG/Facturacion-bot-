@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "activas": true,
+  "destinatarios": [
+    "sistemas1@grupoary.com.mx",
+    "sistemas@grupoary.com.mx"
+  ],
+  "enviar_en_modo_seguro": true,
+  "leer_ventana": true,
+  "ocr_respaldo": true,
+  "adjuntar_ventana": true,
+  "incluir_contexto_cliente": true,
+  "categorias": {
+    "ALTA_CLIENTE": true,
+    "FACTURACION": true,
+    "ENVIO_FACTURA": true,
+    "SISTEMA": true
+  },
+  "deduplicar_minutos": 10
+}

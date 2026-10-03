@@ -1,0 +1,300 @@
+
+=== VM-BASE-ORIGINAL-2026-10-03-R1 | 2026-10-03 10:52:13 | preparar ===
+Carpeta activa: C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT
+Creando entorno NUEVO con C:\Users\admin\AppData\Local\Programs\Python\Python312\python.exe
+Instalando dependencias SIN caché. No se actualiza el Python global.
+Collecting google-api-python-client>=2.150.0 (from -r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 1))
+  Downloading google_api_python_client-2.201.0-py3-none-any.whl.metadata (6.8 kB)
+Collecting google-auth>=2.35.0 (from -r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 2))
+  Downloading google_auth-2.59.1-py3-none-any.whl.metadata (6.0 kB)
+Collecting google-auth-httplib2>=0.2.0 (from -r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 3))
+  Downloading google_auth_httplib2-0.4.4-py3-none-any.whl.metadata (3.0 kB)
+Collecting google-auth-oauthlib>=1.2.1 (from -r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 4))
+  Downloading google_auth_oauthlib-1.5.0-py3-none-any.whl.metadata (2.6 kB)
+Collecting keyring>=25.5.0 (from -r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 5))
+  Downloading keyring-25.7.0-py3-none-any.whl.metadata (21 kB)
+Collecting pywinauto>=0.6.9 (from -r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 6))
+  Downloading pywinauto-0.6.9-py2.py3-none-any.whl.metadata (2.0 kB)
+Collecting pyautogui>=0.9.54 (from -r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 7))
+  Downloading PyAutoGUI-0.9.54.tar.gz (61 kB)
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Collecting pywin32>=308 (from -r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 8))
+  Downloading pywin32-312-cp312-cp312-win_amd64.whl.metadata (11 kB)
+Collecting psutil>=6.1.0 (from -r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 9))
+  Downloading psutil-7.2.2-cp37-abi3-win_amd64.whl.metadata (22 kB)
+Collecting Pillow>=11.0.0 (from -r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 10))
+  Downloading pillow-12.3.0-cp312-cp312-win_amd64.whl.metadata (9.3 kB)
+Collecting pytesseract>=0.3.13 (from -r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 11))
+  Downloading pytesseract-0.3.13-py3-none-any.whl.metadata (11 kB)
+Collecting pypdf>=5.0.0 (from -r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 12))
+  Downloading pypdf-6.19.0-py3-none-any.whl.metadata (7.5 kB)
+Collecting beautifulsoup4>=4.12.3 (from -r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 13))
+  Downloading beautifulsoup4-4.15.0-py3-none-any.whl.metadata (3.8 kB)
+Collecting waitress<4,>=3.0.2 (from -r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 14))
+  Downloading waitress-3.0.2-py3-none-any.whl.metadata (5.8 kB)
+Collecting httplib2<1.0.0,>=0.19.0 (from google-api-python-client>=2.150.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 1))
+  Downloading httplib2-0.32.0-py3-none-any.whl.metadata (2.2 kB)
+Collecting google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0,>=1.31.5 (from google-api-python-client>=2.150.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 1))
+  Downloading google_api_core-2.40.0-py3-none-any.whl.metadata (3.2 kB)
+Collecting uritemplate<5,>=3.0.1 (from google-api-python-client>=2.150.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 1))
+  Downloading uritemplate-4.2.0-py3-none-any.whl.metadata (2.6 kB)
+Collecting pyasn1-modules>=0.2.1 (from google-auth>=2.35.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 2))
+  Downloading pyasn1_modules-0.4.2-py3-none-any.whl.metadata (3.5 kB)
+Collecting cryptography>=38.0.3 (from google-auth>=2.35.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 2))
+  Downloading cryptography-50.0.2-cp311-abi3-win_amd64.whl.metadata (4.4 kB)
+Collecting requests-oauthlib>=0.7.0 (from google-auth-oauthlib>=1.2.1->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 4))
+  Downloading requests_oauthlib-2.0.0-py2.py3-none-any.whl.metadata (11 kB)
+Collecting pywin32-ctypes>=0.2.0 (from keyring>=25.5.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 5))
+  Downloading pywin32_ctypes-0.2.3-py3-none-any.whl.metadata (3.9 kB)
+Collecting jaraco.classes (from keyring>=25.5.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 5))
+  Downloading jaraco.classes-3.4.0-py3-none-any.whl.metadata (2.6 kB)
+Collecting jaraco.functools (from keyring>=25.5.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 5))
+  Downloading jaraco_functools-4.6.0-py3-none-any.whl.metadata (2.9 kB)
+Collecting jaraco.context (from keyring>=25.5.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 5))
+  Downloading jaraco_context-6.1.2-py3-none-any.whl.metadata (4.2 kB)
+Collecting six (from pywinauto>=0.6.9->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 6))
+  Downloading six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+Collecting comtypes (from pywinauto>=0.6.9->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 6))
+  Downloading comtypes-1.4.17-py3-none-any.whl.metadata (7.8 kB)
+Collecting pymsgbox (from pyautogui>=0.9.54->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 7))
+  Downloading pymsgbox-2.0.1-py3-none-any.whl.metadata (4.4 kB)
+Collecting pytweening>=1.0.4 (from pyautogui>=0.9.54->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 7))
+  Downloading pytweening-1.2.0.tar.gz (171 kB)
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Collecting pyscreeze>=0.1.21 (from pyautogui>=0.9.54->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 7))
+  Downloading pyscreeze-1.0.1.tar.gz (27 kB)
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Collecting pygetwindow>=0.0.5 (from pyautogui>=0.9.54->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 7))
+  Downloading PyGetWindow-0.0.9.tar.gz (9.7 kB)
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Collecting mouseinfo (from pyautogui>=0.9.54->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 7))
+  Downloading MouseInfo-0.1.3.tar.gz (10 kB)
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Collecting packaging>=21.3 (from pytesseract>=0.3.13->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 11))
+  Downloading packaging-26.3-py3-none-any.whl.metadata (3.5 kB)
+Collecting soupsieve>=1.6.1 (from beautifulsoup4>=4.12.3->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 13))
+  Downloading soupsieve-2.10-py3-none-any.whl.metadata (4.4 kB)
+Collecting typing-extensions>=4.0.0 (from beautifulsoup4>=4.12.3->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 13))
+  Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting cffi>=2.0.0 (from cryptography>=38.0.3->google-auth>=2.35.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 2))
+  Downloading cffi-2.1.1-cp312-cp312-win_amd64.whl.metadata (2.6 kB)
+Collecting googleapis-common-protos<2.0.0,>=1.69.2 (from google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0,>=1.31.5->google-api-python-client>=2.150.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 1))
+  Downloading googleapis_common_protos-1.75.5-py3-none-any.whl.metadata (8.5 kB)
+Collecting protobuf<8.0.0,>=6.33.5 (from google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0,>=1.31.5->google-api-python-client>=2.150.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 1))
+  Downloading protobuf-7.36.2-cp310-abi3-win_amd64.whl.metadata (595 bytes)
+Collecting proto-plus<2.0.0,>=1.26.1 (from google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0,>=1.31.5->google-api-python-client>=2.150.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 1))
+  Downloading proto_plus-1.29.0-py3-none-any.whl.metadata (2.2 kB)
+Collecting requests<3.0.0,>=2.33.0 (from google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0,>=1.31.5->google-api-python-client>=2.150.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 1))
+  Downloading requests-2.34.2-py3-none-any.whl.metadata (4.8 kB)
+Collecting opentelemetry-api<2.0.0,>=1.44.0 (from google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0,>=1.31.5->google-api-python-client>=2.150.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 1))
+  Downloading opentelemetry_api-1.45.0-py3-none-any.whl.metadata (1.4 kB)
+Collecting pyparsing<4,>=3.1 (from httplib2<1.0.0,>=0.19.0->google-api-python-client>=2.150.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 1))
+  Downloading pyparsing-3.3.3-py3-none-any.whl.metadata (5.9 kB)
+Collecting pyasn1<0.7.0,>=0.6.1 (from pyasn1-modules>=0.2.1->google-auth>=2.35.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 2))
+  Downloading pyasn1-0.6.4-py3-none-any.whl.metadata (8.4 kB)
+Collecting pyrect (from pygetwindow>=0.0.5->pyautogui>=0.9.54->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 7))
+  Downloading PyRect-0.2.0.tar.gz (17 kB)
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Collecting oauthlib>=3.0.0 (from requests-oauthlib>=0.7.0->google-auth-oauthlib>=1.2.1->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 4))
+  Downloading oauthlib-4.0.0-py3-none-any.whl.metadata (8.6 kB)
+Collecting more-itertools (from jaraco.classes->keyring>=25.5.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 5))
+  Downloading more_itertools-11.1.0-py3-none-any.whl.metadata (41 kB)
+Collecting pyperclip (from mouseinfo->pyautogui>=0.9.54->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 7))
+  Downloading pyperclip-1.11.0-py3-none-any.whl.metadata (2.4 kB)
+Collecting pycparser (from cffi>=2.0.0->cryptography>=38.0.3->google-auth>=2.35.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 2))
+  Downloading pycparser-3.0-py3-none-any.whl.metadata (8.2 kB)
+Collecting charset_normalizer<4,>=2 (from requests<3.0.0,>=2.33.0->google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0,>=1.31.5->google-api-python-client>=2.150.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 1))
+  Downloading charset_normalizer-3.5.2-cp312-cp312-win_amd64.whl.metadata (47 kB)
+Collecting idna<4,>=2.5 (from requests<3.0.0,>=2.33.0->google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0,>=1.31.5->google-api-python-client>=2.150.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 1))
+  Downloading idna-3.20-py3-none-any.whl.metadata (7.2 kB)
+Collecting urllib3<3,>=1.26 (from requests<3.0.0,>=2.33.0->google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0,>=1.31.5->google-api-python-client>=2.150.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 1))
+  Downloading urllib3-2.8.0-py3-none-any.whl.metadata (7.4 kB)
+Collecting certifi>=2023.5.7 (from requests<3.0.0,>=2.33.0->google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0,>=1.31.5->google-api-python-client>=2.150.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 1))
+  Downloading certifi-2026.7.22-py3-none-any.whl.metadata (2.5 kB)
+Downloading google_api_python_client-2.201.0-py3-none-any.whl (16.8 MB)
+   ---------------------------------------- 16.8/16.8 MB 1.4 MB/s eta 0:00:00
+Downloading google_auth-2.59.1-py3-none-any.whl (263 kB)
+Downloading google_auth_httplib2-0.4.4-py3-none-any.whl (9.5 kB)
+Downloading google_auth_oauthlib-1.5.0-py3-none-any.whl (20 kB)
+Downloading keyring-25.7.0-py3-none-any.whl (39 kB)
+Downloading pywinauto-0.6.9-py2.py3-none-any.whl (363 kB)
+Downloading pywin32-312-cp312-cp312-win_amd64.whl (6.9 MB)
+   ---------------------------------------- 6.9/6.9 MB 2.7 MB/s eta 0:00:00
+Downloading psutil-7.2.2-cp37-abi3-win_amd64.whl (137 kB)
+Downloading pillow-12.3.0-cp312-cp312-win_amd64.whl (7.2 MB)
+   ---------------------------------------- 7.2/7.2 MB 1.5 MB/s eta 0:00:00
+Downloading pytesseract-0.3.13-py3-none-any.whl (14 kB)
+Downloading pypdf-6.19.0-py3-none-any.whl (395 kB)
+Downloading beautifulsoup4-4.15.0-py3-none-any.whl (109 kB)
+Downloading waitress-3.0.2-py3-none-any.whl (56 kB)
+Downloading cryptography-50.0.2-cp311-abi3-win_amd64.whl (3.8 MB)
+   ---------------------------------------- 3.8/3.8 MB 1.0 MB/s eta 0:00:00
+Downloading google_api_core-2.40.0-py3-none-any.whl (214 kB)
+Downloading httplib2-0.32.0-py3-none-any.whl (93 kB)
+Downloading packaging-26.3-py3-none-any.whl (129 kB)
+Downloading pyasn1_modules-0.4.2-py3-none-any.whl (181 kB)
+Downloading pywin32_ctypes-0.2.3-py3-none-any.whl (30 kB)
+Downloading requests_oauthlib-2.0.0-py2.py3-none-any.whl (24 kB)
+Downloading soupsieve-2.10-py3-none-any.whl (38 kB)
+Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+Downloading uritemplate-4.2.0-py3-none-any.whl (11 kB)
+Downloading comtypes-1.4.17-py3-none-any.whl (298 kB)
+Downloading jaraco.classes-3.4.0-py3-none-any.whl (6.8 kB)
+Downloading jaraco_context-6.1.2-py3-none-any.whl (7.9 kB)
+Downloading jaraco_functools-4.6.0-py3-none-any.whl (11 kB)
+Downloading pymsgbox-2.0.1-py3-none-any.whl (10.0 kB)
+Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
+Downloading cffi-2.1.1-cp312-cp312-win_amd64.whl (185 kB)
+Downloading googleapis_common_protos-1.75.5-py3-none-any.whl (307 kB)
+Downloading oauthlib-4.0.0-py3-none-any.whl (159 kB)
+Downloading opentelemetry_api-1.45.0-py3-none-any.whl (60 kB)
+Downloading proto_plus-1.29.0-py3-none-any.whl (50 kB)
+Downloading protobuf-7.36.2-cp310-abi3-win_amd64.whl (456 kB)
+Downloading pyasn1-0.6.4-py3-none-any.whl (84 kB)
+Downloading pyparsing-3.3.3-py3-none-any.whl (126 kB)
+Downloading requests-2.34.2-py3-none-any.whl (73 kB)
+Downloading more_itertools-11.1.0-py3-none-any.whl (72 kB)
+Downloading pyperclip-1.11.0-py3-none-any.whl (11 kB)
+Downloading certifi-2026.7.22-py3-none-any.whl (136 kB)
+Downloading charset_normalizer-3.5.2-cp312-cp312-win_amd64.whl (207 kB)
+Downloading idna-3.20-py3-none-any.whl (69 kB)
+Downloading urllib3-2.8.0-py3-none-any.whl (135 kB)
+Downloading pycparser-3.0-py3-none-any.whl (48 kB)
+Building wheels for collected packages: pyautogui, pygetwindow, pyscreeze, pytweening, mouseinfo, pyrect
+  Building wheel for pyautogui (pyproject.toml): started
+  Building wheel for pyautogui (pyproject.toml): finished with status 'done'
+  Created wheel for pyautogui: filename=pyautogui-0.9.54-py3-none-any.whl size=37708 sha256=a89b442e62cae4fb46ef3bb8929045106d145e4cc8eab6872c49d13a4be30440
+  Stored in directory: C:\Users\admin\AppData\Local\Temp\pip-ephem-wheel-cache-yftdkrrc\wheels\d9\d6\47\04075995b093ecc87c212c9a3dbd34e59456c6fe504d65c3e4
+  Building wheel for pygetwindow (pyproject.toml): started
+  Building wheel for pygetwindow (pyproject.toml): finished with status 'done'
+  Created wheel for pygetwindow: filename=pygetwindow-0.0.9-py3-none-any.whl size=11137 sha256=7ab67a7942ac30a20596afdf1a3d7073e6b34998f605c264bcf337766aa04dd3
+  Stored in directory: C:\Users\admin\AppData\Local\Temp\pip-ephem-wheel-cache-yftdkrrc\wheels\b3\39\81\34dd7a2eca5f885f1f6e2796761970daf66a2d98ac1904f5f4
+  Building wheel for pyscreeze (pyproject.toml): started
+  Building wheel for pyscreeze (pyproject.toml): finished with status 'done'
+  Created wheel for pyscreeze: filename=pyscreeze-1.0.1-py3-none-any.whl size=14480 sha256=4b6cb0372625ebe06fbb3c55df0160bf74681fac8a37a8b9842bdfa65f71bb0d
+  Stored in directory: C:\Users\admin\AppData\Local\Temp\pip-ephem-wheel-cache-yftdkrrc\wheels\cd\3a\c2\7f2839239a069aa3c9564f6777cbb29d733720ef673f104f0d
+  Building wheel for pytweening (pyproject.toml): started
+  Building wheel for pytweening (pyproject.toml): finished with status 'done'
+  Created wheel for pytweening: filename=pytweening-1.2.0-py3-none-any.whl size=8134 sha256=77b1c48eb197df13cc1b71d1e4afa0202d2b0aae46eea4ab20e346591389ce12
+  Stored in directory: C:\Users\admin\AppData\Local\Temp\pip-ephem-wheel-cache-yftdkrrc\wheels\23\d5\13\4e9bdadbfe3c78e47c675e7410c0eed2fbb63c5ea6cf1b40e7
+  Building wheel for mouseinfo (pyproject.toml): started
+  Building wheel for mouseinfo (pyproject.toml): finished with status 'done'
+  Created wheel for mouseinfo: filename=mouseinfo-0.1.3-py3-none-any.whl size=10959 sha256=b756ab89a1297e458d0ddf2d4c972accedb33a9e2bf69835717ae09dd58213b2
+  Stored in directory: C:\Users\admin\AppData\Local\Temp\pip-ephem-wheel-cache-yftdkrrc\wheels\b1\9b\f3\08650eb7f00af32f07789f3c6a101e0d7fc762b9891ae843bb
+  Building wheel for pyrect (pyproject.toml): started
+  Building wheel for pyrect (pyproject.toml): finished with status 'done'
+  Created wheel for pyrect: filename=pyrect-0.2.0-py2.py3-none-any.whl size=11305 sha256=2a9f6769a97a268ee313d0baf9ea84e980f3f09f54fdd00a49aa6baed911a49e
+  Stored in directory: C:\Users\admin\AppData\Local\Temp\pip-ephem-wheel-cache-yftdkrrc\wheels\0b\1e\d7\0c74bd8f60b39c14d84e307398786002aa7ddc905927cc03c5
+Successfully built pyautogui pygetwindow pyscreeze pytweening mouseinfo pyrect
+Installing collected packages: pytweening, pyscreeze, pyrect, pyperclip, waitress, urllib3, uritemplate, typing-extensions, soupsieve, six, pywin32-ctypes, pywin32, pypdf, pyparsing, pymsgbox, pygetwindow, pycparser, pyasn1, psutil, protobuf, Pillow, packaging, oauthlib, mouseinfo, more-itertools, jaraco.context, idna, comtypes, charset_normalizer, certifi, requests, pywinauto, pytesseract, pyautogui, pyasn1-modules, proto-plus, opentelemetry-api, jaraco.functools, jaraco.classes, httplib2, googleapis-common-protos, cffi, beautifulsoup4, requests-oauthlib, keyring, cryptography, google-auth, google-auth-oauthlib, google-auth-httplib2, google-api-core, google-api-python-client
+Successfully installed Pillow-12.3.0 beautifulsoup4-4.15.0 certifi-2026.7.22 cffi-2.1.1 charset_normalizer-3.5.2 comtypes-1.4.17 cryptography-50.0.2 google-api-core-2.40.0 google-api-python-client-2.201.0 google-auth-2.59.1 google-auth-httplib2-0.4.4 google-auth-oauthlib-1.5.0 googleapis-common-protos-1.75.5 httplib2-0.32.0 idna-3.20 jaraco.classes-3.4.0 jaraco.context-6.1.2 jaraco.functools-4.6.0 keyring-25.7.0 more-itertools-11.1.0 mouseinfo-0.1.3 oauthlib-4.0.0 opentelemetry-api-1.45.0 packaging-26.3 proto-plus-1.29.0 protobuf-7.36.2 psutil-7.2.2 pyasn1-0.6.4 pyasn1-modules-0.4.2 pyautogui-0.9.54 pycparser-3.0 pygetwindow-0.0.9 pymsgbox-2.0.1 pyparsing-3.3.3 pypdf-6.19.0 pyperclip-1.11.0 pyrect-0.2.0 pyscreeze-1.0.1 pytesseract-0.3.13 pytweening-1.2.0 pywin32-312 pywin32-ctypes-0.2.3 pywinauto-0.6.9 requests-2.34.2 requests-oauthlib-2.0.0 six-1.17.0 soupsieve-2.10 typing-extensions-4.16.0 uritemplate-4.2.0 urllib3-2.8.0 waitress-3.0.2
+No broken requirements found.
+
+ENTORNO OK. Abre 2_INICIAR_VM.bat.
+
+=== VM-BASE-ORIGINAL-2026-10-03-R1 | 2026-10-03 10:56:35 | preparar ===
+Carpeta activa: C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT
+Usando entorno local: C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\.venv\Scripts\python.exe
+Instalando dependencias SIN caché. No se actualiza el Python global.
+Requirement already satisfied: google-api-python-client>=2.150.0 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from -r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 1)) (2.201.0)
+Requirement already satisfied: google-auth>=2.35.0 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from -r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 2)) (2.59.1)
+Requirement already satisfied: google-auth-httplib2>=0.2.0 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from -r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 3)) (0.4.4)
+Requirement already satisfied: google-auth-oauthlib>=1.2.1 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from -r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 4)) (1.5.0)
+Requirement already satisfied: keyring>=25.5.0 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from -r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 5)) (25.7.0)
+Requirement already satisfied: pywinauto>=0.6.9 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from -r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 6)) (0.6.9)
+Requirement already satisfied: pyautogui>=0.9.54 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from -r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 7)) (0.9.54)
+Requirement already satisfied: pywin32>=308 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from -r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 8)) (312)
+Requirement already satisfied: psutil>=6.1.0 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from -r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 9)) (7.2.2)
+Requirement already satisfied: Pillow>=11.0.0 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from -r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 10)) (12.3.0)
+Requirement already satisfied: pytesseract>=0.3.13 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from -r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 11)) (0.3.13)
+Requirement already satisfied: pypdf>=5.0.0 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from -r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 12)) (6.19.0)
+Requirement already satisfied: beautifulsoup4>=4.12.3 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from -r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 13)) (4.15.0)
+Requirement already satisfied: waitress<4,>=3.0.2 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from -r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 14)) (3.0.2)
+Requirement already satisfied: httplib2<1.0.0,>=0.19.0 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from google-api-python-client>=2.150.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 1)) (0.32.0)
+Requirement already satisfied: google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0,>=1.31.5 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from google-api-python-client>=2.150.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 1)) (2.40.0)
+Requirement already satisfied: uritemplate<5,>=3.0.1 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from google-api-python-client>=2.150.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 1)) (4.2.0)
+Requirement already satisfied: pyasn1-modules>=0.2.1 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from google-auth>=2.35.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 2)) (0.4.2)
+Requirement already satisfied: cryptography>=38.0.3 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from google-auth>=2.35.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 2)) (50.0.2)
+Requirement already satisfied: requests-oauthlib>=0.7.0 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from google-auth-oauthlib>=1.2.1->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 4)) (2.0.0)
+Requirement already satisfied: pywin32-ctypes>=0.2.0 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from keyring>=25.5.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 5)) (0.2.3)
+Requirement already satisfied: jaraco.classes in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from keyring>=25.5.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 5)) (3.4.0)
+Requirement already satisfied: jaraco.functools in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from keyring>=25.5.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 5)) (4.6.0)
+Requirement already satisfied: jaraco.context in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from keyring>=25.5.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 5)) (6.1.2)
+Requirement already satisfied: six in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from pywinauto>=0.6.9->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 6)) (1.17.0)
+Requirement already satisfied: comtypes in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from pywinauto>=0.6.9->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 6)) (1.4.17)
+Requirement already satisfied: pymsgbox in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from pyautogui>=0.9.54->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 7)) (2.0.1)
+Requirement already satisfied: pytweening>=1.0.4 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from pyautogui>=0.9.54->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 7)) (1.2.0)
+Requirement already satisfied: pyscreeze>=0.1.21 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from pyautogui>=0.9.54->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 7)) (1.0.1)
+Requirement already satisfied: pygetwindow>=0.0.5 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from pyautogui>=0.9.54->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 7)) (0.0.9)
+Requirement already satisfied: mouseinfo in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from pyautogui>=0.9.54->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 7)) (0.1.3)
+Requirement already satisfied: packaging>=21.3 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from pytesseract>=0.3.13->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 11)) (26.3)
+Requirement already satisfied: soupsieve>=1.6.1 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from beautifulsoup4>=4.12.3->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 13)) (2.10)
+Requirement already satisfied: typing-extensions>=4.0.0 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from beautifulsoup4>=4.12.3->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 13)) (4.16.0)
+Requirement already satisfied: cffi>=2.0.0 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from cryptography>=38.0.3->google-auth>=2.35.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 2)) (2.1.1)
+Requirement already satisfied: googleapis-common-protos<2.0.0,>=1.69.2 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0,>=1.31.5->google-api-python-client>=2.150.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 1)) (1.75.5)
+Requirement already satisfied: protobuf<8.0.0,>=6.33.5 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0,>=1.31.5->google-api-python-client>=2.150.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 1)) (7.36.2)
+Requirement already satisfied: proto-plus<2.0.0,>=1.26.1 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0,>=1.31.5->google-api-python-client>=2.150.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 1)) (1.29.0)
+Requirement already satisfied: requests<3.0.0,>=2.33.0 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0,>=1.31.5->google-api-python-client>=2.150.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 1)) (2.34.2)
+Requirement already satisfied: opentelemetry-api<2.0.0,>=1.44.0 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0,>=1.31.5->google-api-python-client>=2.150.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 1)) (1.45.0)
+Requirement already satisfied: pyparsing<4,>=3.1 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from httplib2<1.0.0,>=0.19.0->google-api-python-client>=2.150.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 1)) (3.3.3)
+Requirement already satisfied: pyasn1<0.7.0,>=0.6.1 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from pyasn1-modules>=0.2.1->google-auth>=2.35.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 2)) (0.6.4)
+Requirement already satisfied: pyrect in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from pygetwindow>=0.0.5->pyautogui>=0.9.54->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 7)) (0.2.0)
+Requirement already satisfied: oauthlib>=3.0.0 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from requests-oauthlib>=0.7.0->google-auth-oauthlib>=1.2.1->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 4)) (4.0.0)
+Requirement already satisfied: more-itertools in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from jaraco.classes->keyring>=25.5.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 5)) (11.1.0)
+Requirement already satisfied: pyperclip in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from mouseinfo->pyautogui>=0.9.54->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 7)) (1.11.0)
+Requirement already satisfied: pycparser in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from cffi>=2.0.0->cryptography>=38.0.3->google-auth>=2.35.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 2)) (3.0)
+Requirement already satisfied: charset_normalizer<4,>=2 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from requests<3.0.0,>=2.33.0->google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0,>=1.31.5->google-api-python-client>=2.150.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 1)) (3.5.2)
+Requirement already satisfied: idna<4,>=2.5 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from requests<3.0.0,>=2.33.0->google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0,>=1.31.5->google-api-python-client>=2.150.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 1)) (3.20)
+Requirement already satisfied: urllib3<3,>=1.26 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from requests<3.0.0,>=2.33.0->google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0,>=1.31.5->google-api-python-client>=2.150.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 1)) (2.8.0)
+Requirement already satisfied: certifi>=2023.5.7 in c:\users\admin\desktop\ary_facturacion_bot_vm_r1_rapido_completo\ary_facturacion_bot\.venv\lib\site-packages (from requests<3.0.0,>=2.33.0->google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0,>=1.31.5->google-api-python-client>=2.150.0->-r C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\requirements.in (line 1)) (2026.7.22)
+No broken requirements found.
+
+ENTORNO OK. Abre 2_INICIAR_VM.bat.
+
+=== VM-BASE-ORIGINAL-2026-10-03-R1 | 2026-10-03 10:56:59 | iniciar ===
+Carpeta activa: C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT
+Comprobando TODAS las dependencias del mismo Python que abrirá el bot...
+Python elegido: C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\.venv\Scripts\python.exe
+Abriendo el bot. Conserva esta consola; los errores quedarán en logs/arranque_vm.txt.
+
+=== VM-BASE-ORIGINAL-2026-10-03-R1 | 2026-10-03 11:09:24 | iniciar ===
+Carpeta activa: C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT
+Comprobando TODAS las dependencias del mismo Python que abrirá el bot...
+Python elegido: C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\.venv\Scripts\python.exe
+Abriendo el bot. Conserva esta consola; los errores quedarán en logs/arranque_vm.txt.
+
+=== VM-BASE-ORIGINAL-2026-10-03-R1 | 2026-10-03 11:53:30 | iniciar ===
+Carpeta activa: C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT
+Comprobando TODAS las dependencias del mismo Python que abrirá el bot...
+Python elegido: C:\Users\admin\Desktop\ARY_FACTURACION_BOT_VM_R1_RAPIDO_COMPLETO\ARY_FACTURACION_BOT\.venv\Scripts\python.exe
+Abriendo el bot. Conserva esta consola; los errores quedarán en logs/arranque_vm.txt.
