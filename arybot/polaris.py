@@ -953,37 +953,90 @@ class PolarisBot:
             time.sleep(.20)
         return None
 
+    def _station_menu_command(self, main):
+        """Obtiene y valida el comando nativo de Utilerías -> Cambio de estación.
+
+        En la VM medida (Polaris Exe 3.8.2.4) el menú superior Utilerías es el
+        índice 6 y su comando Cambio de estación es el ID 140, posición 6 del
+        submenú. No se ejecuta el ID a ciegas: se valida en cada intento contra
+        el menú real de la ventana principal.
+        """
+        from ctypes import wintypes as w
+        u=ctypes.WinDLL("user32",use_last_error=True)
+        u.GetMenu.argtypes=[w.HWND]; u.GetMenu.restype=w.HMENU
+        u.GetMenuItemCount.argtypes=[w.HMENU]; u.GetMenuItemCount.restype=ctypes.c_int
+        u.GetMenuStringW.argtypes=[w.HMENU,w.UINT,w.LPWSTR,ctypes.c_int,w.UINT]
+        u.GetMenuStringW.restype=ctypes.c_int
+        u.GetSubMenu.argtypes=[w.HMENU,ctypes.c_int]; u.GetSubMenu.restype=w.HMENU
+        u.GetMenuItemID.argtypes=[w.HMENU,ctypes.c_int]; u.GetMenuItemID.restype=w.UINT
+        u.GetMenuState.argtypes=[w.HMENU,w.UINT,w.UINT]; u.GetMenuState.restype=w.UINT
+
+        MF_BYPOSITION=0x0400
+        MF_DISABLED=0x0002
+        MF_GRAYED=0x0001
+        MF_SEPARATOR=0x0800
+
+        menu=u.GetMenu(main)
+        if not menu:
+            raise PolarisError("Polaris no expone su menú principal de Windows.")
+
+        util_pos=None
+        count=u.GetMenuItemCount(menu)
+        for pos in range(max(0,count)):
+            buf=ctypes.create_unicode_buffer(256)
+            u.GetMenuStringW(menu,pos,buf,len(buf),MF_BYPOSITION)
+            if self._norm(buf.value)=="UTILERIAS":
+                util_pos=pos
+                break
+        if util_pos is None:
+            raise PolarisError("No encontré el menú Utilerías en la ventana principal de Polaris.")
+
+        submenu=u.GetSubMenu(menu,util_pos)
+        if not submenu:
+            raise PolarisError("El menú Utilerías no expone su submenú nativo.")
+        subcount=u.GetMenuItemCount(submenu)
+        if subcount <= 6:
+            raise PolarisError(f"El menú Utilerías cambió: solo tiene {subcount} elementos.")
+
+        command_id=int(u.GetMenuItemID(submenu,6)) & 0xFFFFFFFF
+        state=int(u.GetMenuState(submenu,6,MF_BYPOSITION)) & 0xFFFFFFFF
+        if command_id != 140:
+            raise PolarisError(
+                f"El menú Utilerías no coincide con esta instalación: "
+                f"esperaba Cambio de estación ID 140 en posición 6 y obtuve {command_id}."
+            )
+        if state == 0xFFFFFFFF or state & (MF_DISABLED|MF_GRAYED|MF_SEPARATOR):
+            raise PolarisError("Cambio de estación está deshabilitado o no disponible en Polaris.")
+        return command_id
+
     def _open_station_catalog(self, main):
-        """Abre Utilerías -> Cambio de estación imitando el video del usuario."""
+        """Abre Cambio de estación por su comando nativo validado.
+
+        Conserva el flujo de la versión física, pero elimina la dependencia
+        de resolución/DPI/RDP para llegar al catálogo.
+        """
         self._activate(main,maximize=True)
-        r=self._rect(main)
+        command_id=self._station_menu_command(main)
+        self.log("Cambio de estación: ejecutando comando nativo validado de Utilerías (ID 140)...")
+        pyautogui.failSafeCheck()
+        try:
+            win32gui.PostMessage(main,getattr(win32con,"WM_COMMAND",0x0111),command_id,0)
+        except Exception as exc:
+            raise PolarisError(
+                "Windows no permitió ejecutar Cambio de estación en Polaris. "
+                "Revisa que bot y Polaris usen el mismo nivel de permisos."
+            ) from exc
 
-        x1=r.left+int(r.width*self.UTIL_MENU[0])
-        y1=r.top+int(r.height*self.UTIL_MENU[1])
-        self.log("Cambio de estación: abriendo menú Utilerías...")
-        pyautogui.moveTo(x1,y1,duration=.15)
-        pyautogui.click()
-        time.sleep(.45)
-
-        x2=r.left+int(r.width*self.UTIL_CAMBIO_ESTACION[0])
-        y2=r.top+int(r.height*self.UTIL_CAMBIO_ESTACION[1])
-        self.log("Cambio de estación: CLICK directo en 'Cambio de estación'...")
-        pyautogui.moveTo(x2,y2,duration=.18)
-        pyautogui.click()
-
-        dlg=self._wait_text_dialog("Seleccione el registro deseado",4)
+        dlg=self._wait_text_dialog("Seleccione el registro deseado",8)
         if dlg:
+            self.log("Catálogo de estaciones abierto mediante comando nativo.")
             return dlg
 
-        self.log("No apareció el catálogo con clic directo; reintentando por teclado (6 DOWN)...")
-        pyautogui.press("esc")
-        self._activate(main,maximize=True)
-        r=self._rect(main)
-        pyautogui.click(r.left+int(r.width*self.UTIL_MENU[0]), r.top+int(r.height*self.UTIL_MENU[1]))
-        time.sleep(.35)
-        pyautogui.press("down",presses=6,interval=.09)
-        pyautogui.press("enter")
-        return self._wait_text_dialog("Seleccione el registro deseado",7)
+        self._screenshot_error("cambio_estacion_comando_nativo_sin_dialogo")
+        raise PolarisError(
+            "Polaris recibió el comando nativo de Cambio de estación (ID 140), "
+            "pero no apareció 'Seleccione el registro deseado'. No se ejecutó otra opción."
+        )
 
     def _find_descendant_text(self, root, wanted):
         """Busca un control hijo visible por texto exacto/normalizado."""
