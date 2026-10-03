@@ -8,11 +8,7 @@ from tkinter import ttk, filedialog, messagebox
 from .config import ConfigManager
 from .db import DB
 from .gmail_client import GmailClient, NeedGmailAuth, WrongGmailAccount
-from .polaris import PolarisError
-if os.environ.get('ARY_USAR_ORIGINAL') == '1':
-    from .polaris import PolarisBot
-else:
-    from .compat_vm import PolarisBotVM as PolarisBot
+from .polaris import PolarisBot, PolarisError
 from .processor import Processor
 from .worker import BotWorker
 from .parser import Solicitud, normalize_payment, normalize_cfdi_usage, normalize_station, normalize_ticket_date, STATIONS, USO_CFDI
