@@ -132,12 +132,28 @@ class PolarisBot:
         return out
 
     def _find_title(self, regex):
+        """Busca por título y, para la principal, prefiere la ventana visual TForm_Menu."""
         rx=re.compile(regex,re.I)
+        principal=(regex == self.pcfg.get("ventana_principal_regex"))
+        matches=[]
         for h in self._enum():
             try:
-                if rx.search(win32gui.GetWindowText(h) or ""): return h
-            except: pass
-        return None
+                title=win32gui.GetWindowText(h) or ""
+                if not rx.search(title):
+                    continue
+                if not principal:
+                    return h
+                r=self._rect(h)
+                cls=(win32gui.GetClassName(h) or "").upper()
+                visual=bool(win32gui.IsWindowVisible(h) and r.width>=800 and r.height>=500)
+                preferred=(cls=="TFORM_MENU")
+                matches.append((int(visual),int(preferred),r.width*r.height,h))
+            except Exception:
+                pass
+        if not matches:
+            return None
+        matches.sort(reverse=True)
+        return matches[0][3]
 
     def _find_window_any_level(self, regex, *, min_width=0, min_height=0):
         """Busca una ventana por título incluyendo controles/MDI hijos.
@@ -1010,32 +1026,130 @@ class PolarisBot:
         return command_id
 
     def _open_station_catalog(self, main):
-        """Abre Cambio de estación por su comando nativo validado.
+        """Abre Utilerías -> Cambio de estación con rectángulos nativos de Windows.
 
-        Conserva el flujo de la versión física, pero elimina la dependencia
-        de resolución/DPI/RDP para llegar al catálogo.
+        En la PC física 0.241*1600 caía en Utilerías; en la VM 0.241*1920 cae
+        en Ventanas. Por eso aquí NO se usan porcentajes de pantalla.
         """
-        self._activate(main,maximize=True)
-        command_id=self._station_menu_command(main)
-        self.log("Cambio de estación: ejecutando comando nativo validado de Utilerías (ID 140)...")
-        pyautogui.failSafeCheck()
-        try:
-            win32gui.PostMessage(main,getattr(win32con,"WM_COMMAND",0x0111),command_id,0)
-        except Exception as exc:
-            raise PolarisError(
-                "Windows no permitió ejecutar Cambio de estación en Polaris. "
-                "Revisa que bot y Polaris usen el mismo nivel de permisos."
-            ) from exc
+        from ctypes import wintypes as w
 
-        dlg=self._wait_text_dialog("Seleccione el registro deseado",8)
+        self._activate(main,maximize=True)
+        pyautogui.failSafeCheck()
+
+        u=ctypes.WinDLL("user32",use_last_error=True)
+        u.GetMenu.argtypes=[w.HWND]; u.GetMenu.restype=w.HMENU
+        u.GetMenuItemCount.argtypes=[w.HMENU]; u.GetMenuItemCount.restype=ctypes.c_int
+        u.GetMenuStringW.argtypes=[w.HMENU,w.UINT,w.LPWSTR,ctypes.c_int,w.UINT]
+        u.GetMenuStringW.restype=ctypes.c_int
+        u.GetSubMenu.argtypes=[w.HMENU,ctypes.c_int]; u.GetSubMenu.restype=w.HMENU
+        u.GetMenuItemID.argtypes=[w.HMENU,ctypes.c_int]; u.GetMenuItemID.restype=w.UINT
+        u.GetMenuState.argtypes=[w.HMENU,w.UINT,w.UINT]; u.GetMenuState.restype=w.UINT
+        u.GetMenuItemRect.argtypes=[w.HWND,w.HMENU,w.UINT,ctypes.POINTER(w.RECT)]
+        u.GetMenuItemRect.restype=w.BOOL
+        u.SendMessageW.argtypes=[w.HWND,w.UINT,w.WPARAM,w.LPARAM]
+        u.SendMessageW.restype=w.LPARAM
+
+        MF_BYPOSITION=0x0400
+        MF_DISABLED=0x0002
+        MF_GRAYED=0x0001
+        MF_SEPARATOR=0x0800
+        WM_COMMAND=getattr(win32con,"WM_COMMAND",0x0111)
+
+        menu=u.GetMenu(main)
+        if not menu:
+            raise PolarisError("Polaris no expone el menú principal de Windows.")
+
+        util_pos=None
+        for pos in range(max(0,u.GetMenuItemCount(menu))):
+            buf=ctypes.create_unicode_buffer(256)
+            u.GetMenuStringW(menu,pos,buf,len(buf),MF_BYPOSITION)
+            if self._norm(buf.value)=="UTILERIAS":
+                util_pos=pos
+                break
+        if util_pos is None:
+            raise PolarisError("No se encontró Utilerías en el menú real de Polaris.")
+
+        submenu=u.GetSubMenu(menu,util_pos)
+        if not submenu:
+            raise PolarisError("Utilerías no expone su submenú nativo.")
+
+        target_pos=None
+        for pos in range(max(0,u.GetMenuItemCount(submenu))):
+            if (int(u.GetMenuItemID(submenu,pos)) & 0xFFFFFFFF)==140:
+                target_pos=pos
+                break
+        if target_pos is None:
+            raise PolarisError(
+                "No se encontró Cambio de estación (ID 140) dentro de Utilerías. "
+                "No se pulsó ninguna otra opción."
+            )
+        state=int(u.GetMenuState(submenu,target_pos,MF_BYPOSITION)) & 0xFFFFFFFF
+        if state==0xFFFFFFFF or state & (MF_DISABLED|MF_GRAYED|MF_SEPARATOR):
+            raise PolarisError("Cambio de estación está deshabilitado en Polaris.")
+
+        def rect_menu(owner,hmenu,pos):
+            rr=w.RECT()
+            if not u.GetMenuItemRect(owner,hmenu,pos,ctypes.byref(rr)):
+                return None
+            rect=(int(rr.left),int(rr.top),int(rr.right),int(rr.bottom))
+            return rect if rect[2]>rect[0] and rect[3]>rect[1] else None
+
+        # Abrir el menú superior exactamente donde Windows dice que está.
+        top_rect=rect_menu(main,menu,util_pos)
+        if not top_rect:
+            raise PolarisError("Windows no devolvió la posición real de Utilerías.")
+        x=(top_rect[0]+top_rect[2])//2
+        y=(top_rect[1]+top_rect[3])//2
+        self.log(f"VM-P04: Utilerías real rect={top_rect}; clic=({x},{y}); destino ID 140.")
+        pyautogui.moveTo(x,y,duration=.10)
+        pyautogui.click()
+
+        # Esperar el popup y obtener la fila real del ID 140.
+        item_rect=None
+        deadline=time.monotonic()+3.0
+        while time.monotonic()<deadline:
+            pyautogui.failSafeCheck()
+            candidate=rect_menu(0,submenu,target_pos)
+            if candidate:
+                cx=(candidate[0]+candidate[2])//2
+                cy=(candidate[1]+candidate[3])//2
+                try:
+                    under=win32gui.WindowFromPoint((cx,cy))
+                    if under and win32gui.GetClassName(under)=="#32768":
+                        item_rect=candidate
+                        break
+                except Exception:
+                    pass
+            time.sleep(.05)
+
+        if item_rect:
+            cx=(item_rect[0]+item_rect[2])//2
+            cy=(item_rect[1]+item_rect[3])//2
+            self.log(f"VM-P04: Cambio de estación ID 140 rect={item_rect}; clic=({cx},{cy}).")
+            pyautogui.moveTo(cx,cy,duration=.10)
+            pyautogui.click()
+            dlg=self._wait_text_dialog("Seleccione el registro deseado",5)
+            if dlg:
+                self.log("VM-P04: catálogo de estaciones abierto por clic nativo.")
+                return dlg
+
+        # Respaldo seguro: el MISMO ID ya validado, de forma síncrona.
+        try:
+            pyautogui.press("esc")
+        except Exception:
+            pass
+        self._activate(main,maximize=True)
+        self.log("VM-P04: clic nativo no respondió; SendMessage WM_COMMAND ID 140.")
+        u.SendMessageW(main,WM_COMMAND,140,0)
+        dlg=self._wait_text_dialog("Seleccione el registro deseado",6)
         if dlg:
-            self.log("Catálogo de estaciones abierto mediante comando nativo.")
+            self.log("VM-P04: catálogo abierto por WM_COMMAND ID 140.")
             return dlg
 
-        self._screenshot_error("cambio_estacion_comando_nativo_sin_dialogo")
+        self._screenshot_error("vm_p04_cambio_estacion_id140")
         raise PolarisError(
-            "Polaris recibió el comando nativo de Cambio de estación (ID 140), "
-            "pero no apareció 'Seleccione el registro deseado'. No se ejecutó otra opción."
+            "Polaris no abrió 'Seleccione el registro deseado' con la opción real "
+            "Cambio de estación (ID 140). No se ejecutó ninguna otra opción."
         )
 
     def _find_descendant_text(self, root, wanted):
