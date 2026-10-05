@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#B0187C">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'self'; form-action 'none'; connect-src 'self'; img-src 'self' data:; style-src 'unsafe-inline'; script-src 'sha256-YODThZpMNwpJcLNXvFPrliAQHyXAYfEXFe2Fjzue+us='">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'self'; form-action 'none'; connect-src 'self'; img-src 'self' data:; style-src 'unsafe-inline'; script-src 'sha256-Tbojq5W2BjjdHk0TxxCR+L6jnqw4EEg+7HwURjK9rAw='">
 <title>Facturación | ARY Super Servicios</title>
 <style>
 :root{--bg:#17000f;--panel:#2a071e;--line:rgba(255,190,222,.17);--text:#fff9fc;--muted:#d9b4ca;--primary:#b0187c;--primary2:#d72a93;--accent:#fcb144;--radius:24px}
@@ -19,6 +19,24 @@
 @media(max-width:1100px){.menu{display:block}.header-inner{flex-wrap:wrap;padding:16px 0;min-height:80px}.nav{display:none;flex-basis:100%;border-radius:15px;flex-wrap:wrap;padding:9px;gap:4px}.nav.open{display:flex}.nav a{flex-grow:1;text-align:center;font-size:13px}.workspace{grid-template-columns:minmax(0,1fr) 280px;gap:18px}.content{padding:25px}.hero h1{font-size:51px}}
 @media(max-width:870px){.workspace{grid-template-columns:1fr}.aside{display:grid;grid-template-columns:1fr 1fr;gap:18px}.side-card{margin:0}.mini-points{grid-column:1/-1;margin-top:0}.hero{padding-top:36px}.hero h1{font-size:45px}.form-bottom p{max-width:330px}}
 @media(max-width:560px){.container{width:calc(100% - 28px)}.brand strong{font-size:14px}.brand-mark{width:42px;height:42px;font-size:29px}.brand small{font-size:8px}.hero-top{align-items:flex-start;gap:14px;flex-direction:column}.hero{padding-top:29px;padding-bottom:24px}.hero h1{font-size:38px;letter-spacing:-1.8px;margin-top:20px}.hero p{font-size:13px}.connection{font-size:10px;padding:5px 10px}.workspace{gap:20px;margin-bottom:34px}.form-shell{border-radius:19px}.tab{padding:11px 8px;gap:7px}.tab-badge{width:28px;height:28px;flex-basis:28px;border-radius:8px}.tab strong{font-size:11px}.tab small{font-size:9px}.content{padding:23px 18px}.form-title h2{font-size:21px}.tag{font-size:8px;padding:4px 6px}.grid{grid-template-columns:1fr;gap:17px}.control{font-size:16px;min-height:49px}.form-bottom{flex-direction:column;align-items:stretch;gap:16px}.form-bottom p{max-width:none}.btn{min-height:48px;font-size:13px}.check{font-size:12px}.field small{font-size:11px}.aside{grid-template-columns:1fr}.side-card{padding:22px}.footer-inner{flex-direction:column;gap:7px}.receipt{padding:27px 19px}.reference{padding:16px}.reference strong{font-size:17px}.receipt-actions .btn{flex:1}.connection{max-width:100%}.eyebrow{font-size:9px}.mode-banner{font-size:12px}}
+
+.progress-card{margin:20px 0 16px;padding:18px;border:1px solid var(--line);border-radius:15px;background:#17000eaa}
+.progress-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.progress-head strong{font-size:13px}.progress-percent{font-size:11px;color:#fcb144;font-family:Consolas,monospace}
+.progress-track{height:13px;border-radius:999px;background:#0f000a;border:1px solid #ffffff14;overflow:hidden;position:relative}
+.progress-bar{height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#b0187c,#f05caf,#fcb144);transition:width .6s ease;position:relative;overflow:hidden}
+.progress-bar.loading:after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 15%,#ffffff55 45%,transparent 75%);transform:translateX(-100%);animation:aryProgress 1.25s linear infinite}
+.progress-card[data-result="success"]{border-color:#65d99a66;background:#0a40251f}
+.progress-card[data-result="success"] .progress-bar{background:linear-gradient(90deg,#20985d,#6be0a4)}
+.progress-card[data-result="error"]{border-color:#ff668777;background:#5a14282f}
+.progress-card[data-result="error"] .progress-bar{background:linear-gradient(90deg,#b51f47,#ff6687)}
+.progress-message{margin:11px 0 0!important;color:#e9c9da!important;font-size:12px!important}
+.result-box{margin:17px 0;padding:16px;border-radius:13px;border:1px solid var(--line);font-size:13px;line-height:1.7}
+.result-box.success{border-color:#6be0a466;background:#124b2c45;color:#d9ffe9}
+.result-box.error{border-color:#ff668777;background:#651b3455;color:#ffe0e7}
+.result-box strong{display:block;font-size:15px;margin-bottom:4px}
+.result-box a{font-weight:800;color:#ffd56e}
+@keyframes aryProgress{to{transform:translateX(100%)}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 
 input[type="date"].control{color-scheme:dark}
@@ -95,6 +113,12 @@ input[type="date"].control::-webkit-calendar-picker-indicator{filter:invert(1);o
 <h2 id="receiptTitle">Solicitud recibida</h2><p>Conserva esta referencia para consultar con el área de facturación.</p>
 <div class="reference"><div><small>Número de solicitud</small><strong id="receiptRef"></strong></div><button id="copyReference" type="button" class="btn copy">Copiar</button></div>
 <div id="receiptSafe" class="safe-receipt" hidden><strong>Solicitud de prueba.</strong> No autoriza timbrar una factura ni guardar un cliente.</div>
+<div id="progressCard" class="progress-card" aria-live="polite">
+  <div class="progress-head"><strong id="progressTitle">Procesando solicitud</strong><span id="progressPercent" class="progress-percent">10%</span></div>
+  <div class="progress-track" role="progressbar" aria-label="Avance de facturación" aria-valuemin="0" aria-valuemax="100" aria-valuenow="10"><div id="progressBar" class="progress-bar loading"></div></div>
+  <p id="progressMessage" class="progress-message">Estamos preparando tu solicitud.</p>
+</div>
+<div id="finalResult" class="result-box" hidden></div>
 <p><span class="state-pill" id="receiptState"></span></p><p id="receiptMessage" role="status"></p><p id="statusError" class="error" hidden role="status"></p>
 <div class="receipt-actions"><button type="button" class="btn btn-primary" id="refreshStatus">Actualizar estado</button><a href="ary_contacto.htm" class="btn">Contactar a ARY</a></div>
 <p class="privacy">El seguimiento no muestra tus datos fiscales. Guarda la referencia antes de cerrar esta pestaña. La confirmación de recepción no es un CFDI.</p>
@@ -254,6 +278,53 @@ input[type="date"].control::-webkit-calendar-picker-indicator{filter:invert(1);o
     storage.set('ary_portal_seguimiento', JSON.stringify({seguimiento:data.seguimiento, referencia:data.referencia}));
     storage.remove('ary_portal_pendiente');
   }
+  const PHONE_DISPLAY = '871 165 1404';
+  const PHONE_LINK = 'tel:+528711651404';
+  const PROGRESS = {
+    EN_COLA:{pct:18,title:'Solicitud recibida',msg:'Tu solicitud está en espera para ser atendida.'},
+    EJECUTANDO:{pct:68,title:'Generando tu factura…',msg:'Estamos procesando tu solicitud. No cierres esta página.'},
+    PREPARADA_FACTURA:{pct:82,title:'Factura preparada',msg:'La solicitud está preparada y requiere revisión antes de continuar.'},
+    ACEPTAR_ALTA:{pct:78,title:'Confirmando registro…',msg:'Estamos confirmando tu alta en el sistema.'},
+    PREPARADA_ALTA:{pct:82,title:'Alta preparada',msg:'El registro está preparado y requiere revisión.'},
+    ALTA_CONFIRMADA:{pct:100,title:'Alta confirmada',msg:'Tu registro quedó confirmado correctamente.'},
+    ENVIO_SOLICITADO:{pct:100,title:'Factura generada',msg:'Se ha enviado por correo su factura.'},
+    YA_FACTURADO:{pct:100,title:'Ticket ya facturado',msg:'Este ticket ya aparece facturado en el sistema.'},
+    REVISION_REQUERIDA:{pct:100,title:'No fue posible facturar',msg:'Error al facturar. Comuníquese con ARY al '+PHONE_DISPLAY+'.',error:true},
+    REVISION_CERRADA:{pct:100,title:'Revisión cerrada',msg:'No fue posible completar la facturación. Comuníquese con ARY al '+PHONE_DISPLAY+'.',error:true},
+    ESPERANDO_DATOS:{pct:100,title:'Faltan datos',msg:'No fue posible completar la solicitud. Comuníquese con ARY al '+PHONE_DISPLAY+'.',error:true},
+    CANCELADA:{pct:100,title:'Solicitud cancelada',msg:'La solicitud fue cancelada. Comuníquese con ARY al '+PHONE_DISPLAY+'.',error:true},
+    PRUEBA_CERRADA:{pct:100,title:'Prueba finalizada',msg:'La prueba terminó sin emitir una factura.'}
+  };
+  const TERMINAL = new Set(['ALTA_CONFIRMADA','ENVIO_SOLICITADO','YA_FACTURADO','REVISION_REQUERIDA','REVISION_CERRADA','ESPERANDO_DATOS','CANCELADA','PRUEBA_CERRADA']);
+
+  function updateProgress(data) {
+    const state = PROGRESS[data.estado] || {pct:45,title:'Procesando solicitud…',msg:data.mensaje || 'Estamos atendiendo tu solicitud.'};
+    const card=$('progressCard'), bar=$('progressBar'), track=bar.parentElement, result=$('finalResult');
+    $('progressTitle').textContent=state.title;
+    $('progressPercent').textContent=state.pct+'%';
+    $('progressMessage').textContent=state.msg;
+    bar.style.width=state.pct+'%';
+    track.setAttribute('aria-valuenow',String(state.pct));
+    bar.classList.toggle('loading',!TERMINAL.has(data.estado));
+    card.dataset.result=state.error ? 'error' : TERMINAL.has(data.estado) ? 'success' : '';
+
+    result.hidden=true;
+    result.className='result-box';
+    result.textContent='';
+    if(data.tipo==='FACTURA' && data.estado==='ENVIO_SOLICITADO') {
+      result.classList.add('success'); result.hidden=false;
+      const strong=document.createElement('strong'); strong.textContent='✓ Se ha enviado por correo su factura.';
+      const text=document.createElement('span'); text.textContent=' Revise la bandeja de entrada y también correo no deseado.';
+      result.append(strong,text);
+    } else if(data.tipo==='FACTURA' && state.error) {
+      result.classList.add('error'); result.hidden=false;
+      const strong=document.createElement('strong'); strong.textContent='Error al facturar.';
+      const text=document.createTextNode(' Comuníquese con ARY al ');
+      const link=document.createElement('a'); link.href=PHONE_LINK; link.textContent=PHONE_DISPLAY;
+      result.append(strong,text,link,document.createTextNode('.'));
+    }
+  }
+
   function renderReceipt(data) {
     $('tabs').hidden = true; $('panel-factura').hidden = true; $('panel-alta').hidden = true;
     $('receipt').hidden = false;
@@ -261,16 +332,20 @@ input[type="date"].control::-webkit-calendar-picker-indicator{filter:invert(1);o
     $('receiptState').textContent = data.estado.replaceAll('_',' ');
     $('receiptSafe').hidden = !data.modo_seguro;
     $('receiptMessage').textContent = data.mensaje;
+    updateProgress(data);
     if (poll) clearTimeout(poll);
-    const terminal = ['ALTA_CONFIRMADA','ENVIO_SOLICITADO','YA_FACTURADO','CANCELADA','PRUEBA_CERRADA','REVISION_CERRADA'];
-    if (!terminal.includes(data.estado) && !document.hidden) poll = setTimeout(refresh, 12000);
+    if (!TERMINAL.has(data.estado) && !document.hidden) poll = setTimeout(refresh, 2000);
   }
   async function refresh() {
     if(!receipt || !csrf) return;
     $('refreshStatus').disabled = true;
     $('statusError').hidden = true;
     try { renderReceipt(await call('/estado', {seguimiento:receipt.seguimiento})); }
-    catch (error) { $('statusError').textContent = 'No se actualizó el estado. Tu solicitud no se reenvió. '+(error.name==='AbortError' ? 'Revisa la conexión.' : error.message); $('statusError').hidden = false; }
+    catch (error) {
+      $('statusError').textContent = 'No se pudo actualizar el avance en este momento. La solicitud no se volvió a enviar.';
+      $('statusError').hidden = false;
+      if (!document.hidden) poll = setTimeout(refresh, 4000);
+    }
     finally { $('refreshStatus').disabled = false; }
   }
   $('refreshStatus').addEventListener('click', refresh);
