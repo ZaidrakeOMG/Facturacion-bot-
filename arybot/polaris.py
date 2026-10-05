@@ -939,6 +939,71 @@ class PolarisBot:
             self._screenshot_error("limpieza_ventanas_detenida")
             raise
 
+    def _cleanup_before_station_change_quick(self, main):
+        """Limpieza rápida para la VM antes de abrir Cambio de estación.
+
+        Cierra primero 'Accesos al Sistema' de forma directa y, si no queda
+        ninguna otra ventana operativa de Polaris, continúa inmediatamente.
+        Solo usa la limpieza completa como respaldo cuando realmente quedan
+        otros formularios abiertos.
+        """
+        self._cleanup_main_ok(main)
+        pyautogui.failSafeCheck()
+        self.log("VM-P05: limpieza rápida antes de cambio de estación...")
+
+        # 1) Cerrar directamente Accesos al Sistema si está visible.
+        access=[]
+        for row in self._popup_candidates(main):
+            try:
+                _depth,_area,h,title,cls,_rect=row
+                if self._norm(title)=="ACCESOSALSISTEMA":
+                    access.append((h,title))
+            except Exception:
+                pass
+        for h,title in access:
+            if not self._window_exists_visible(h):
+                continue
+            self.log("VM-P05: cerrando 'Accesos al Sistema'...")
+            pyautogui.failSafeCheck()
+            try:
+                win32gui.PostMessage(h,win32con.WM_CLOSE,0,0)
+            except Exception as exc:
+                raise PolarisError(
+                    "Windows no permitió cerrar 'Accesos al Sistema'. "
+                    "Revisa que bot y Polaris tengan el mismo nivel de permisos."
+                ) from exc
+            end=time.monotonic()+3.0
+            while time.monotonic()<end and self._window_exists_visible(h):
+                pyautogui.failSafeCheck()
+                time.sleep(.08)
+            if self._window_exists_visible(h):
+                raise PolarisError("'Accesos al Sistema' no respondió al cierre.")
+
+        # 2) Dar un instante a Delphi para devolver el foco/habilitar la principal.
+        end=time.monotonic()+2.0
+        while time.monotonic()<end:
+            pyautogui.failSafeCheck()
+            if self._window_exists_visible(main) and win32gui.IsWindowEnabled(main):
+                break
+            time.sleep(.08)
+
+        # 3) Si ya no quedan formularios, continuar YA; sin tres rondas de escaneo.
+        remaining=self._popup_candidates(main)
+        if not remaining and win32gui.IsWindowEnabled(main):
+            self.log("VM-P05: Polaris limpio; continúa cambio de estación.")
+            return True
+
+        # 4) Si quedó otra ventana real, conservar la limpieza segura original.
+        names=[]
+        for row in remaining:
+            try:
+                names.append(row[3])
+            except Exception:
+                pass
+        self.log("VM-P05: quedan ventanas de Polaris: "+(" | ".join(names) or "sin título")
+                 +". Se usa limpieza segura de respaldo.")
+        return self._cleanup_before_station_change(main)
+
     def _close_access_window(self, *, required=False):
         """Compatibilidad con v3.1: usa el mismo cierre verificado, no clics en la X."""
         main=self._find_title(self.pcfg["ventana_principal_regex"])
@@ -1263,7 +1328,7 @@ class PolarisBot:
         # completamente limpio de ventanas MDI/modales que puedan tapar Utilerías.
         # Solo se cierran ventanas DEL PROPIO POLARIS; si aparece una confirmación
         # de cambios sin guardar, el bot se detiene en vez de descartarlos.
-        self._cleanup_before_station_change(main)
+        self._cleanup_before_station_change_quick(main)
         main=self._find_title(self.pcfg["ventana_principal_regex"]) or main
 
         if not force and self._station_is_active(main,key):
@@ -1330,7 +1395,7 @@ class PolarisBot:
     def test_cleanup_only(self):
         with self._lock:
             main=self.ensure_ready()
-            self._cleanup_before_station_change(main)
+            self._cleanup_before_station_change_quick(main)
             return "Polaris limpio: ventanas emergentes cerradas"
 
     def _invoice_window(self):
