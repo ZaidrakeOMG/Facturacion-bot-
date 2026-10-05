@@ -1092,82 +1092,46 @@ class PolarisBot:
         return menu,top_pos,submenu,sub_pos,140
 
     def _open_station_catalog(self, main):
-        """Abre Cambio de estación por la ruta nativa ID 140 medida en la VM."""
+        """Abre Cambio de estación SIN clic visual en el submenú.
+
+        En RDP/GetMenuItemRect el rectángulo físico del popup puede quedar
+        desplazado una fila y caer en 'Cambiar Usuario'. Por eso, una vez
+        validada la ruta nativa y el ID 140, se ejecuta directamente WM_COMMAND.
+        """
         from ctypes import wintypes as w
 
         self._activate(main,maximize=True)
         pyautogui.failSafeCheck()
 
         u=ctypes.WinDLL("user32",use_last_error=True)
-        u.GetMenuItemRect.argtypes=[w.HWND,w.HMENU,w.UINT,ctypes.POINTER(w.RECT)]
-        u.GetMenuItemRect.restype=w.BOOL
         u.SendMessageW.argtypes=[w.HWND,w.UINT,w.WPARAM,w.LPARAM]
         u.SendMessageW.restype=w.LPARAM
         WM_COMMAND=getattr(win32con,"WM_COMMAND",0x0111)
 
-        menu,util_pos,submenu,target_pos,command_id=self._station_menu_path(main)
+        _menu,_util_pos,_submenu,_target_pos,command_id=self._station_menu_path(main)
+        if command_id != 140:
+            raise PolarisError(
+                f"Seguridad: la opción validada no es Cambio de estación (ID={command_id})."
+            )
 
-        def rect_menu(owner,hmenu,pos):
-            rr=w.RECT()
-            if not u.GetMenuItemRect(owner,hmenu,pos,ctypes.byref(rr)):
-                return None
-            result=(int(rr.left),int(rr.top),int(rr.right),int(rr.bottom))
-            return result if result[2]>result[0] and result[3]>result[1] else None
-
-        # Abrir el sexto menú superior (Utilerías) usando el rectángulo real
-        # devuelto por Windows, sin porcentajes de resolución.
-        top_rect=rect_menu(main,menu,util_pos)
-        if top_rect:
-            x=(top_rect[0]+top_rect[2])//2
-            y=(top_rect[1]+top_rect[3])//2
-            self.log(f"VM-P06: ruta ID 140 localizada. Menú 6 rect={top_rect}.")
-            pyautogui.moveTo(x,y,duration=.08)
-            pyautogui.click()
-
-            deadline=time.monotonic()+2.5
-            item_rect=None
-            while time.monotonic()<deadline:
-                pyautogui.failSafeCheck()
-                candidate=rect_menu(0,submenu,target_pos)
-                if candidate:
-                    cx=(candidate[0]+candidate[2])//2
-                    cy=(candidate[1]+candidate[3])//2
-                    try:
-                        under=win32gui.WindowFromPoint((cx,cy))
-                        if under and win32gui.GetClassName(under)=="#32768":
-                            item_rect=candidate
-                            break
-                    except Exception:
-                        pass
-                time.sleep(.04)
-
-            if item_rect:
-                cx=(item_rect[0]+item_rect[2])//2
-                cy=(item_rect[1]+item_rect[3])//2
-                self.log(f"VM-P06: clic real en Cambio de estación ID 140 rect={item_rect}.")
-                pyautogui.moveTo(cx,cy,duration=.08)
-                pyautogui.click()
-                dlg=self._station_catalog_dialog(5)
-                if dlg:
-                    return dlg
-
-        # Delphi a veces no materializa el popup en RDP. El mismo ID ya fue
-        # localizado y validado dentro del menú real, así que se envía directamente.
+        self.log("VM-P08: ejecutando directamente Cambio de estación (WM_COMMAND ID 140).")
         try:
-            pyautogui.press("esc")
-        except Exception:
-            pass
-        self._activate(main,maximize=True)
-        self.log("VM-P06: enviando WM_COMMAND validado ID 140.")
-        u.SendMessageW(main,WM_COMMAND,command_id,0)
+            u.SendMessageW(main,WM_COMMAND,command_id,0)
+        except Exception as exc:
+            raise PolarisError(
+                "Windows no permitió ejecutar Cambio de estación (ID 140). "
+                "Revisa que bot y Polaris tengan el mismo nivel de permisos."
+            ) from exc
+
         dlg=self._station_catalog_dialog(7)
         if dlg:
+            self.log("VM-P08: catálogo de estaciones abierto sin tocar Cambiar Usuario.")
             return dlg
 
-        self._screenshot_error("vm_p06_cambio_estacion_id140")
+        self._screenshot_error("vm_p08_cambio_estacion_id140")
         raise PolarisError(
-            "Polaris no abrió 'Seleccione el registro deseado' después de ejecutar "
-            "el comando nativo validado Cambio de estación (ID 140)."
+            "Polaris recibió Cambio de estación (ID 140), pero no apareció "
+            "'Seleccione el registro deseado'. No se ejecutó ninguna otra opción."
         )
 
     def _station_catalog_dialog(self, timeout=8):
