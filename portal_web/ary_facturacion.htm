@@ -14,7 +14,7 @@
 
   <meta content="no-referrer" name="referrer"/>
 
-  <meta content="default-src 'none'; base-uri 'self'; form-action 'none'; connect-src 'self'; img-src 'self' data:; style-src 'unsafe-inline'; script-src 'sha256-d2P2I46sjmm40vIEkPY5n8NzzP5lzM5F3wxPWhhsdeE='" http-equiv="Content-Security-Policy"/>
+  <meta content="default-src 'none'; base-uri 'self'; form-action 'none'; connect-src 'self'; img-src 'self' data:; style-src 'unsafe-inline'; script-src 'sha256-Tm2BRss7CCi2EHIFsPp8Eq1id4Nsd4sZ+ZydEzE/emw='" http-equiv="Content-Security-Policy"/>
 
   <title>
 
@@ -567,6 +567,16 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
   color:#ffd9e6
 
 }
+
+.onboarding-notice {
+  border-color:#fcb14466;
+  background:linear-gradient(135deg,#5b270d4d,#6e15382e);
+  color:#ffe7bd;
+}
+.onboarding-notice strong {
+  color:#ffd16f;
+}
+
 
 
 
@@ -2562,7 +2572,7 @@ input[type="date"].control::-webkit-calendar-picker-indicator {
 
     <p>
 
-     Da de alta tus datos o solicita la factura de tu ticket. Elige tu estación, revisa la información y conserva tu número de solicitud.
+     Primero registra tus datos si eres cliente nuevo. Una vez dado de alta, podrás solicitar la factura de tu ticket y seguir su avance en tiempo real.
 
     </p>
 
@@ -2632,7 +2642,7 @@ input[type="date"].control::-webkit-calendar-picker-indicator {
 
       </button>
 
-      <button aria-controls="panel-alta" aria-selected="false" class="tab" id="tab-alta" role="tab" tabindex="-1" type="button">
+      <button aria-controls="panel-alta" aria-selected="true" class="tab" id="tab-alta" role="tab" type="button">
 
        <span aria-hidden="true" class="tab-badge">
 
@@ -2672,7 +2682,7 @@ input[type="date"].control::-webkit-calendar-picker-indicator {
 
      <!-- ==================== FORMULARIO DE FACTURACIÓN ==================== -->
 
-     <section aria-labelledby="tab-factura" class="content" id="panel-factura" role="tabpanel">
+     <section aria-labelledby="tab-factura" class="content" hidden="" id="panel-factura" role="tabpanel">
 
       <div class="form-title">
 
@@ -2978,7 +2988,7 @@ input[type="date"].control::-webkit-calendar-picker-indicator {
 
      <!-- ==================== ALTA DE CLIENTE ==================== -->
 
-     <section aria-labelledby="tab-alta" class="content" hidden="" id="panel-alta" role="tabpanel">
+     <section aria-labelledby="tab-alta" class="content" id="panel-alta" role="tabpanel">
 
       <div class="form-title">
 
@@ -3622,7 +3632,7 @@ input[type="date"].control::-webkit-calendar-picker-indicator {
 
 
 
-  let csrf = '', serverSafe = true, ready = false, active = 'factura', busy = false, poll = null, receipt = null;
+  let csrf = '', serverSafe = true, ready = false, active = 'alta', busy = false, poll = null, receipt = null;
 
 
 
@@ -4312,7 +4322,7 @@ input[type="date"].control::-webkit-calendar-picker-indicator {
 
 
 
-    setCatalogs(INITIAL);$('receipt').hidden=true;$('tabs').hidden=false;selectTab('factura',true);
+    setCatalogs(INITIAL);$('receipt').hidden=true;$('tabs').hidden=false;selectTab('alta',true);
 
 
 
