@@ -1147,7 +1147,7 @@ class PolarisBot:
                 self.log(f"VM-P06: clic real en Cambio de estación ID 140 rect={item_rect}.")
                 pyautogui.moveTo(cx,cy,duration=.08)
                 pyautogui.click()
-                dlg=self._wait_text_dialog("Seleccione el registro deseado",5)
+                dlg=self._station_catalog_dialog(5)
                 if dlg:
                     return dlg
 
@@ -1160,7 +1160,7 @@ class PolarisBot:
         self._activate(main,maximize=True)
         self.log("VM-P06: enviando WM_COMMAND validado ID 140.")
         u.SendMessageW(main,WM_COMMAND,command_id,0)
-        dlg=self._wait_text_dialog("Seleccione el registro deseado",7)
+        dlg=self._station_catalog_dialog(7)
         if dlg:
             return dlg
 
@@ -1169,6 +1169,72 @@ class PolarisBot:
             "Polaris no abrió 'Seleccione el registro deseado' después de ejecutar "
             "el comando nativo validado Cambio de estación (ID 140)."
         )
+
+    def _station_catalog_dialog(self, timeout=8):
+        """Detecta el catálogo real de estaciones aunque sea angosto en la VM."""
+        end=time.time()+timeout
+        while time.time()<end:
+            h=self._find_window_any_level(
+                r"^\s*Seleccione el registro deseado\s*$",
+                min_width=300,
+                min_height=250,
+            )
+            if h:
+                return h
+            time.sleep(.10)
+        return None
+
+    def _station_search_edit(self, dlg):
+        """Localiza el cuadro Número del catálogo sin depender de coordenadas."""
+        candidates=[]
+        try:
+            dr=self._rect(dlg)
+        except Exception:
+            return None
+        def cb(h,_):
+            try:
+                if not win32gui.IsWindowVisible(h) or not win32gui.IsWindowEnabled(h):
+                    return
+                cls=(win32gui.GetClassName(h) or "").upper()
+                if "EDIT" not in cls:
+                    return
+                r=self._rect(h)
+                if r.width < 80 or r.height < 14:
+                    return
+                # El campo Número está en el tercio superior del catálogo.
+                if r.top > dr.top + int(dr.height*.38):
+                    return
+                candidates.append((r.top,r.left,-r.width,h))
+            except Exception:
+                pass
+        try:
+            win32gui.EnumChildWindows(dlg,cb,None)
+        except Exception:
+            pass
+        if not candidates:
+            return None
+        candidates.sort()
+        return candidates[0][3]
+
+    def _select_station_by_number(self, dlg, numero):
+        """Busca una estación por Número y selecciona el único resultado visible."""
+        self._activate(dlg)
+        edit=self._station_search_edit(dlg)
+        if edit:
+            r=self._rect(edit)
+            pyautogui.click((r.left+r.right)//2,(r.top+r.bottom)//2)
+        else:
+            # Respaldo relativo únicamente dentro del diálogo ya identificado.
+            self._click_rel(dlg,self.ESTACION_DLG["campo_numero"],wait=.10)
+        pyautogui.hotkey("ctrl","a")
+        pyautogui.write(str(numero),interval=.04)
+        self.log(f"VM-P07: buscando estación por Número {numero}...")
+        self._click_button_text_or_rel(dlg,"Buscar",self.ESTACION_DLG["buscar"],wait=.55)
+
+        # La búsqueda de Polaris deja el resultado en la primera fila del grid.
+        # Un clic dentro de esa fila evita depender del orden completo de estaciones.
+        self._click_rel(dlg,self.ESTACION_DLG["primera_fila"],wait=.30)
+        return True
 
     def _find_descendant_text(self, root, wanted):
         """Busca un control hijo visible por texto exacto/normalizado."""
@@ -1211,7 +1277,7 @@ class PolarisBot:
         return False
 
     def _station_dialog_alive(self):
-        return self._wait_text_dialog("Seleccione el registro deseado",.35)
+        return self._station_catalog_dialog(.35)
 
     def _accept_station_row(self, dlg):
         """Acepta la estación seleccionada y confirma que aparece el diálogo de series."""
@@ -1300,13 +1366,8 @@ class PolarisBot:
             )
 
         self._activate(dlg)
-        row_y=self.STATION_ROW_Y.get(key)
-        if row_y is None:
-            raise PolarisError(f"No hay posición configurada para la estación {key}.")
-
-        # Exactamente como en el video: seleccionar la fila de la estación y luego Aceptar.
-        self.log(f"Catálogo de estaciones abierto. Seleccionando fila {key} ({info['numero']})...")
-        self._click_rel(dlg,(0.535,row_y),wait=.35)
+        self.log(f"Catálogo de estaciones abierto. Buscando {key} por Número {info['numero']}...")
+        self._select_station_by_number(dlg,info["numero"])
 
         series=self._accept_station_row(dlg)
         if not series:
