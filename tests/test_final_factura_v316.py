@@ -41,7 +41,7 @@ class Scene:
         add(240,200,'TBitBtn','&Aceptar',(792,538,855,560))
         add(300,1,'#32770','Error',(300,320,560,450),False)
         self.bot=SimpleNamespace(base=Path(base),cfg={'app':{'modo_prueba':False}},
-            pcfg={'espera_timbrado':45,'espera_envio':15}, log=self.logs.append,
+            pcfg={'espera_timbrado':45,'espera_envio':15,'espera_post_envio':15}, log=self.logs.append,
             _norm=PolarisBot._norm, _rect=lambda h:self.nodes[h]['r'],
             _class_name=lambda h:self.nodes[h]['cls'], _pid=lambda h:2 if h in self.nodes else 9,
             _same_polaris_process=lambda a,b:a in self.nodes and b in self.nodes,
@@ -129,6 +129,7 @@ class FinalTests(unittest.TestCase):
     def run_final(self):return self.ui.completar(1,100,sol(),self.reg)
     def test_full_final_and_send_only_once(self):
         self.assertEqual(self.run_final(),'ENVIO_SOLICITADO')
+        self.assertGreaterEqual(self.s.now,15)
         self.assertEqual(self.s.actions.count(110),1);self.assertEqual(self.s.actions.count(240),1)
         self.assertNotIn(211,self.s.actions);self.assertNotIn(212,self.s.actions)
         self.assertEqual(self.s.nodes[220]['text'],sol().correo_destino)
