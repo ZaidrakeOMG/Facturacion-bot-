@@ -1092,21 +1092,15 @@ class PolarisBot:
         return menu,top_pos,submenu,sub_pos,140
 
     def _open_station_catalog(self, main):
-        """Abre Cambio de estación SIN clic visual en el submenú.
+        """Abre Cambio de estación sin bloquear el hilo del bot.
 
-        En RDP/GetMenuItemRect el rectángulo físico del popup puede quedar
-        desplazado una fila y caer en 'Cambiar Usuario'. Por eso, una vez
-        validada la ruta nativa y el ID 140, se ejecuta directamente WM_COMMAND.
+        Polaris abre el catálogo como diálogo modal. SendMessage/SendMessageW
+        bloquea al emisor hasta que ese diálogo se cierre; por eso versiones
+        anteriores se quedaban mirando 'Seleccione el registro deseado' sin
+        poder seleccionar ninguna fila. PostMessage devuelve inmediatamente.
         """
-        from ctypes import wintypes as w
-
         self._activate(main,maximize=True)
         pyautogui.failSafeCheck()
-
-        u=ctypes.WinDLL("user32",use_last_error=True)
-        u.SendMessageW.argtypes=[w.HWND,w.UINT,w.WPARAM,w.LPARAM]
-        u.SendMessageW.restype=w.LPARAM
-        WM_COMMAND=getattr(win32con,"WM_COMMAND",0x0111)
 
         _menu,_util_pos,_submenu,_target_pos,command_id=self._station_menu_path(main)
         if command_id != 140:
@@ -1114,24 +1108,26 @@ class PolarisBot:
                 f"Seguridad: la opción validada no es Cambio de estación (ID={command_id})."
             )
 
-        self.log("VM-P08: ejecutando directamente Cambio de estación (WM_COMMAND ID 140).")
+        self.log("VM-P11: abriendo Cambio de estación con PostMessage ID 140...")
         try:
-            u.SendMessageW(main,WM_COMMAND,command_id,0)
+            win32gui.PostMessage(main,getattr(win32con,"WM_COMMAND",0x0111),command_id,0)
         except Exception as exc:
             raise PolarisError(
-                "Windows no permitió ejecutar Cambio de estación (ID 140). "
+                "Windows no permitió abrir Cambio de estación (ID 140). "
                 "Revisa que bot y Polaris tengan el mismo nivel de permisos."
             ) from exc
 
-        dlg=self._station_catalog_dialog(7)
+        # Detector original de la versión que sí funcionaba: localiza el texto
+        # en cualquier control y sube al formulario contenedor.
+        dlg=self._wait_text_dialog("Seleccione el registro deseado",7)
         if dlg:
-            self.log("VM-P08: catálogo de estaciones abierto sin tocar Cambiar Usuario.")
+            self.log("VM-P11: catálogo de estaciones abierto; el hilo sigue libre.")
             return dlg
 
-        self._screenshot_error("vm_p08_cambio_estacion_id140")
+        self._screenshot_error("vm_p11_cambio_estacion_id140")
         raise PolarisError(
-            "Polaris recibió Cambio de estación (ID 140), pero no apareció "
-            "'Seleccione el registro deseado'. No se ejecutó ninguna otra opción."
+            "Se envió Cambio de estación (ID 140), pero no apareció "
+            "'Seleccione el registro deseado'."
         )
 
     def _station_catalog_dialog(self, timeout=8):
@@ -1244,31 +1240,49 @@ class PolarisBot:
         return self._station_catalog_dialog(.35)
 
     def _accept_station_row(self, dlg):
-        """Acepta la fila con clic directo, igual que el flujo manual confirmado."""
-        self.log("VM-P10: fila seleccionada. Clic directo en Aceptar...")
-        self._activate(dlg)
-        self._click_rel(dlg,self.ESTACION_DLG["aceptar"],wait=.35)
-        series=self._series_dialog(5.0)
+        """Acepta la estación seleccionada y confirma que aparece el diálogo de series."""
+        self.log("Estación seleccionada. Pulsando Aceptar...")
+        self._click_button_text_or_rel(dlg,"Aceptar",self.ESTACION_DLG["aceptar"],wait=.65)
+        series=self._series_dialog(2.5)
         if series:
-            self.log("VM-P10: diálogo de Series detectado.")
             return series
 
-        self._screenshot_error("vm_p10_no_series_tras_aceptar_estacion")
+        # Algunos controles VCL reciben el clic visual pero no disparan el evento.
+        # Si el catálogo sigue abierto, ENTER activa el botón Aceptar predeterminado.
+        dlg2=self._wait_text_dialog("Seleccione el registro deseado",.35)
+        if dlg2:
+            self.log("Aceptar no respondió al primer clic; reintentando con ENTER...")
+            self._activate(dlg2)
+            pyautogui.press("enter")
+            series=self._series_dialog(3.0)
+            if series:
+                return series
+
+        # Último reintento físico sobre la misma zona del botón.
+        dlg3=self._wait_text_dialog("Seleccione el registro deseado",.35)
+        if dlg3:
+            self.log("Segundo reintento: clic físico en Aceptar...")
+            self._click_rel(dlg3,self.ESTACION_DLG["aceptar"],wait=.65)
+            series=self._series_dialog(3.0)
+            if series:
+                return series
         return None
 
     def _accept_series_dialog(self, series):
-        """Conserva las series y pulsa Aceptar directamente, como en el video manual."""
+        """Conserva las series predeterminadas y cierra el diálogo con Aceptar."""
         self._activate(series)
-        self.log("VM-P10: Series abiertas. Clic directo en Aceptar...")
-        self._click_rel(series,self.SERIES_DLG["aceptar"],wait=.40)
-        end=time.monotonic()+4.0
-        while time.monotonic()<end:
-            if not self._series_dialog(.15):
-                self.log("VM-P10: Series cerradas correctamente.")
-                return True
-            time.sleep(.08)
-        self._screenshot_error("vm_p10_series_no_cerro")
-        return False
+        self.log("Series de facturación: conservando valores y pulsando Aceptar...")
+        self._click_button_text_or_rel(series,"Aceptar",self.SERIES_DLG["aceptar"],wait=.65)
+
+        # Confirma que el diálogo desapareció; si no, ENTER como respaldo VCL.
+        if self._series_dialog(.7):
+            self.log("El diálogo de Series sigue abierto; reintentando Aceptar con ENTER...")
+            series2=self._series_dialog(.3)
+            if series2:
+                self._activate(series2)
+                pyautogui.press("enter")
+                time.sleep(.65)
+        return self._series_dialog(.5) is None
 
     def _change_station(self, main, station, force=False):
         """Cambia la estación antes de abrir Facturación de Efectivo.
@@ -1316,12 +1330,8 @@ class PolarisBot:
         if row_y is None:
             raise PolarisError(f"No hay fila configurada para la estación {key}.")
 
-        # Flujo confirmado por el video manual 05/oct/2026:
-        # seleccionar directamente la fila -> Aceptar -> Series -> Aceptar.
-        self.log(
-            f"VM-P09: catálogo abierto. Seleccionando fila {key} "
-            f"({info['numero']}) en y={row_y:.3f}..."
-        )
+        # Igual que la versión física que sí funcionaba: seleccionar fila y aceptar.
+        self.log(f"Catálogo de estaciones abierto. Seleccionando fila {key} ({info['numero']})...")
         self._click_rel(dlg,(0.535,row_y),wait=.35)
 
         series=self._accept_station_row(dlg)
