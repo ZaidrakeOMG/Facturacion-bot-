@@ -1,11 +1,8 @@
 {
   "version": 1,
-  "activas": true,
-  "destinatarios": [
-    "sistemas1@grupoary.com.mx",
-    "sistemas@grupoary.com.mx"
-  ],
-  "enviar_en_modo_seguro": true,
+  "activas": false,
+  "destinatarios": [],
+  "enviar_en_modo_seguro": false,
   "leer_ventana": true,
   "ocr_respaldo": true,
   "adjuntar_ventana": true,
