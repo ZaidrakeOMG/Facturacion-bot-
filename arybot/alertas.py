@@ -119,6 +119,23 @@ class ColaAlertas:
 
 
 class AlertasInternas:
+    DESTINATARIOS_BLOQUEADOS = {
+        'sistemas1@grupoary.com.mx',
+        'sistemas@grupoary.com.mx',
+    }
+
+    def _quitar_destinatarios_bloqueados(self, options):
+        options=copy.deepcopy(options)
+        recipients=[
+            x for x in options.get('destinatarios',[])
+            if str(x).strip().lower() not in self.DESTINATARIOS_BLOQUEADOS
+        ]
+        options['destinatarios']=recipients
+        if not recipients:
+            options['activas']=False
+            options['enviar_en_modo_seguro']=False
+        return options
+
     def __init__(self, base, cfg, log, *, sender=None, lector_factory=LectorVentana):
         self.base = Path(base); self.cfg = cfg; self.log = log
         self.path = self.base/'alertas_internas.json'
@@ -128,6 +145,19 @@ class AlertasInternas:
         except Exception:
             self.options = normalizar_config()
             self.config_error = 'Configuración de alertas inválida. Quedaron desactivadas; revisa y guarda.'
+
+        # Migración local: estos dos buzones ya no deben recibir alertas del bot.
+        # Se aplica aunque la VM conserve un alertas_internas.json viejo.
+        cleaned=self._quitar_destinatarios_bloqueados(self.options)
+        if cleaned != self.options:
+            self.options=cleaned
+            try:
+                tmp=self.path.with_suffix('.tmp')
+                tmp.write_text(json.dumps(self.options,ensure_ascii=False,indent=2),encoding='utf-8')
+                tmp.replace(self.path)
+                self.log('Alertas internas: se retiraron destinatarios de sistemas; no se enviarán correos a esos buzones.')
+            except Exception:
+                pass
         self.cola = ColaAlertas(base)
         self.sender = sender; self.lector_factory = lector_factory
         self._stop = threading.Event(); self._wake = threading.Event(); self._thread = None
@@ -137,7 +167,7 @@ class AlertasInternas:
         with self.lock: return copy.deepcopy(self.options)
 
     def guardar_ajustes(self, data):
-        valid = normalizar_config(data)
+        valid = self._quitar_destinatarios_bloqueados(normalizar_config(data))
         with self.lock:
             tmp = self.path.with_suffix('.tmp')
             tmp.write_text(json.dumps(valid, ensure_ascii=False, indent=2), encoding='utf-8')
