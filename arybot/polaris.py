@@ -1293,7 +1293,7 @@ class PolarisBot:
 
         Flujo real del video:
           Utilerías -> CLICK en Cambio de estación
-          -> buscar por Número -> seleccionar -> Aceptar
+          -> seleccionar la fila visible de la estación -> Aceptar
           -> Selección de Series de facturación -> conservar valores -> Aceptar.
 
         ``force=True`` se usa en el botón de PRUEBA para que puedas ver el flujo
@@ -1330,8 +1330,17 @@ class PolarisBot:
             )
 
         self._activate(dlg)
-        self.log(f"Catálogo de estaciones abierto. Buscando {key} por Número {info['numero']}...")
-        self._select_station_by_number(dlg,info["numero"])
+        row_y=self.STATION_ROW_Y.get(key)
+        if row_y is None:
+            raise PolarisError(f"No hay fila configurada para la estación {key}.")
+
+        # Flujo confirmado por el video manual 05/oct/2026:
+        # seleccionar directamente la fila -> Aceptar -> Series -> Aceptar.
+        self.log(
+            f"VM-P09: catálogo abierto. Seleccionando fila {key} "
+            f"({info['numero']}) en y={row_y:.3f}..."
+        )
+        self._click_rel(dlg,(0.535,row_y),wait=.35)
 
         series=self._accept_station_row(dlg)
         if not series:
