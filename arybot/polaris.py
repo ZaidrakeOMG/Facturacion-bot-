@@ -1377,6 +1377,75 @@ class PolarisBot:
             self._cleanup_before_station_change_quick(main)
             return "Polaris limpio: ventanas emergentes cerradas"
 
+    def cerrar_polaris_tras_solicitud(self, motivo=""):
+        """Cierra completamente Polaris para que la siguiente solicitud empiece limpia.
+
+        Primero intenta WM_CLOSE. Si una ventana modal deja el proceso atorado,
+        termina únicamente el PID de Polaris que pertenece a la ventana validada.
+        No reintenta la solicitud que acaba de finalizar/fallar.
+        """
+        main=self._find_title(self.pcfg.get("ventana_principal_regex",r".*Polaris Facturacion.*"))
+        login=self._find_title(self.pcfg.get("ventana_login_regex",r".*Entrada al Sistema.*Polaris.*"))
+        target=main or login
+        if not target:
+            self.log("SESION: Polaris ya estaba cerrado.")
+            return True
+
+        pid=self._pid_window(target)
+        if not pid or pid==os.getpid():
+            raise PolarisError("No pude validar el proceso de Polaris para cerrarlo.")
+
+        self.log("SESION: cerrando Polaris al terminar solicitud"
+                 +(f" ({motivo})" if motivo else "")+"...")
+        pyautogui.failSafeCheck()
+
+        # Cierre normal primero.
+        try:
+            if main:
+                win32gui.PostMessage(main,win32con.WM_CLOSE,0,0)
+            elif login:
+                win32gui.PostMessage(login,win32con.WM_CLOSE,0,0)
+        except Exception:
+            pass
+
+        import psutil
+        end=time.monotonic()+3.0
+        while time.monotonic()<end:
+            if not psutil.pid_exists(pid):
+                self.log("SESION: Polaris cerrado normalmente.")
+                time.sleep(.20)
+                return True
+            time.sleep(.10)
+
+        # Si quedó un modal/MDI impidiendo cerrar, terminar SOLO el PID validado.
+        try:
+            proc=psutil.Process(pid)
+            name=(proc.name() or "").casefold()
+            exe=""
+            try:
+                exe=(proc.exe() or "").casefold()
+            except Exception:
+                pass
+            if "polaris" not in name and "polaris" not in exe:
+                raise PolarisError(
+                    f"Seguridad: PID {pid} no parece ser Polaris ({name}). No se terminó."
+                )
+            self.log("SESION: Polaris quedó atorado; terminando su proceso para limpiar la próxima solicitud.")
+            proc.terminate()
+            try:
+                proc.wait(timeout=3.0)
+            except psutil.TimeoutExpired:
+                proc.kill()
+                proc.wait(timeout=2.0)
+        except psutil.NoSuchProcess:
+            pass
+
+        time.sleep(.35)
+        if psutil.pid_exists(pid):
+            raise PolarisError("Polaris no se pudo cerrar completamente.")
+        self.log("SESION: Polaris cerrado. La próxima solicitud lo abrirá desde cero.")
+        return True
+
     def _invoice_window(self):
         # IMPORTANTE v2.4:
         # "Facturación de Efectivo" es una ventana MDI HIJA de Polaris. No basta
