@@ -1,449 +1,4657 @@
 <!DOCTYPE html>
+
 <html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#B0187C">
-<meta name="robots" content="noindex, nofollow">
-<meta name="referrer" content="no-referrer">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'self'; form-action 'none'; connect-src 'self'; img-src 'self' data:; style-src 'unsafe-inline'; script-src 'sha256-Tbojq5W2BjjdHk0TxxCR+L6jnqw4EEg+7HwURjK9rAw='">
-<title>Facturación | ARY Super Servicios</title>
-<style>
-:root{--bg:#17000f;--panel:#2a071e;--line:rgba(255,190,222,.17);--text:#fff9fc;--muted:#d9b4ca;--primary:#b0187c;--primary2:#d72a93;--accent:#fcb144;--radius:24px}
-*{box-sizing:border-box}body{margin:0;color:var(--text);background:radial-gradient(circle at 7% 18%,#59063566,transparent 32%),radial-gradient(circle at 100% 35%,#fcb1440d,transparent 28%),linear-gradient(180deg,#17000f,#230416 50%,#120009);font:15px/1.65 "Manrope","Segoe UI",Arial,sans-serif;min-height:100vh}button,input,select{font:inherit}button,a,input,select{touch-action:manipulation}a{color:inherit}button,a{-webkit-tap-highlight-color:transparent}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.55}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #ffd36a;outline-offset:4px}[hidden]{display:none!important}.container{width:min(1190px,calc(100% - 48px));margin:auto}.skip{position:absolute;top:-100px;left:20px;z-index:10;background:#fcb144;color:#17000f;padding:10px}.skip:focus{top:5px}
-.topbar{border-bottom:1px solid var(--line);background:#1a0012e8}.header-inner{min-height:86px;display:flex;align-items:center;justify-content:space-between;gap:24px}.brand{display:flex;gap:11px;align-items:center;text-decoration:none;white-space:nowrap}.brand-mark{display:grid;place-items:center;background:linear-gradient(150deg,#ce1d8d,#780850);width:48px;height:48px;border:1px solid #ed6bb36b;border-radius:15px;font-size:33px;line-height:1;font-weight:900;color:#fff;box-shadow:0 6px 26px #b0187c33}.brand-mark img{width:36px;height:36px;object-fit:contain}.brand strong{display:block;font-size:15px;letter-spacing:-.4px}.brand small{display:block;color:var(--muted);font-size:9px;letter-spacing:2px;text-transform:uppercase}.nav{display:flex;gap:2px;align-items:center;background:#ffffff04;border:1px solid var(--line);padding:5px;border-radius:40px}.nav a{font-size:12px;font-weight:700;padding:9px 10px;white-space:nowrap;text-decoration:none;border-radius:30px}.nav a:hover{background:#b0187c33}.nav a[aria-current]{background:linear-gradient(130deg,#b0187c,#86105e);color:#fff;border:1px solid #dc4faa66}.menu{display:none;border:1px solid var(--line);color:#fff;background:#41092e;border-radius:12px;padding:10px 13px}
-.hero{padding:54px 0 34px;position:relative}.hero-top{display:flex;align-items:center;justify-content:space-between;gap:20px}.eyebrow{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:var(--accent);display:flex;align-items:center;gap:9px}.eyebrow:before{content:"";width:27px;height:1px;background:var(--accent)}.connection{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:30px;padding:7px 12px;display:flex;align-items:center;gap:7px}.connection:before{content:"";height:6px;width:6px;background:var(--accent);border-radius:50%}.connection[data-state="ok"]:before{background:#86deb1}.connection[data-state="error"]:before{background:#ff8eac}.hero h1{font-size:clamp(34px,4.6vw,64px);line-height:1.07;letter-spacing:-2.7px;margin:23px 0 14px;font-weight:800}.hero h1 em{font-style:normal;color:#ffc267}.hero p{color:var(--muted);max-width:700px;margin:0;font-size:15px;line-height:1.8}.mode-banner{border:1px solid #fcb14466;background:#fcb1440c;padding:12px 17px;margin:0 0 20px;border-radius:14px;color:#ffe2a9;font-size:13px}.mode-banner strong{color:#ffe8b8}.notice{margin:0 0 20px;border-radius:14px;padding:14px 18px;border:1px solid #df69a36e;background:#6e15382e;font-size:13px;color:#ffd9e6}
-.workspace{display:grid;grid-template-columns:minmax(0,1fr) 308px;gap:25px;align-items:start;margin-bottom:56px}.form-shell{border:1px solid var(--line);border-radius:var(--radius);background:linear-gradient(140deg,#3c082ad9,#220217f2);box-shadow:0 20px 65px #0003;overflow:hidden;min-width:0}.tabs{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--line);padding:8px;gap:7px;background:#19011188}.tab{border:1px solid transparent;background:none;color:var(--muted);padding:14px 12px;border-radius:16px;display:flex;gap:11px;text-align:left;align-items:center}.tab:hover{background:#ffffff07}.tab[aria-selected="true"]{color:#fff;background:linear-gradient(130deg,#b0187c2e,#b0187c13);border-color:#d72a9366}.tab-badge{height:35px;width:35px;flex:0 0 35px;display:grid;place-items:center;border-radius:11px;border:1px solid var(--line);color:#fcb144;background:#b0187c16}.tab strong{font-size:13px;display:block}.tab small{font-size:10px;display:block;opacity:.75;margin-top:2px}.content{padding:28px 30px 30px}.form-title{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:21px}.form-title h2{margin:0;font-size:23px;letter-spacing:-.7px;line-height:1.3}.form-title p{margin:6px 0 0;color:var(--muted);font-size:12px}.tag{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#fcb144;padding:5px 8px;border:1px solid #fcb14440;border-radius:7px;white-space:nowrap}.fields{margin:0;padding:0;border:0;min-width:0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px 17px}.field{min-width:0}.field.full{grid-column:1/-1}label{display:block;font-size:12px;font-weight:700;color:#fbe7f2;margin-bottom:7px}label .required{color:var(--accent);margin-left:3px}.control{display:block;width:100%;min-height:47px;padding:10px 12px;border-radius:11px;border:1px solid #a7658d66;background:#1d0114;color:#fff;outline:none;transition:border-color .15s,box-shadow .15s;min-width:0}.control:hover{border-color:#db5a9c88}.control:focus{border-color:#ed6bbb;box-shadow:0 0 0 3px #b0187c22}.control::placeholder{color:#ad7e98;opacity:1}.control:disabled{opacity:.55}select.control{color-scheme:dark;padding-right:26px}select.control option{background:#250419;color:#fff}.field small{display:block;margin-top:6px;color:#c399b1;font-size:10px;line-height:1.5}.rfc{text-transform:uppercase}.inline-note{margin:20px 0 0;border-left:2px solid var(--accent);padding:0 0 0 12px;color:#e6bfd4;font-size:12px;line-height:1.7}.check{display:flex;gap:10px;align-items:flex-start;font-size:11px;color:#d9b4ca;font-weight:500;margin:22px 0 0;cursor:pointer;line-height:1.7}.check input{width:17px;height:17px;flex:0 0 17px;accent-color:#b0187c;margin:2px 0 0}.form-bottom{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-top:24px}.form-bottom p{margin:0;max-width:235px;color:#bf93ad;font-size:10px;line-height:1.65}.btn{min-height:46px;border:1px solid #da539c70;border-radius:12px;padding:11px 17px;background:#471030;color:#fff;display:inline-flex;align-items:center;justify-content:center;gap:13px;text-decoration:none;font-size:12px;font-weight:800}.btn-primary{background:linear-gradient(120deg,#b0187c,#cc218d);border-color:#e367ad77;box-shadow:0 7px 23px #b0187c22}.btn:hover{filter:brightness(1.12)}.btn svg{flex:0 0 16px}.error{color:#ffdbdf;background:#651b3455;border:1px solid #ef709a77;border-radius:11px;padding:12px 14px;margin-top:17px;font-size:12px}.trap{position:absolute!important;left:-9999px!important;width:1px;height:1px;overflow:hidden}
-.side-card{padding:24px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(145deg,#3c092aa6,#1b0314c9);margin-bottom:17px}.side-kicker{color:#fcb144;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-weight:800}.side-card h3{font-size:20px;margin:10px 0 18px;line-height:1.35;letter-spacing:-.5px}.steps{margin:0;padding:0;list-style:none;counter-reset:step}.steps li{counter-increment:step;position:relative;padding-left:35px;margin-bottom:20px}.steps li:last-child{margin-bottom:0}.steps li:before{content:counter(step,decimal-leading-zero);position:absolute;left:0;top:1px;font-size:10px;width:25px;height:25px;border:1px solid #fcb14440;border-radius:8px;color:#fcb144;display:grid;place-items:center;background:#fcb14409;font-weight:800}.steps strong{font-size:12px;display:block}.steps p{font-size:11px;color:#c89db5;margin:4px 0 0;line-height:1.7}.help-card{padding:20px 22px;border:1px solid #fcb1442e;border-radius:20px;background:#fcb14405}.help-card strong{font-size:12px;color:#ffdda1}.help-card p{font-size:11px;color:var(--muted);margin:7px 0 14px}.text-link{font-size:11px;font-weight:700;color:#fcb144;text-decoration:none}.text-link:hover{text-decoration:underline}.mini-points{display:flex;flex-wrap:wrap;gap:11px;margin:20px 3px 0;color:#ad7e99;font-size:10px}.mini-points span:before{content:"·";margin-right:5px;color:#d72a93}.site-footer{border-top:1px solid var(--line);padding:25px 0;color:#a87895;font-size:11px}.footer-inner{display:flex;justify-content:space-between;gap:20px}.footer-inner strong{color:#ddb7cd}
-.receipt{padding:34px 30px}.receipt-icon{width:54px;height:54px;border:1px solid #fcb14466;background:#fcb1440c;color:#fcb144;display:grid;place-items:center;border-radius:17px;margin-bottom:20px}.receipt h2{font-size:26px;margin:0 0 8px;letter-spacing:-.7px}.receipt p{font-size:13px;color:var(--muted);margin:10px 0}.reference{padding:17px 20px;background:#15000ebb;border:1px solid var(--line);border-radius:13px;margin:21px 0;display:flex;justify-content:space-between;align-items:center;gap:12px}.reference small{display:block;color:#b989a3;font-size:10px;text-transform:uppercase;letter-spacing:1px}.reference strong{display:block;font-size:20px;letter-spacing:1px;font-family:Consolas,monospace;margin-top:3px}.state-pill{display:inline-block;font-size:10px;border-radius:7px;background:#b0187c22;color:#f9c6e2;border:1px solid #b0187c66;padding:5px 8px;letter-spacing:1px;max-width:100%;overflow-wrap:anywhere}.receipt-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}.receipt .privacy{color:#a77a92;font-size:10px;margin-top:23px}.receipt .new{border:0;background:none;color:#dcb6cb;font-size:11px;padding:14px 0 0;text-decoration:underline}.receipt .copy{font-size:10px;min-height:36px;padding:5px 10px;background:#410e2c}.noscript{margin:20px;color:#ffdda1}.safe-receipt{margin:17px 0 0;border:1px solid #fcb14466;border-radius:10px;padding:11px 13px;font-size:12px;color:#ffe2a9;background:#fcb14407}
-@media(max-width:1100px){.menu{display:block}.header-inner{flex-wrap:wrap;padding:16px 0;min-height:80px}.nav{display:none;flex-basis:100%;border-radius:15px;flex-wrap:wrap;padding:9px;gap:4px}.nav.open{display:flex}.nav a{flex-grow:1;text-align:center;font-size:13px}.workspace{grid-template-columns:minmax(0,1fr) 280px;gap:18px}.content{padding:25px}.hero h1{font-size:51px}}
-@media(max-width:870px){.workspace{grid-template-columns:1fr}.aside{display:grid;grid-template-columns:1fr 1fr;gap:18px}.side-card{margin:0}.mini-points{grid-column:1/-1;margin-top:0}.hero{padding-top:36px}.hero h1{font-size:45px}.form-bottom p{max-width:330px}}
-@media(max-width:560px){.container{width:calc(100% - 28px)}.brand strong{font-size:14px}.brand-mark{width:42px;height:42px;font-size:29px}.brand small{font-size:8px}.hero-top{align-items:flex-start;gap:14px;flex-direction:column}.hero{padding-top:29px;padding-bottom:24px}.hero h1{font-size:38px;letter-spacing:-1.8px;margin-top:20px}.hero p{font-size:13px}.connection{font-size:10px;padding:5px 10px}.workspace{gap:20px;margin-bottom:34px}.form-shell{border-radius:19px}.tab{padding:11px 8px;gap:7px}.tab-badge{width:28px;height:28px;flex-basis:28px;border-radius:8px}.tab strong{font-size:11px}.tab small{font-size:9px}.content{padding:23px 18px}.form-title h2{font-size:21px}.tag{font-size:8px;padding:4px 6px}.grid{grid-template-columns:1fr;gap:17px}.control{font-size:16px;min-height:49px}.form-bottom{flex-direction:column;align-items:stretch;gap:16px}.form-bottom p{max-width:none}.btn{min-height:48px;font-size:13px}.check{font-size:12px}.field small{font-size:11px}.aside{grid-template-columns:1fr}.side-card{padding:22px}.footer-inner{flex-direction:column;gap:7px}.receipt{padding:27px 19px}.reference{padding:16px}.reference strong{font-size:17px}.receipt-actions .btn{flex:1}.connection{max-width:100%}.eyebrow{font-size:9px}.mode-banner{font-size:12px}}
 
-.progress-card{margin:20px 0 16px;padding:18px;border:1px solid var(--line);border-radius:15px;background:#17000eaa}
-.progress-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
-.progress-head strong{font-size:13px}.progress-percent{font-size:11px;color:#fcb144;font-family:Consolas,monospace}
-.progress-track{height:13px;border-radius:999px;background:#0f000a;border:1px solid #ffffff14;overflow:hidden;position:relative}
-.progress-bar{height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#b0187c,#f05caf,#fcb144);transition:width .6s ease;position:relative;overflow:hidden}
-.progress-bar.loading:after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 15%,#ffffff55 45%,transparent 75%);transform:translateX(-100%);animation:aryProgress 1.25s linear infinite}
-.progress-card[data-result="success"]{border-color:#65d99a66;background:#0a40251f}
-.progress-card[data-result="success"] .progress-bar{background:linear-gradient(90deg,#20985d,#6be0a4)}
-.progress-card[data-result="error"]{border-color:#ff668777;background:#5a14282f}
-.progress-card[data-result="error"] .progress-bar{background:linear-gradient(90deg,#b51f47,#ff6687)}
-.progress-message{margin:11px 0 0!important;color:#e9c9da!important;font-size:12px!important}
-.result-box{margin:17px 0;padding:16px;border-radius:13px;border:1px solid var(--line);font-size:13px;line-height:1.7}
-.result-box.success{border-color:#6be0a466;background:#124b2c45;color:#d9ffe9}
-.result-box.error{border-color:#ff668777;background:#651b3455;color:#ffe0e7}
-.result-box strong{display:block;font-size:15px;margin-bottom:4px}
-.result-box a{font-weight:800;color:#ffd56e}
-@keyframes aryProgress{to{transform:translateX(100%)}}
-@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+ <head>
 
-input[type="date"].control{color-scheme:dark}
-input[type="date"].control::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.85;cursor:pointer}
-.review-dialog{width:min(650px,calc(100% - 28px));border:1px solid #e06aac66;border-radius:22px;padding:0;background:linear-gradient(150deg,#3d082bdc,#1a0012f7);color:var(--text);box-shadow:0 30px 100px #0009}
-.review-dialog::backdrop{background:#090006c7;backdrop-filter:blur(4px)}
-.review-head{padding:26px 28px 15px;border-bottom:1px solid var(--line)}
-.review-kicker{display:block;color:var(--accent);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:7px}
-.review-head h2{margin:0;font-size:25px;letter-spacing:-.7px}
-.review-head p{margin:8px 0 0;color:var(--muted);font-size:12px;line-height:1.7}
-.review-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px;padding:20px 28px 8px}
-.review-item{padding:11px 13px;border:1px solid var(--line);border-radius:11px;background:#17000eb0;min-width:0}
-.review-item.full{grid-column:1/-1}
-.review-item small{display:block;color:#b98aa3;font-size:9px;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px}
-.review-item strong{display:block;font-size:12px;overflow-wrap:anywhere}
-.review-warning{margin:13px 28px 0;padding:12px 14px;border-radius:11px;border:1px solid #fcb14455;background:#fcb1440a;color:#ffe0a7;font-size:11px;line-height:1.6}
-.review-actions{display:flex;justify-content:flex-end;gap:10px;padding:20px 28px 27px}
-@media(max-width:560px){.review-grid{grid-template-columns:1fr;padding:18px 18px 6px}.review-item.full{grid-column:auto}.review-head{padding:23px 18px 14px}.review-warning{margin:12px 18px 0}.review-actions{padding:18px;flex-direction:column-reverse}.review-actions .btn{width:100%}}
+  <meta charset="utf-8"/>
 
-</style>
-</head>
-<body>
-<a class="skip" href="#tramites">Ir a facturación</a>
-<header class="topbar"><div class="container header-inner">
-<a class="brand" href="default.htm" aria-label="ARY Super Servicios, inicio"><span class="brand-mark" aria-hidden="true"><span id="brandFallback">A</span><img id="brandLogo" src="images/Arylogo2.png" alt="" hidden></span><span><strong>ARY Super Servicios</strong><small>Experiencia en movimiento</small></span></a>
-<button class="menu" id="menuButton" type="button" aria-controls="mainNav" aria-expanded="false">Menú ☰</button>
-<nav class="nav" id="mainNav" aria-label="Navegación principal"><a href="default.htm">Inicio</a><a href="ary_conoce_nuestra_empresa.htm">Empresa</a><a href="ary_ubica_nuestras_estaciones.htm">Estaciones</a><a href="ary_servicios.htm">Servicios</a><a href="ary_productos.htm">Productos</a><a href="ary_tips_ahorro_combustible.htm">Tips</a><a href="ary_contacto.htm">Contacto</a><a href="ary_facturacion.htm" aria-current="page">Facturación</a></nav>
-</div></header>
-<main class="container" id="tramites">
-<section class="hero" aria-labelledby="pageTitle"><div class="hero-top"><span class="eyebrow">Servicios en línea · Grupo ARY</span><span class="connection" id="connection" role="status">Comprobando conexión</span></div><h1 id="pageTitle">Tu factura,<br><em>sin complicaciones.</em></h1><p>Da de alta tus datos o solicita la factura de tu ticket. Elige tu estación, revisa la información y conserva tu número de solicitud.</p></section>
-<noscript><p class="noscript">Activa JavaScript para enviar y consultar solicitudes en este portal.</p></noscript>
-<div id="modeBanner" class="mode-banner" hidden><strong>Portal en modo de prueba.</strong> Las solicitudes se preparan sin timbrar facturas ni guardar clientes. No se considera un trámite terminado.</div>
-<div id="connectionError" class="notice" role="status" hidden></div>
-<div class="workspace">
-<section class="form-shell" aria-label="Trámites de facturación">
-<div class="tabs" role="tablist" aria-label="Elige tu trámite" id="tabs">
-<button class="tab" type="button" role="tab" id="tab-factura" aria-selected="true" aria-controls="panel-factura"><span class="tab-badge" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 12h7M9 16h7"/></svg></span><span><strong>Facturar ticket</strong><small>Ya estoy registrado</small></span></button>
-<button class="tab" type="button" role="tab" id="tab-alta" aria-selected="false" aria-controls="panel-alta" tabindex="-1"><span class="tab-badge" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="10" cy="7" r="4"/><path d="M3 21v-3a7 7 0 0 1 12-4M19 13v8M15 17h8"/></svg></span><span><strong>Dar de alta cliente</strong><small>Es mi primer registro</small></span></button>
-</div>
-<section class="content" id="panel-factura" role="tabpanel" aria-labelledby="tab-factura">
-<div class="form-title"><div><h2>Factura tu ticket</h2><p>Ten a la mano tu ticket y el RFC registrado.</p></div><span class="tag">01 / Facturación</span></div>
-<form id="form-factura" autocomplete="off"><fieldset class="fields"><legend hidden>Datos para facturar</legend><div class="grid">
-<div class="field full"><label for="factura-estacion">Estación donde cargaste<span class="required">*</span></label><select class="control station" id="factura-estacion" name="estacion" required><option value="">Selecciona tu estación</option></select><small>Debe coincidir con la estación impresa en tu ticket.</small></div>
-<div class="field"><label for="factura-rfc">RFC del cliente<span class="required">*</span></label><input class="control rfc" id="factura-rfc" name="rfc" maxlength="13" minlength="12" placeholder="RFC de 12 o 13 caracteres" autocapitalize="characters" spellcheck="false" required></div>
-<div class="field"><label for="factura-ticket">Folio del ticket<span class="required">*</span></label><input class="control" id="factura-ticket" name="ticket" inputmode="numeric" pattern="[0-9]{1,20}" maxlength="20" placeholder="Escribe el folio" required><small>Un ticket por solicitud. Conserva los ceros iniciales.</small></div>
-<div class="field full"><label for="factura-fecha">Fecha del ticket<span class="required">*</span></label><input class="control" id="factura-fecha" name="fecha_ticket" type="date" required><small>Introduce la fecha que aparece impresa en tu ticket.</small></div>
-<div class="field full"><label for="factura-pago">Forma de pago · ¿Cómo pagaste?<span class="required">*</span></label><select class="control" id="factura-pago" name="forma_pago" required><option value="">Selecciona tu forma de pago</option></select><small>Elige efectivo, tarjeta de crédito, tarjeta de débito o transferencia. No ingreses números de tarjeta.</small></div>
-<div class="field full"><label for="factura-uso">Uso de CFDI<span class="required">*</span></label><select class="control" id="factura-uso" name="uso_cfdi" required></select><small>Se muestra el catálogo del bot. Revisa que tu elección corresponda a tu solicitud.</small></div>
-<div class="field"><label for="factura-correo">Correo para recibir la factura<span class="required">*</span></label><input class="control" id="factura-correo" name="correo" type="email" maxlength="254" placeholder="tu@correo.com" autocomplete="email" spellcheck="false" required></div>
-<div class="field"><label for="factura-confirmacion">Confirma tu correo<span class="required">*</span></label><input class="control" id="factura-confirmacion" name="correo_confirmacion" type="email" maxlength="254" placeholder="Escribe el mismo correo" autocomplete="off" spellcheck="false" required></div>
-</div><p class="inline-note">Si es tu primera solicitud, completa primero <strong>Dar de alta cliente</strong> y espera la confirmación del registro.</p>
-<div class="trap" aria-hidden="true"><label for="factura-web">Deja este campo vacío</label><input id="factura-web" name="sitio_web" tabindex="-1" autocomplete="off"></div>
-<label class="check"><input name="confirmado" type="checkbox" required><span>Revisé la estación, el RFC, el ticket, la fecha del ticket, la forma de pago, el uso de CFDI y el correo. Confirmo que corresponden a mi solicitud.</span></label></fieldset>
-<div id="error-factura" class="error" tabindex="-1" role="alert" hidden></div>
-<div class="form-bottom"><p>Recibir tu solicitud no significa que la factura ya esté emitida. Podrás consultar el avance.</p><button class="btn btn-primary submit" type="submit" disabled>Enviar solicitud <span aria-hidden="true">→</span></button></div>
-</form></section>
-<section class="content" id="panel-alta" role="tabpanel" aria-labelledby="tab-alta" hidden>
-<div class="form-title"><div><h2>Registra tus datos</h2><p>Los cuatro datos que utiliza el alta del bot.</p></div><span class="tag">02 / Alta</span></div>
-<form id="form-alta" autocomplete="off"><fieldset class="fields"><legend hidden>Datos para alta de cliente</legend><div class="grid">
-<div class="field full"><label for="alta-estacion">Estación<span class="required">*</span></label><select class="control station" id="alta-estacion" name="estacion" required><option value="">Selecciona tu estación</option></select><small>Elige la estación en la que vas a solicitar tu factura.</small></div>
-<div class="field"><label for="alta-rfc">RFC<span class="required">*</span></label><input class="control rfc" id="alta-rfc" name="rfc" maxlength="13" minlength="12" placeholder="RFC de 12 o 13 caracteres" autocapitalize="characters" spellcheck="false" required></div>
-<div class="field"><label for="alta-idcif">idCIF<span class="required">*</span></label><input class="control" id="alta-idcif" name="idcif" inputmode="numeric" pattern="[0-9]{11}" minlength="11" maxlength="11" placeholder="11 dígitos" required><small>Captura los 11 dígitos de tu idCIF, sin espacios.</small></div>
-<div class="field full"><label for="alta-telefono">Teléfono<span class="required">*</span></label><input class="control" id="alta-telefono" name="telefono" type="tel" maxlength="24" placeholder="Tu número de contacto" autocomplete="tel" required></div>
-<div class="field"><label for="alta-correo">Correo electrónico<span class="required">*</span></label><input class="control" id="alta-correo" name="correo" type="email" maxlength="254" placeholder="tu@correo.com" autocomplete="email" spellcheck="false" required></div>
-<div class="field"><label for="alta-confirmacion">Confirma tu correo<span class="required">*</span></label><input class="control" id="alta-confirmacion" name="correo_confirmacion" type="email" maxlength="254" placeholder="Escribe el mismo correo" autocomplete="off" spellcheck="false" required></div>
-</div><p class="inline-note">El bot consulta los datos fiscales desde Polaris. El personal revisa el registro antes de guardarlo; este trámite <strong>no emite una factura</strong>.</p>
-<div class="trap" aria-hidden="true"><label for="alta-web">Deja este campo vacío</label><input id="alta-web" name="sitio_web" tabindex="-1" autocomplete="off"></div>
-<label class="check"><input name="confirmado" type="checkbox" required><span>Revisé mi RFC, idCIF, teléfono y correo, y solicito que se atienda mi alta de cliente en la estación seleccionada.</span></label></fieldset>
-<div id="error-alta" class="error" tabindex="-1" role="alert" hidden></div>
-<div class="form-bottom"><p>El registro queda pendiente hasta que el personal confirme el alta en el sistema.</p><button class="btn btn-primary submit" type="submit" disabled>Solicitar alta <span aria-hidden="true">→</span></button></div>
-</form></section>
-<section class="receipt" id="receipt" aria-labelledby="receiptTitle" hidden tabindex="-1">
-<div class="receipt-icon" aria-hidden="true"><svg width="27" height="27" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" fill="none"><path d="m5 12 4 4L19 6"/><path d="M20 13v6H4V4h10"/></svg></div>
-<h2 id="receiptTitle">Solicitud recibida</h2><p>Conserva esta referencia para consultar con el área de facturación.</p>
-<div class="reference"><div><small>Número de solicitud</small><strong id="receiptRef"></strong></div><button id="copyReference" type="button" class="btn copy">Copiar</button></div>
-<div id="receiptSafe" class="safe-receipt" hidden><strong>Solicitud de prueba.</strong> No autoriza timbrar una factura ni guardar un cliente.</div>
-<div id="progressCard" class="progress-card" aria-live="polite">
-  <div class="progress-head"><strong id="progressTitle">Procesando solicitud</strong><span id="progressPercent" class="progress-percent">10%</span></div>
-  <div class="progress-track" role="progressbar" aria-label="Avance de facturación" aria-valuemin="0" aria-valuemax="100" aria-valuenow="10"><div id="progressBar" class="progress-bar loading"></div></div>
-  <p id="progressMessage" class="progress-message">Estamos preparando tu solicitud.</p>
-</div>
-<div id="finalResult" class="result-box" hidden></div>
-<p><span class="state-pill" id="receiptState"></span></p><p id="receiptMessage" role="status"></p><p id="statusError" class="error" hidden role="status"></p>
-<div class="receipt-actions"><button type="button" class="btn btn-primary" id="refreshStatus">Actualizar estado</button><a href="ary_contacto.htm" class="btn">Contactar a ARY</a></div>
-<p class="privacy">El seguimiento no muestra tus datos fiscales. Guarda la referencia antes de cerrar esta pestaña. La confirmación de recepción no es un CFDI.</p>
-<button id="newRequest" type="button" class="new">Iniciar un trámite diferente</button>
-</section>
-</section>
-<aside class="aside" aria-label="Ayuda para tu solicitud">
-<div class="side-card"><span class="side-kicker">Antes de enviar</span><h3>Un proceso claro,<br>de principio a fin.</h3><ol class="steps"><li><strong>Elige tu trámite</strong><p>Registra tus datos si eres nuevo, o solicita la factura de tu ticket.</p></li><li><strong>Revisa la información</strong><p>La estación y la forma de pago deben corresponder a tu compra.</p></li><li><strong>Conserva el seguimiento</strong><p>Tu solicitud entra a la cola del bot. El personal atiende las revisiones necesarias.</p></li></ol></div>
-<div class="help-card"><strong>¿Ya enviaste este ticket?</strong><p>No lo repitas mientras siga EN COLA o EJECUTÁNDOSE. Si terminó en revisión/error, puedes iniciar una nueva consulta del ticket.</p><a class="text-link" href="ary_contacto.htm">Necesito ayuda <span aria-hidden="true">↗</span></a></div>
-<div class="mini-points"><span>Alta de clientes</span><span>Facturación</span><span>Seguimiento</span></div>
-</aside>
-</div>
-</main>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
 
-<dialog class="review-dialog" id="reviewDialog" aria-labelledby="reviewTitle">
-  <div class="review-head">
-    <span class="review-kicker">Antes de facturar</span>
-    <h2 id="reviewTitle">Verifica todos tus datos</h2>
-    <p>Confirma que la información coincida exactamente con tu ticket. Si algo está mal, vuelve y corrígelo antes de enviar.</p>
-  </div>
-  <div class="review-grid" id="reviewGrid"></div>
-  <div class="review-warning"><strong>Importante:</strong> una estación, fecha, folio o forma de pago incorrectos pueden impedir la facturación.</div>
-  <div class="review-actions">
-    <button type="button" class="btn" id="reviewBack">Volver a revisar</button>
-    <button type="button" class="btn btn-primary" id="reviewConfirm">Sí, enviar solicitud →</button>
-  </div>
-</dialog>
-<footer class="site-footer"><div class="container footer-inner"><span><strong>ARY Super Servicios</strong> · Energía para seguir avanzando.</span><span>© <span id="year"></span> Grupo ARY</span></div></footer>
-<script>
-'use strict';
+  <meta content="#B0187C" name="theme-color"/>
+
+  <meta content="noindex, nofollow" name="robots"/>
+
+  <meta content="no-referrer" name="referrer"/>
+
+  <meta content="default-src 'none'; base-uri 'self'; form-action 'none'; connect-src 'self'; img-src 'self' data:; style-src 'unsafe-inline'; script-src 'sha256-d2P2I46sjmm40vIEkPY5n8NzzP5lzM5F3wxPWhhsdeE='" http-equiv="Content-Security-Policy"/>
+
+  <title>
+
+   Facturación | ARY Super Servicios
+
+  </title>
+
+  <style>
+
+   :root {
+
+  --bg:#17000f;
+
+  --panel:#2a071e;
+
+  --line:rgba(255,190,222,.17);
+
+  --text:#fff9fc;
+
+  --muted:#d9b4ca;
+
+  --primary:#b0187c;
+
+  --primary2:#d72a93;
+
+  --accent:#fcb144;
+
+  --radius:24px
+
+}
+
+
+
+* {
+
+  box-sizing:border-box
+
+}
+
+
+
+body {
+
+  margin:0;
+
+  color:var(--text);
+
+  background:radial-gradient(circle at 7% 18%,#59063566,transparent 32%),radial-gradient(circle at 100% 35%,#fcb1440d,transparent 28%),linear-gradient(180deg,#17000f,#230416 50%,#120009);
+
+  font:15px/1.65 "Manrope","Segoe UI",Arial,sans-serif;
+
+  min-height:100vh
+
+}
+
+
+
+button,input,select {
+
+  font:inherit
+
+}
+
+
+
+button,a,input,select {
+
+  touch-action:manipulation
+
+}
+
+
+
+a {
+
+  color:inherit
+
+}
+
+
+
+button,a {
+
+  -webkit-tap-highlight-color:transparent
+
+}
+
+
+
+button {
+
+  cursor:pointer
+
+}
+
+
+
+button:disabled {
+
+  cursor:not-allowed;
+
+  opacity:.55
+
+}
+
+
+
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
+
+  outline:3px solid #ffd36a;
+
+  outline-offset:4px
+
+}
+
+
+
+[hidden] {
+
+  display:none!important
+
+}
+
+
+
+.container {
+
+  width:min(1190px,calc(100% - 48px));
+
+  margin:auto
+
+}
+
+
+
+.skip {
+
+  position:absolute;
+
+  top:-100px;
+
+  left:20px;
+
+  z-index:10;
+
+  background:#fcb144;
+
+  color:#17000f;
+
+  padding:10px
+
+}
+
+
+
+.skip:focus {
+
+  top:5px
+
+}
+
+
+
+.topbar {
+
+  border-bottom:1px solid var(--line);
+
+  background:#1a0012e8
+
+}
+
+
+
+.header-inner {
+
+  min-height:86px;
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:space-between;
+
+  gap:24px
+
+}
+
+
+
+.brand {
+
+  display:flex;
+
+  gap:11px;
+
+  align-items:center;
+
+  text-decoration:none;
+
+  white-space:nowrap
+
+}
+
+
+
+.brand-mark {
+
+  display:grid;
+
+  place-items:center;
+
+  background:linear-gradient(150deg,#ce1d8d,#780850);
+
+  width:48px;
+
+  height:48px;
+
+  border:1px solid #ed6bb36b;
+
+  border-radius:15px;
+
+  font-size:33px;
+
+  line-height:1;
+
+  font-weight:900;
+
+  color:#fff;
+
+  box-shadow:0 6px 26px #b0187c33
+
+}
+
+
+
+.brand-mark img {
+
+  width:36px;
+
+  height:36px;
+
+  object-fit:contain
+
+}
+
+
+
+.brand strong {
+
+  display:block;
+
+  font-size:15px;
+
+  letter-spacing:-.4px
+
+}
+
+
+
+.brand small {
+
+  display:block;
+
+  color:var(--muted);
+
+  font-size:9px;
+
+  letter-spacing:2px;
+
+  text-transform:uppercase
+
+}
+
+
+
+.nav {
+
+  display:flex;
+
+  gap:2px;
+
+  align-items:center;
+
+  background:#ffffff04;
+
+  border:1px solid var(--line);
+
+  padding:5px;
+
+  border-radius:40px
+
+}
+
+
+
+.nav a {
+
+  font-size:12px;
+
+  font-weight:700;
+
+  padding:9px 10px;
+
+  white-space:nowrap;
+
+  text-decoration:none;
+
+  border-radius:30px
+
+}
+
+
+
+.nav a:hover {
+
+  background:#b0187c33
+
+}
+
+
+
+.nav a[aria-current] {
+
+  background:linear-gradient(130deg,#b0187c,#86105e);
+
+  color:#fff;
+
+  border:1px solid #dc4faa66
+
+}
+
+
+
+.menu {
+
+  display:none;
+
+  border:1px solid var(--line);
+
+  color:#fff;
+
+  background:#41092e;
+
+  border-radius:12px;
+
+  padding:10px 13px
+
+}
+
+
+
+.hero {
+
+  padding:54px 0 34px;
+
+  position:relative
+
+}
+
+
+
+.hero-top {
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:space-between;
+
+  gap:20px
+
+}
+
+
+
+.eyebrow {
+
+  font-size:10px;
+
+  font-weight:800;
+
+  text-transform:uppercase;
+
+  letter-spacing:2px;
+
+  color:var(--accent);
+
+  display:flex;
+
+  align-items:center;
+
+  gap:9px
+
+}
+
+
+
+.eyebrow:before {
+
+  content:"";
+
+  width:27px;
+
+  height:1px;
+
+  background:var(--accent)
+
+}
+
+
+
+.connection {
+
+  font-size:11px;
+
+  color:var(--muted);
+
+  border:1px solid var(--line);
+
+  border-radius:30px;
+
+  padding:7px 12px;
+
+  display:flex;
+
+  align-items:center;
+
+  gap:7px
+
+}
+
+
+
+.connection:before {
+
+  content:"";
+
+  height:6px;
+
+  width:6px;
+
+  background:var(--accent);
+
+  border-radius:50%
+
+}
+
+
+
+.connection[data-state="ok"]:before {
+
+  background:#86deb1
+
+}
+
+
+
+.connection[data-state="error"]:before {
+
+  background:#ff8eac
+
+}
+
+
+
+.hero h1 {
+
+  font-size:clamp(34px,4.6vw,64px);
+
+  line-height:1.07;
+
+  letter-spacing:-2.7px;
+
+  margin:23px 0 14px;
+
+  font-weight:800
+
+}
+
+
+
+.hero h1 em {
+
+  font-style:normal;
+
+  color:#ffc267
+
+}
+
+
+
+.hero p {
+
+  color:var(--muted);
+
+  max-width:700px;
+
+  margin:0;
+
+  font-size:15px;
+
+  line-height:1.8
+
+}
+
+
+
+.mode-banner {
+
+  border:1px solid #fcb14466;
+
+  background:#fcb1440c;
+
+  padding:12px 17px;
+
+  margin:0 0 20px;
+
+  border-radius:14px;
+
+  color:#ffe2a9;
+
+  font-size:13px
+
+}
+
+
+
+.mode-banner strong {
+
+  color:#ffe8b8
+
+}
+
+
+
+.notice {
+
+  margin:0 0 20px;
+
+  border-radius:14px;
+
+  padding:14px 18px;
+
+  border:1px solid #df69a36e;
+
+  background:#6e15382e;
+
+  font-size:13px;
+
+  color:#ffd9e6
+
+}
+
+
+
+.workspace {
+
+  display:grid;
+
+  grid-template-columns:minmax(0,1fr) 308px;
+
+  gap:25px;
+
+  align-items:start;
+
+  margin-bottom:56px
+
+}
+
+
+
+.form-shell {
+
+  border:1px solid var(--line);
+
+  border-radius:var(--radius);
+
+  background:linear-gradient(140deg,#3c082ad9,#220217f2);
+
+  box-shadow:0 20px 65px #0003;
+
+  overflow:hidden;
+
+  min-width:0
+
+}
+
+
+
+.tabs {
+
+  display:grid;
+
+  grid-template-columns:1fr 1fr;
+
+  border-bottom:1px solid var(--line);
+
+  padding:8px;
+
+  gap:7px;
+
+  background:#19011188
+
+}
+
+
+
+.tab {
+
+  border:1px solid transparent;
+
+  background:none;
+
+  color:var(--muted);
+
+  padding:14px 12px;
+
+  border-radius:16px;
+
+  display:flex;
+
+  gap:11px;
+
+  text-align:left;
+
+  align-items:center
+
+}
+
+
+
+.tab:hover {
+
+  background:#ffffff07
+
+}
+
+
+
+.tab[aria-selected="true"] {
+
+  color:#fff;
+
+  background:linear-gradient(130deg,#b0187c2e,#b0187c13);
+
+  border-color:#d72a9366
+
+}
+
+
+
+.tab-badge {
+
+  height:35px;
+
+  width:35px;
+
+  flex:0 0 35px;
+
+  display:grid;
+
+  place-items:center;
+
+  border-radius:11px;
+
+  border:1px solid var(--line);
+
+  color:#fcb144;
+
+  background:#b0187c16
+
+}
+
+
+
+.tab strong {
+
+  font-size:13px;
+
+  display:block
+
+}
+
+
+
+.tab small {
+
+  font-size:10px;
+
+  display:block;
+
+  opacity:.75;
+
+  margin-top:2px
+
+}
+
+
+
+.content {
+
+  padding:28px 30px 30px
+
+}
+
+
+
+.form-title {
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:space-between;
+
+  gap:18px;
+
+  margin-bottom:21px
+
+}
+
+
+
+.form-title h2 {
+
+  margin:0;
+
+  font-size:23px;
+
+  letter-spacing:-.7px;
+
+  line-height:1.3
+
+}
+
+
+
+.form-title p {
+
+  margin:6px 0 0;
+
+  color:var(--muted);
+
+  font-size:12px
+
+}
+
+
+
+.tag {
+
+  font-size:10px;
+
+  text-transform:uppercase;
+
+  letter-spacing:1px;
+
+  color:#fcb144;
+
+  padding:5px 8px;
+
+  border:1px solid #fcb14440;
+
+  border-radius:7px;
+
+  white-space:nowrap
+
+}
+
+
+
+.fields {
+
+  margin:0;
+
+  padding:0;
+
+  border:0;
+
+  min-width:0
+
+}
+
+
+
+.grid {
+
+  display:grid;
+
+  grid-template-columns:1fr 1fr;
+
+  gap:18px 17px
+
+}
+
+
+
+.field {
+
+  min-width:0
+
+}
+
+
+
+.field.full {
+
+  grid-column:1/-1
+
+}
+
+
+
+label {
+
+  display:block;
+
+  font-size:12px;
+
+  font-weight:700;
+
+  color:#fbe7f2;
+
+  margin-bottom:7px
+
+}
+
+
+
+label .required {
+
+  color:var(--accent);
+
+  margin-left:3px
+
+}
+
+
+
+.control {
+
+  display:block;
+
+  width:100%;
+
+  min-height:47px;
+
+  padding:10px 12px;
+
+  border-radius:11px;
+
+  border:1px solid #a7658d66;
+
+  background:#1d0114;
+
+  color:#fff;
+
+  outline:none;
+
+  transition:border-color .15s,box-shadow .15s;
+
+  min-width:0
+
+}
+
+
+
+.control:hover {
+
+  border-color:#db5a9c88
+
+}
+
+
+
+.control:focus {
+
+  border-color:#ed6bbb;
+
+  box-shadow:0 0 0 3px #b0187c22
+
+}
+
+
+
+.control::placeholder {
+
+  color:#ad7e98;
+
+  opacity:1
+
+}
+
+
+
+.control:disabled {
+
+  opacity:.55
+
+}
+
+
+
+select.control {
+
+  color-scheme:dark;
+
+  padding-right:26px
+
+}
+
+
+
+select.control option {
+
+  background:#250419;
+
+  color:#fff
+
+}
+
+
+
+.field small {
+
+  display:block;
+
+  margin-top:6px;
+
+  color:#c399b1;
+
+  font-size:10px;
+
+  line-height:1.5
+
+}
+
+
+
+.rfc {
+
+  text-transform:uppercase
+
+}
+
+
+
+.inline-note {
+
+  margin:20px 0 0;
+
+  border-left:2px solid var(--accent);
+
+  padding:0 0 0 12px;
+
+  color:#e6bfd4;
+
+  font-size:12px;
+
+  line-height:1.7
+
+}
+
+
+
+.check {
+
+  display:flex;
+
+  gap:10px;
+
+  align-items:flex-start;
+
+  font-size:11px;
+
+  color:#d9b4ca;
+
+  font-weight:500;
+
+  margin:22px 0 0;
+
+  cursor:pointer;
+  line-height:1.7
+
+}
+
+
+
+.check input {
+
+  width:17px;
+
+  height:17px;
+
+  flex:0 0 17px;
+
+  accent-color:#b0187c;
+
+  margin:2px 0 0
+
+}
+
+
+
+.form-bottom {
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:space-between;
+
+  gap:15px;
+
+  margin-top:24px
+
+}
+
+
+
+.form-bottom p {
+
+  margin:0;
+
+  max-width:235px;
+
+  color:#bf93ad;
+
+  font-size:10px;
+
+  line-height:1.65
+
+}
+
+
+
+.btn {
+
+  min-height:46px;
+
+  border:1px solid #da539c70;
+
+  border-radius:12px;
+
+  padding:11px 17px;
+
+  background:#471030;
+
+  color:#fff;
+
+  display:inline-flex;
+
+  align-items:center;
+
+  justify-content:center;
+
+  gap:13px;
+
+  text-decoration:none;
+
+  font-size:12px;
+
+  font-weight:800
+
+}
+
+
+
+.btn-primary {
+
+  background:linear-gradient(120deg,#b0187c,#cc218d);
+
+  border-color:#e367ad77;
+
+  box-shadow:0 7px 23px #b0187c22
+
+}
+
+
+
+.btn:hover {
+
+  filter:brightness(1.12)
+
+}
+
+
+
+.btn svg {
+
+  flex:0 0 16px
+
+}
+
+
+
+.error {
+
+  color:#ffdbdf;
+
+  background:#651b3455;
+
+  border:1px solid #ef709a77;
+
+  border-radius:11px;
+
+  padding:12px 14px;
+
+  margin-top:17px;
+
+  font-size:12px
+
+}
+
+
+
+.trap {
+
+  position:absolute!important;
+
+  left:-9999px!important;
+
+  width:1px;
+
+  height:1px;
+
+  overflow:hidden
+
+}
+
+
+
+.side-card {
+
+  padding:24px;
+
+  border:1px solid var(--line);
+
+  border-radius:22px;
+
+  background:linear-gradient(145deg,#3c092aa6,#1b0314c9);
+
+  margin-bottom:17px
+
+}
+
+
+
+.side-kicker {
+
+  color:#fcb144;
+
+  font-size:10px;
+
+  letter-spacing:1.5px;
+
+  text-transform:uppercase;
+
+  font-weight:800
+
+}
+
+
+
+.side-card h3 {
+
+  font-size:20px;
+
+  margin:10px 0 18px;
+
+  line-height:1.35;
+
+  letter-spacing:-.5px
+
+}
+
+
+
+.steps {
+
+  margin:0;
+
+  padding:0;
+
+  list-style:none;
+
+  counter-reset:step
+
+}
+
+
+
+.steps li {
+
+  counter-increment:step;
+
+  position:relative;
+
+  padding-left:35px;
+
+  margin-bottom:20px
+
+}
+
+
+
+.steps li:last-child {
+
+  margin-bottom:0
+
+}
+
+
+
+.steps li:before {
+
+  content:counter(step,decimal-leading-zero);
+
+  position:absolute;
+
+  left:0;
+
+  top:1px;
+
+  font-size:10px;
+
+  width:25px;
+
+  height:25px;
+
+  border:1px solid #fcb14440;
+
+  border-radius:8px;
+
+  color:#fcb144;
+
+  display:grid;
+
+  place-items:center;
+
+  background:#fcb14409;
+
+  font-weight:800
+
+}
+
+
+
+.steps strong {
+
+  font-size:12px;
+
+  display:block
+
+}
+
+
+
+.steps p {
+
+  font-size:11px;
+
+  color:#c89db5;
+
+  margin:4px 0 0;
+
+  line-height:1.7
+
+}
+
+
+
+.help-card {
+
+  padding:20px 22px;
+
+  border:1px solid #fcb1442e;
+
+  border-radius:20px;
+
+  background:#fcb14405
+
+}
+
+
+
+.help-card strong {
+
+  font-size:12px;
+
+  color:#ffdda1
+
+}
+
+
+
+.help-card p {
+
+  font-size:11px;
+
+  color:var(--muted);
+
+  margin:7px 0 14px
+
+}
+
+
+
+.text-link {
+
+  font-size:11px;
+
+  font-weight:700;
+
+  color:#fcb144;
+
+  text-decoration:none
+
+}
+
+
+
+.text-link:hover {
+
+  text-decoration:underline
+
+}
+
+
+
+.mini-points {
+
+  display:flex;
+
+  flex-wrap:wrap;
+
+  gap:11px;
+
+  margin:20px 3px 0;
+
+  color:#ad7e99;
+
+  font-size:10px
+
+}
+
+
+
+.mini-points span:before {
+
+  content:"·";
+
+  margin-right:5px;
+
+  color:#d72a93
+
+}
+
+
+
+.site-footer {
+
+  border-top:1px solid var(--line);
+
+  padding:25px 0;
+
+  color:#a87895;
+
+  font-size:11px
+
+}
+
+
+
+.footer-inner {
+
+  display:flex;
+
+  justify-content:space-between;
+
+  gap:20px
+
+}
+
+
+
+.footer-inner strong {
+
+  color:#ddb7cd
+
+}
+
+
+
+.receipt {
+
+  padding:34px 30px
+
+}
+
+
+
+.receipt-icon {
+
+  width:54px;
+
+  height:54px;
+
+  border:1px solid #fcb14466;
+
+  background:#fcb1440c;
+
+  color:#fcb144;
+
+  display:grid;
+
+  place-items:center;
+
+  border-radius:17px;
+
+  margin-bottom:20px
+
+}
+
+
+
+.receipt h2 {
+
+  font-size:26px;
+
+  margin:0 0 8px;
+
+  letter-spacing:-.7px
+
+}
+
+
+
+.receipt p {
+
+  font-size:13px;
+
+  color:var(--muted);
+
+  margin:10px 0
+
+}
+
+
+
+.reference {
+
+  padding:17px 20px;
+
+  background:#15000ebb;
+
+  border:1px solid var(--line);
+
+  border-radius:13px;
+
+  margin:21px 0;
+
+  display:flex;
+
+  justify-content:space-between;
+
+  align-items:center;
+
+  gap:12px
+
+}
+
+
+
+.reference small {
+
+  display:block;
+
+  color:#b989a3;
+
+  font-size:10px;
+
+  text-transform:uppercase;
+
+  letter-spacing:1px
+
+}
+
+
+
+.reference strong {
+
+  display:block;
+
+  font-size:20px;
+
+  letter-spacing:1px;
+
+  font-family:Consolas,monospace;
+
+  margin-top:3px
+
+}
+
+
+
+.state-pill {
+
+  display:inline-block;
+
+  font-size:10px;
+
+  border-radius:7px;
+
+  background:#b0187c22;
+
+  color:#f9c6e2;
+
+  border:1px solid #b0187c66;
+
+  padding:5px 8px;
+
+  letter-spacing:1px;
+
+  max-width:100%;
+
+  overflow-wrap:anywhere
+
+}
+
+
+
+.receipt-actions {
+
+  display:flex;
+
+  flex-wrap:wrap;
+
+  gap:10px;
+
+  margin-top:24px
+
+}
+
+
+
+.receipt .privacy {
+
+  color:#a77a92;
+
+  font-size:10px;
+
+  margin-top:23px
+
+}
+
+
+
+.receipt .new {
+
+  border:0;
+
+  background:none;
+
+  color:#dcb6cb;
+
+  font-size:11px;
+
+  padding:14px 0 0;
+
+  text-decoration:underline
+
+}
+
+
+
+.receipt .copy {
+
+  font-size:10px;
+
+  min-height:36px;
+
+  padding:5px 10px;
+
+  background:#410e2c
+
+}
+
+
+
+.noscript {
+
+  margin:20px;
+
+  color:#ffdda1
+
+}
+
+
+
+.safe-receipt {
+
+  margin:17px 0 0;
+
+  border:1px solid #fcb14466;
+
+  border-radius:10px;
+
+  padding:11px 13px;
+
+  font-size:12px;
+
+  color:#ffe2a9;
+
+  background:#fcb14407
+
+}
+
+
+
+@media(max-width:1100px) {
+
+  .menu {
+
+    display:block
+
+  }
+
+
+
+  .header-inner {
+
+    flex-wrap:wrap;
+
+    padding:16px 0;
+
+    min-height:80px
+
+  }
+
+
+
+  .nav {
+
+    display:none;
+
+    flex-basis:100%;
+
+    border-radius:15px;
+
+    flex-wrap:wrap;
+
+    padding:9px;
+
+    gap:4px
+
+  }
+
+
+
+  .nav.open {
+
+    display:flex
+
+  }
+
+
+
+  .nav a {
+
+    flex-grow:1;
+
+    text-align:center;
+
+    font-size:13px
+
+  }
+
+
+
+  .workspace {
+
+    grid-template-columns:minmax(0,1fr) 280px;
+
+    gap:18px
+
+  }
+
+
+
+  .content {
+
+    padding:25px
+
+  }
+
+
+
+  .hero h1 {
+
+    font-size:51px
+
+}
+
+
+
+@media(max-width:870px) {
+
+  .workspace {
+
+    grid-template-columns:1fr
+
+  }
+
+
+
+  .aside {
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:18px
+
+  }
+
+
+
+  .side-card {
+
+    margin:0
+
+  }
+
+
+
+  .mini-points {
+
+    grid-column:1/-1;
+
+    margin-top:0
+
+  }
+
+
+
+  .hero {
+
+    padding-top:36px
+
+  }
+
+
+
+  .hero h1 {
+
+    font-size:45px
+
+  }
+
+
+
+  .form-bottom p {
+
+    max-width:330px
+
+}
+
+
+
+@media(max-width:560px) {
+
+  .container {
+
+    width:calc(100% - 28px)
+
+  }
+
+
+
+  .brand strong {
+
+    font-size:14px
+
+  }
+
+
+
+  .brand-mark {
+
+    width:42px;
+
+    height:42px;
+
+    font-size:29px
+
+  }
+
+
+
+  .brand small {
+
+    font-size:8px
+
+  }
+
+
+
+  .hero-top {
+
+    align-items:flex-start;
+
+    gap:14px;
+
+    flex-direction:column
+
+  }
+
+
+
+  .hero {
+
+    padding-top:29px;
+
+    padding-bottom:24px
+
+  }
+
+
+
+  .hero h1 {
+
+    font-size:38px;
+
+    letter-spacing:-1.8px;
+
+    margin-top:20px
+
+  }
+
+
+
+  .hero p {
+
+    font-size:13px
+
+  }
+
+
+
+  .connection {
+
+    font-size:10px;
+
+    padding:5px 10px
+
+  }
+
+
+
+  .workspace {
+
+    gap:20px;
+
+    margin-bottom:34px
+
+  }
+
+
+
+  .form-shell {
+
+    border-radius:19px
+
+  }
+
+
+
+  .tab {
+
+    padding:11px 8px;
+
+    gap:7px
+
+  }
+
+
+
+  .tab-badge {
+
+    width:28px;
+
+    height:28px;
+
+    flex-basis:28px;
+
+    border-radius:8px
+
+  }
+
+
+
+  .tab strong {
+
+    font-size:11px
+
+  }
+
+
+
+  .tab small {
+
+    font-size:9px
+
+  }
+
+
+
+  .content {
+
+    padding:23px 18px
+
+  }
+
+
+
+  .form-title h2 {
+
+    font-size:21px
+
+  }
+
+
+
+  .tag {
+
+    font-size:8px;
+
+    padding:4px 6px
+
+  }
+
+
+
+  .grid {
+
+    grid-template-columns:1fr;
+
+    gap:17px
+
+  }
+
+
+
+  .control {
+
+    font-size:16px;
+
+    min-height:49px
+
+  }
+
+
+
+  .form-bottom {
+
+    flex-direction:column;
+
+    align-items:stretch;
+
+    gap:16px
+
+  }
+
+
+
+  .form-bottom p {
+
+    max-width:none
+
+  }
+
+
+  .btn {
+
+    min-height:48px;
+
+    font-size:13px
+
+  }
+
+
+
+  .check {
+
+    font-size:12px
+
+  }
+
+
+
+  .field small {
+
+    font-size:11px
+
+  }
+
+
+
+  .aside {
+
+    grid-template-columns:1fr
+
+  }
+
+
+
+  .side-card {
+
+    padding:22px
+
+  }
+
+
+
+  .footer-inner {
+
+    flex-direction:column;
+
+    gap:7px
+
+  }
+
+
+
+  .receipt {
+
+    padding:27px 19px
+
+  }
+
+
+
+  .reference {
+
+    padding:16px
+
+  }
+
+
+
+  .reference strong {
+
+    font-size:17px
+
+  }
+
+
+
+  .receipt-actions .btn {
+
+    flex:1
+
+  }
+
+
+
+  .connection {
+
+    max-width:100%
+
+  }
+
+
+
+  .eyebrow {
+
+    font-size:9px
+
+  }
+
+
+
+  .mode-banner {
+
+    font-size:12px
+
+}
+
+
+
+
+.progress-card {
+  margin:20px 0 16px;
+  padding:18px;
+  border:1px solid var(--line);
+  border-radius:15px;
+  background:#17000eaa
+}
+.progress-head {display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.progress-head strong {font-size:13px}
+.progress-percent {font-size:11px;color:#fcb144;font-family:Consolas,monospace}
+.progress-track {height:13px;border-radius:999px;background:#0f000a;border:1px solid #ffffff14;overflow:hidden;position:relative}
+.progress-bar {height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#b0187c,#f05caf,#fcb144);transition:width .6s ease;position:relative;overflow:hidden}
+.progress-bar.loading:after {content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 15%,#ffffff55 45%,transparent 75%);transform:translateX(-100%);animation:aryProgress 1.25s linear infinite}
+.progress-card[data-result="success"] {border-color:#65d99a66;background:#0a40251f}
+.progress-card[data-result="success"] .progress-bar {background:linear-gradient(90deg,#20985d,#6be0a4)}
+.progress-card[data-result="error"] {border-color:#ff668777;background:#5a14282f}
+.progress-card[data-result="error"] .progress-bar {background:linear-gradient(90deg,#b51f47,#ff6687)}
+.progress-card[data-result="warning"] {border-color:#fcb14466;background:#5b3a071f}
+.progress-message {margin:11px 0 0!important;color:#e9c9da!important;font-size:12px!important}
+.result-box {margin:17px 0;padding:16px;border-radius:13px;border:1px solid var(--line);font-size:13px;line-height:1.7}
+.result-box.success {border-color:#6be0a466;background:#124b2c45;color:#d9ffe9}
+.result-box.error {border-color:#ff668777;background:#651b3455;color:#ffe0e7}
+.result-box.warning {border-color:#fcb14466;background:#5b3a0738;color:#fff0c8}
+.result-box strong {display:block;font-size:15px;margin-bottom:4px}
+.result-box a {font-weight:800;color:#ffd56e}
+@keyframes aryProgress {to {transform:translateX(100%)}}
+
+@media(prefers-reduced-motion:reduce) {
+
+    * {
+
+        scroll-behavior: auto !important;
+
+        transition: none !important;
+
+    }
+
+}
+
+
+
+/* CALENDARIO BLANCO */
+
+input[type="date"].control {
+
+    color-scheme: dark;
+
+}
+
+
+
+input[type="date"].control::-webkit-calendar-picker-indicator {
+
+    filter: invert(1) brightness(2);
+
+    opacity: 1;
+
+    cursor: pointer;
+
+}
+
+
+
+.review-dialog {
+
+  width:min(650px,calc(100% - 28px));
+
+  border:1px solid #e06aac66;
+
+  border-radius:22px;
+
+  padding:0;
+
+  background:linear-gradient(150deg,#3d082b,#1a0012);
+
+  color:var(--text);
+
+  box-shadow:0 30px 100px #0009
+
+}
+
+
+
+.review-dialog::backdrop {
+
+  background:#090006c7;
+
+  backdrop-filter:blur(4px)
+
+}
+
+
+
+.review-head {
+
+  padding:25px 27px 15px;
+
+  border-bottom:1px solid var(--line)
+
+}
+
+
+
+.review-kicker {
+
+  display:block;
+
+  color:var(--accent);
+
+  font-size:10px;
+
+  font-weight:800;
+
+  text-transform:uppercase;
+
+  letter-spacing:1.4px;
+
+  margin-bottom:7px
+
+}
+
+
+
+.review-head h2 {
+
+  margin:0;
+
+  font-size:24px;
+
+  letter-spacing:-.6px
+
+}
+
+
+
+.review-head p {
+
+  margin:8px 0 0;
+
+  color:var(--muted);
+
+  font-size:12px;
+
+  line-height:1.7
+
+}
+
+
+
+.review-grid {
+
+  display:grid;
+
+  grid-template-columns:1fr 1fr;
+
+  gap:10px 12px;
+
+  padding:20px 27px 8px
+
+}
+
+
+
+.review-item {
+
+  padding:11px 13px;
+
+  border:1px solid var(--line);
+
+  border-radius:11px;
+
+  background:#17000e;
+
+  min-width:0
+
+}
+
+
+
+.review-item.full {
+
+  grid-column:1/-1
+
+}
+
+
+
+.review-item small {
+
+  display:block;
+
+  color:#b98aa3;
+
+  font-size:9px;
+
+  text-transform:uppercase;
+
+  letter-spacing:.8px;
+
+  margin-bottom:3px
+
+}
+
+
+
+.review-item strong {
+
+  display:block;
+
+  font-size:12px;
+
+  overflow-wrap:anywhere
+
+}
+
+
+
+.review-warning {
+
+  margin:13px 27px 0;
+
+  padding:12px 14px;
+
+  border-radius:11px;
+
+  border:1px solid #fcb14455;
+
+  background:#fcb1440a;
+
+  color:#ffe0a7;
+
+  font-size:11px;
+
+  line-height:1.6
+
+}
+
+
+
+.review-actions {
+
+  display:flex;
+
+  justify-content:flex-end;
+
+  gap:10px;
+
+  padding:20px 27px 27px
+
+}
+
+
+
+@media(max-width:560px) {
+
+  .review-grid {
+
+    grid-template-columns:1fr;
+
+    padding:18px 18px 6px
+
+  }
+
+
+
+  .review-item.full {
+
+    grid-column:auto
+
+  }
+
+
+
+  .review-head {
+
+    padding:22px 18px 14px
+
+  }
+
+
+
+  .review-warning {
+
+    margin:12px 18px 0
+
+  }
+
+
+
+  .review-actions {
+
+    padding:18px;
+
+    flex-direction:column-reverse
+
+  }
+
+
+
+  .review-actions .btn {
+
+    width:100%
+
+}
+
+  </style>
+
+ </head>
+
+ <body>
+
+  <a class="skip" href="#tramites">
+
+   Ir a facturación
+
+  </a>
+
+  <!-- ==================== ENCABEZADO ==================== -->
+
+  <header class="topbar">
+
+   <div class="container header-inner">
+
+    <a aria-label="ARY Super Servicios, inicio" class="brand" href="default.htm">
+
+     <span aria-hidden="true" class="brand-mark">
+
+      <span id="brandFallback">
+
+       A
+
+      </span>
+
+      <img alt="" hidden="" id="brandLogo" src="images/Arylogo2.png"/>
+
+     </span>
+
+     <span>
+
+      <strong>
+
+       ARY Super Servicios
+
+      </strong>
+
+      <small>
+
+       Experiencia en movimiento
+
+      </small>
+
+     </span>
+
+    </a>
+
+    <button aria-controls="mainNav" aria-expanded="false" class="menu" id="menuButton" type="button">
+
+     Menú ☰
+
+    </button>
+
+    <nav aria-label="Navegación principal" class="nav" id="mainNav">
+
+     <a href="default.htm">
+
+      Inicio
+
+     </a>
+
+     <a href="ary_conoce_nuestra_empresa.htm">
+
+      Empresa
+
+     </a>
+
+     <a href="ary_ubica_nuestras_estaciones.htm">
+
+      Estaciones
+
+     </a>
+
+     <a href="ary_servicios.htm">
+
+      Servicios
+
+     </a>
+
+     <a href="ary_productos.htm">
+
+      Productos
+
+     </a>
+
+     <a href="ary_tips_ahorro_combustible.htm">
+
+      Tips
+
+     </a>
+
+     <a href="ary_contacto.htm">
+
+      Contacto
+
+     </a>
+
+     <a aria-current="page" href="ary_facturacion.htm">
+
+      Facturación
+
+     </a>
+
+    </nav>
+
+   </div>
+
+  </header>
+
+  <!-- ==================== CONTENIDO PRINCIPAL ==================== -->
+
+  <main class="container" id="tramites">
+
+   <section aria-labelledby="pageTitle" class="hero">
+
+    <div class="hero-top">
+
+     <span class="eyebrow">
+
+      Servicios en línea · Grupo ARY
+
+     </span>
+
+     <span class="connection" id="connection" role="status">
+
+      Comprobando conexión
+
+     </span>
+
+    </div>
+
+    <h1 id="pageTitle">
+
+     Tu factura,
+
+     <br/>
+
+     <em>
+
+      sin complicaciones.
+
+     </em>
+
+    </h1>
+
+    <p>
+
+     Da de alta tus datos o solicita la factura de tu ticket. Elige tu estación, revisa la información y conserva tu número de solicitud.
+
+    </p>
+
+   </section>
+
+   <noscript>
+
+    <p class="noscript">
+
+     Activa JavaScript para enviar y consultar solicitudes en este portal.
+
+    </p>
+
+   </noscript>
+
+   <div class="mode-banner" hidden="" id="modeBanner">
+
+    <strong>
+
+     Portal en modo de prueba.
+
+    </strong>
+
+    Las solicitudes se preparan sin timbrar facturas ni guardar clientes. No se considera un trámite terminado.
+
+   </div>
+
+   <div class="notice" hidden="" id="connectionError" role="status">
+
+   </div>
+
+   <div class="workspace">
+
+    <section aria-label="Trámites de facturación" class="form-shell">
+
+     <div aria-label="Elige tu trámite" class="tabs" id="tabs" role="tablist">
+
+      <button aria-controls="panel-factura" aria-selected="true" class="tab" id="tab-factura" role="tab" type="button">
+
+       <span aria-hidden="true" class="tab-badge">
+
+        <svg fill="none" height="18" stroke="currentColor" stroke-width="1.7" viewbox="0 0 24 24" width="18">
+
+         <path d="M6 3h9l4 4v14H6zM14 3v5h5M9 12h7M9 16h7">
+
+         </path>
+
+        </svg>
+
+       </span>
+
+       <span>
+
+        <strong>
+
+         Facturar ticket
+
+        </strong>
+
+        <small>
+
+         Ya estoy registrado
+
+        </small>
+
+       </span>
+
+      </button>
+
+      <button aria-controls="panel-alta" aria-selected="false" class="tab" id="tab-alta" role="tab" tabindex="-1" type="button">
+
+       <span aria-hidden="true" class="tab-badge">
+
+        <svg fill="none" height="18" stroke="currentColor" stroke-width="1.7" viewbox="0 0 24 24" width="18">
+
+         <circle cx="10" cy="7" r="4">
+
+         </circle>
+
+         <path d="M3 21v-3a7 7 0 0 1 12-4M19 13v8M15 17h8">
+
+         </path>
+
+        </svg>
+
+       </span>
+
+       <span>
+
+        <strong>
+
+         Dar de alta cliente
+
+        </strong>
+
+        <small>
+
+         Es mi primer registro
+
+        </small>
+
+       </span>
+
+      </button>
+
+     </div>
+
+     <!-- ==================== FORMULARIO DE FACTURACIÓN ==================== -->
+
+     <section aria-labelledby="tab-factura" class="content" id="panel-factura" role="tabpanel">
+
+      <div class="form-title">
+
+       <div>
+
+        <h2>
+
+         Factura tu ticket
+
+        </h2>
+
+        <p>
+
+         Ten a la mano tu ticket y el RFC registrado.
+
+        </p>
+
+       </div>
+
+       <span class="tag">
+
+        01 / Facturación
+
+       </span>
+
+      </div>
+
+      <form autocomplete="off" id="form-factura">
+
+       <fieldset class="fields">
+
+        <legend hidden="">
+
+         Datos para facturar
+
+        </legend>
+
+        <div class="grid">
+
+         <div class="field full">
+
+          <label for="factura-estacion">
+
+           Estación donde cargaste
+
+           <span class="required">
+
+            *
+
+           </span>
+
+          </label>
+
+          <select class="control station" id="factura-estacion" name="estacion" required="">
+
+           <option value="">
+
+            Selecciona tu estación
+
+           </option>
+
+          </select>
+
+          <small>
+
+           Debe coincidir con la estación impresa en tu ticket.
+
+          </small>
+
+         </div>
+
+         <div class="field">
+
+          <label for="factura-rfc">
+
+           RFC del cliente
+
+           <span class="required">
+
+            *
+
+           </span>
+
+          </label>
+
+          <input autocapitalize="characters" class="control rfc" id="factura-rfc" maxlength="13" minlength="12" name="rfc" placeholder="RFC de 12 o 13 caracteres" required="" spellcheck="false"/>
+
+         </div>
+
+         <div class="field">
+
+          <label for="factura-ticket">
+
+           Folio del ticket
+
+           <span class="required">
+
+            *
+
+           </span>
+
+          </label>
+
+          <input class="control" id="factura-ticket" inputmode="numeric" maxlength="20" name="ticket" pattern="[0-9]{1,20}" placeholder="Escribe el folio" required=""/>
+
+          <small>
+
+           Un ticket por solicitud. Conserva los ceros iniciales.
+
+          </small>
+
+         </div>
+
+         <div class="field">
+
+          <label for="factura-fecha">
+
+           Fecha del ticket
+
+           <span class="required">
+
+            *
+
+           </span>
+
+          </label>
+
+          <input class="control" id="factura-fecha" name="fecha_ticket" required="" type="date"/>
+
+          <small>
+
+           Selecciona la fecha impresa en el ticket. Se permite hoy y los 3 días anteriores.
+
+          </small>
+
+         </div>
+
+         <div class="field full">
+
+          <label for="factura-pago">
+
+           Forma de pago · ¿Cómo pagaste?
+
+           <span class="required">
+
+            *
+
+           </span>
+
+          </label>
+
+          <select class="control" id="factura-pago" name="forma_pago" required="">
+
+           <option value="">
+
+            Selecciona tu forma de pago
+
+           </option>
+
+          </select>
+
+          <small>
+
+           Elige efectivo, tarjeta de crédito, tarjeta de débito o transferencia. No ingreses números de tarjeta.
+
+          </small>
+
+         </div>
+
+         <div class="field full">
+
+          <label for="factura-uso">
+
+           Uso de CFDI
+
+           <span class="required">
+
+            *
+
+           </span>
+
+          </label>
+
+          <select class="control" id="factura-uso" name="uso_cfdi" required="">
+
+          </select>
+
+          <small>
+
+           Se muestra el catálogo del bot. Revisa que tu elección corresponda a tu solicitud.
+
+          </small>
+
+         </div>
+
+         <div class="field">
+
+          <label for="factura-correo">
+
+           Correo para recibir la factura
+
+           <span class="required">
+
+            *
+
+           </span>
+
+          </label>
+
+          <input autocomplete="email" class="control" id="factura-correo" maxlength="254" name="correo" placeholder="tu@correo.com" required="" spellcheck="false" type="email"/>
+
+         </div>
+
+         <div class="field">
+
+          <label for="factura-confirmacion">
+
+           Confirma tu correo
+
+           <span class="required">
+
+            *
+
+           </span>
+
+          </label>
+
+          <input autocomplete="off" class="control" id="factura-confirmacion" maxlength="254" name="correo_confirmacion" placeholder="Escribe el mismo correo" required="" spellcheck="false" type="email"/>
+
+         </div>
+
+        </div>
+
+        <p class="inline-note">
+
+         Si es tu primera solicitud, completa primero
+
+         <strong>
+
+          Dar de alta cliente
+
+         </strong>
+
+         y espera la confirmación del registro.
+
+        </p>
+
+        <div aria-hidden="true" class="trap">
+
+         <label for="factura-web">
+
+          Deja este campo vacío
+
+         </label>
+
+         <input autocomplete="off" id="factura-web" name="sitio_web" tabindex="-1"/>
+
+        </div>
+
+        <label class="check">
+
+         <input name="confirmado" required="" type="checkbox"/>
+
+         <span>
+
+          Revisé la estación, el RFC, el ticket, la fecha del ticket, la forma de pago, el uso de CFDI y el correo. Confirmo que corresponden a mi solicitud.
+
+         </span>
+
+        </label>
+
+       </fieldset>
+
+       <div class="error" hidden="" id="error-factura" role="alert" tabindex="-1">
+
+       </div>
+
+       <div class="form-bottom">
+
+        <p>
+
+         Recibir tu solicitud no significa que la factura ya esté emitida. Podrás consultar el avance.
+
+        </p>
+
+        <button class="btn btn-primary submit" disabled="" type="submit">
+
+         Enviar solicitud
+
+         <span aria-hidden="true">
+
+          →
+
+         </span>
+
+        </button>
+
+       </div>
+
+      </form>
+
+     </section>
+
+     <!-- ==================== ALTA DE CLIENTE ==================== -->
+
+     <section aria-labelledby="tab-alta" class="content" hidden="" id="panel-alta" role="tabpanel">
+
+      <div class="form-title">
+
+       <div>
+
+        <h2>
+
+         Registra tus datos
+
+        </h2>
+
+        <p>
+
+         Los cuatro datos que utiliza el alta del bot.
+
+        </p>
+
+       </div>
+
+       <span class="tag">
+
+        02 / Alta
+
+       </span>
+
+      </div>
+
+      <form autocomplete="off" id="form-alta">
+
+       <fieldset class="fields">
+
+        <legend hidden="">
+
+         Datos para alta de cliente
+
+        </legend>
+
+        <div class="grid">
+
+         <div class="field full">
+
+          <label for="alta-estacion">
+
+           Estación
+           <span class="required">
+
+            *
+
+           </span>
+
+          </label>
+
+          <select class="control station" id="alta-estacion" name="estacion" required="">
+
+           <option value="">
+
+            Selecciona tu estación
+
+           </option>
+
+          </select>
+
+          <small>
+
+           Elige la estación en la que vas a solicitar tu factura.
+
+          </small>
+
+         </div>
+
+         <div class="field">
+
+          <label for="alta-rfc">
+
+           RFC
+
+           <span class="required">
+
+            *
+
+           </span>
+
+          </label>
+
+          <input autocapitalize="characters" class="control rfc" id="alta-rfc" maxlength="13" minlength="12" name="rfc" placeholder="RFC de 12 o 13 caracteres" required="" spellcheck="false"/>
+
+         </div>
+
+         <div class="field">
+
+          <label for="alta-idcif">
+
+           idCIF
+
+           <span class="required">
+
+            *
+
+           </span>
+
+          </label>
+
+          <input class="control" id="alta-idcif" inputmode="numeric" maxlength="11" minlength="11" name="idcif" pattern="[0-9]{11}" placeholder="11 dígitos" required=""/>
+
+          <small>
+
+           Captura los 11 dígitos de tu idCIF, sin espacios.
+
+          </small>
+
+         </div>
+
+         <div class="field full">
+
+          <label for="alta-telefono">
+
+           Teléfono
+
+           <span class="required">
+
+            *
+
+           </span>
+
+          </label>
+
+          <input autocomplete="tel" class="control" id="alta-telefono" maxlength="24" name="telefono" placeholder="Tu número de contacto" required="" type="tel"/>
+
+         </div>
+
+         <div class="field">
+
+          <label for="alta-correo">
+
+           Correo electrónico
+
+           <span class="required">
+
+            *
+
+           </span>
+
+          </label>
+
+          <input autocomplete="email" class="control" id="alta-correo" maxlength="254" name="correo" placeholder="tu@correo.com" required="" spellcheck="false" type="email"/>
+
+         </div>
+
+         <div class="field">
+
+          <label for="alta-confirmacion">
+
+           Confirma tu correo
+
+           <span class="required">
+
+            *
+
+           </span>
+
+          </label>
+
+          <input autocomplete="off" class="control" id="alta-confirmacion" maxlength="254" name="correo_confirmacion" placeholder="Escribe el mismo correo" required="" spellcheck="false" type="email"/>
+
+         </div>
+
+        </div>
+
+        <p class="inline-note">
+
+         El bot consulta los datos fiscales desde Polaris. El personal revisa el registro antes de guardarlo; este trámite
+
+         <strong>
+
+          no emite una factura
+
+         </strong>
+
+         .
+
+        </p>
+
+        <div aria-hidden="true" class="trap">
+
+         <label for="alta-web">
+
+          Deja este campo vacío
+
+         </label>
+
+         <input autocomplete="off" id="alta-web" name="sitio_web" tabindex="-1"/>
+
+        </div>
+
+        <label class="check">
+
+         <input name="confirmado" required="" type="checkbox"/>
+
+         <span>
+
+          Revisé mi RFC, idCIF, teléfono y correo, y solicito que se atienda mi alta de cliente en la estación seleccionada.
+
+         </span>
+
+        </label>
+
+       </fieldset>
+
+       <div class="error" hidden="" id="error-alta" role="alert" tabindex="-1">
+
+       </div>
+
+       <div class="form-bottom">
+
+        <p>
+
+         El registro queda pendiente hasta que el personal confirme el alta en el sistema.
+
+        </p>
+
+        <button class="btn btn-primary submit" disabled="" type="submit">
+
+         Solicitar alta
+
+         <span aria-hidden="true">
+
+          →
+
+         </span>
+
+        </button>
+
+       </div>
+
+      </form>
+
+     </section>
+
+     <!-- ==================== SEGUIMIENTO DE SOLICITUD ==================== -->
+
+     <section aria-labelledby="receiptTitle" class="receipt" hidden="" id="receipt" tabindex="-1">
+
+      <div aria-hidden="true" class="receipt-icon">
+
+       <svg fill="none" height="27" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24" width="27">
+
+        <path d="m5 12 4 4L19 6">
+
+        </path>
+
+        <path d="M20 13v6H4V4h10">
+
+        </path>
+
+       </svg>
+
+      </div>
+
+      <h2 id="receiptTitle">
+
+       Solicitud recibida
+
+      </h2>
+
+      <p>
+
+       Conserva esta referencia para consultar con el área de facturación.
+
+      </p>
+
+      <div class="reference">
+
+       <div>
+
+        <small>
+
+         Número de solicitud
+
+        </small>
+
+        <strong id="receiptRef">
+
+        </strong>
+
+       </div>
+
+       <button class="btn copy" id="copyReference" type="button">
+
+        Copiar
+
+       </button>
+
+      </div>
+
+      <div class="safe-receipt" hidden="" id="receiptSafe">
+
+       <strong>
+
+        Solicitud de prueba.
+
+       </strong>
+
+       No autoriza timbrar una factura ni guardar un cliente.
+
+      </div>
+
+      <div aria-live="polite" class="progress-card" id="progressCard">
+       <div class="progress-head">
+        <strong id="progressTitle">Procesando solicitud</strong>
+        <span class="progress-percent" id="progressPercent">10%</span>
+       </div>
+       <div aria-label="Avance de facturación" aria-valuemax="100" aria-valuemin="0" aria-valuenow="10" class="progress-track" id="progressTrack" role="progressbar">
+        <div class="progress-bar loading" id="progressBar"></div>
+       </div>
+       <p class="progress-message" id="progressMessage">Estamos preparando tu solicitud.</p>
+      </div>
+      <div class="result-box" hidden="" id="finalResult"></div>
+
+
+      <p>
+
+       <span class="state-pill" id="receiptState">
+
+       </span>
+
+      </p>
+
+      <p id="receiptMessage" role="status">
+
+      </p>
+
+      <p class="error" hidden="" id="statusError" role="status">
+
+      </p>
+
+      <div class="receipt-actions">
+
+       <button class="btn btn-primary" id="refreshStatus" type="button">
+
+        Actualizar estado
+
+       </button>
+
+       <a class="btn" href="ary_contacto.htm">
+
+        Contactar a ARY
+
+       </a>
+
+      </div>
+
+      <p class="privacy">
+
+       El seguimiento no muestra tus datos fiscales. Guarda la referencia antes de cerrar esta pestaña. La confirmación de recepción no es un CFDI.
+
+      </p>
+
+      <button class="new" id="newRequest" type="button">
+
+       Iniciar un trámite diferente
+
+      </button>
+
+     </section>
+
+    </section>
+
+    <aside aria-label="Ayuda para tu solicitud" class="aside">
+
+     <div class="side-card">
+
+      <span class="side-kicker">
+
+       Antes de enviar
+
+      </span>
+
+      <h3>
+
+       Un proceso claro,
+
+       <br/>
+
+       de principio a fin.
+
+      </h3>
+
+      <ol class="steps">
+
+       <li>
+
+        <strong>
+
+         Elige tu trámite
+
+        </strong>
+
+        <p>
+
+         Registra tus datos si eres nuevo, o solicita la factura de tu ticket.
+
+        </p>
+
+       </li>
+
+       <li>
+
+        <strong>
+
+         Revisa la información
+
+        </strong>
+
+        <p>
+
+         La estación y la forma de pago deben corresponder a tu compra.
+
+        </p>
+
+       </li>
+
+       <li>
+
+        <strong>
+
+         Conserva el seguimiento
+
+        </strong>
+
+        <p>
+
+         Tu solicitud entra a la cola del bot. El personal atiende las revisiones necesarias.
+
+        </p>
+
+       </li>
+
+      </ol>
+
+     </div>
+
+     <div class="help-card">
+
+      <strong>
+
+       ¿Ya enviaste este ticket?
+
+      </strong>
+
+      <p>
+
+       No lo solicites nuevamente si está pendiente o en revisión. Consulta el estado o contacta al área de facturación con tu referencia.
+
+      </p>
+
+      <a class="text-link" href="ary_contacto.htm">
+
+       Necesito ayuda
+
+       <span aria-hidden="true">
+
+        ↗
+
+       </span>
+
+      </a>
+
+     </div>
+
+     <div class="mini-points">
+
+      <span>
+
+       Alta de clientes
+
+      </span>
+
+      <span>
+
+       Facturación
+
+      </span>
+
+      <span>
+
+       Seguimiento
+
+      </span>
+
+     </div>
+
+    </aside>
+
+   </div>
+
+  </main>
+
+  <!-- ==================== CONFIRMACIÓN ANTES DE FACTURAR ==================== -->
+
+  <dialog aria-labelledby="reviewTitle" class="review-dialog" id="reviewDialog">
+
+   <div class="review-head">
+
+    <span class="review-kicker">
+
+     Antes de facturar
+
+    </span>
+
+    <h2 id="reviewTitle">
+
+     Verifica todos tus datos
+
+    </h2>
+
+    <p>
+
+     Confirma que la información coincida exactamente con tu ticket antes de enviar.
+
+    </p>
+
+   </div>
+
+   <div class="review-grid" id="reviewGrid">
+
+   </div>
+
+   <div class="review-warning">
+
+    <strong>
+
+     Importante:
+
+    </strong>
+
+    revisa especialmente estación, folio, fecha y forma de pago.
+
+   </div>
+
+   <div class="review-actions">
+
+    <button class="btn" id="reviewBack" type="button">
+
+     Volver a revisar
+
+    </button>
+
+    <button class="btn btn-primary" id="reviewConfirm" type="button">
+
+     Sí, enviar solicitud →
+
+    </button>
+
+   </div>
+
+  </dialog>
+
+  <!-- ==================== PIE DE PÁGINA ==================== -->
+
+  <footer class="site-footer">
+
+   <div class="container footer-inner">
+
+    <span>
+
+     <strong>
+
+      ARY Super Servicios
+
+     </strong>
+
+     · Energía para seguir avanzando.
+
+    </span>
+
+    <span>
+
+     ©
+
+     <span id="year">
+
+     </span>
+
+     Grupo ARY
+
+    </span>
+
+   </div>
+
+  </footer>
+
+  <script>
+
+   'use strict';
+
+
+
 (() => {
+
+
+
+  // ============================================================
+
+  // CONFIGURACIÓN DEL PORTAL
+
+  // ============================================================
+
   const API = '/api/facturacion';
+
+
+
   // Catálogos tomados del ZIP del bot. El servidor los vuelve a confirmar al conectar.
+
+
+
   const INITIAL = {"estaciones": [{"valor": "ARY I", "texto": "ARY I · Est. 6953"}, {"valor": "ARY II", "texto": "ARY II · Est. 4376"}, {"valor": "ARY III", "texto": "ARY III · Est. 4837"}, {"valor": "ARY IV", "texto": "ARY IV · Est. 5522"}, {"valor": "SERVICIO APACHE", "texto": "SERVICIO APACHE · Est. 6086"}, {"valor": "ARY V", "texto": "ARY V · Est. 9427"}, {"valor": "ARY VI", "texto": "ARY VI · Est. 11507"}], "formas_pago": [{"valor": "EFECTIVO", "texto": "Efectivo"}, {"valor": "TARJETA DE CREDITO", "texto": "Tarjeta de crédito"}, {"valor": "TARJETA DE DEBITO", "texto": "Tarjeta de débito"}, {"valor": "TRANSFERENCIA ELECTRONICA DE FONDOS", "texto": "Transferencia"}], "usos_cfdi": [{"valor": "G01", "texto": "G01 — ADQUISICIÓN DE MERCANCÍAS."}, {"valor": "G02", "texto": "G02 — DEVOLUCIONES, DESCUENTOS O BONIFICACIONES."}, {"valor": "G03", "texto": "G03 — GASTOS EN GENERAL."}, {"valor": "I01", "texto": "I01 — CONSTRUCCIONES."}, {"valor": "I02", "texto": "I02 — MOBILIARIO Y EQUIPO DE OFICINA POR INVERSIONES."}, {"valor": "I03", "texto": "I03 — EQUIPO DE TRANSPORTE."}, {"valor": "I04", "texto": "I04 — EQUIPO DE CÓMPUTO Y ACCESORIOS."}, {"valor": "I05", "texto": "I05 — DADOS, TROQUELES, MOLDES, MATRICES Y HERRAMENTAL."}, {"valor": "I06", "texto": "I06 — COMUNICACIONES TELEFÓNICAS."}, {"valor": "I07", "texto": "I07 — COMUNICACIONES SATELITALES."}, {"valor": "I08", "texto": "I08 — OTRA MAQUINARIA Y EQUIPO."}, {"valor": "D01", "texto": "D01 — HONORARIOS MÉDICOS, DENTALES Y GASTOS HOSPITALARIOS."}, {"valor": "D02", "texto": "D02 — GASTOS MÉDICOS POR INCAPACIDAD O DISCAPACIDAD."}, {"valor": "D03", "texto": "D03 — GASTOS FUNERALES."}, {"valor": "D04", "texto": "D04 — DONATIVOS."}, {"valor": "D05", "texto": "D05 — INTERESES REALES EFECTIVAMENTE PAGADOS POR CRÉDITOS HIPOTECARIOS."}, {"valor": "D06", "texto": "D06 — APORTACIONES VOLUNTARIAS AL SAR."}, {"valor": "D07", "texto": "D07 — PRIMAS POR SEGUROS DE GASTOS MÉDICOS."}, {"valor": "D08", "texto": "D08 — GASTOS DE TRANSPORTACIÓN ESCOLAR OBLIGATORIA."}, {"valor": "D09", "texto": "D09 — DEPÓSITOS EN CUENTAS PARA EL AHORRO Y PLANES DE PENSIONES."}, {"valor": "D10", "texto": "D10 — PAGOS POR SERVICIOS EDUCATIVOS (COLEGIATURAS)."}, {"valor": "S01", "texto": "S01 — SIN EFECTOS FISCALES."}, {"valor": "CP01", "texto": "CP01 — PAGOS."}, {"valor": "CN01", "texto": "CN01 — NÓMINA."}, {"valor": "P01", "texto": "P01 — POR DEFINIR"}]};
+
+
+
   const $ = id => document.getElementById(id);
+
+
+
   const storage = {
+
+
+
     get(key) { try { return sessionStorage.getItem(key); } catch (_) { return null; } },
+
+
+
     set(key, value) { try { sessionStorage.setItem(key, value); } catch (_) {} },
+
+
+
     remove(key) { try { sessionStorage.removeItem(key); } catch (_) {} }
+
+
+
   };
+
+
+
   let csrf = '', serverSafe = true, ready = false, active = 'factura', busy = false, poll = null, receipt = null;
+
+
+
   let snapshots = {factura: null, alta: null};
+
+
+
   let reviewApproved = false;
+
+
+
   const id = () => { const bytes = new Uint8Array(16); crypto.getRandomValues(bytes); return Array.from(bytes, b => b.toString(16).padStart(2,'0')).join(''); };
+
+
+
   let ids = {factura: id(), alta: id()};
+
+
+
   $('year').textContent = String(new Date().getFullYear());
+
+
+
   const brandLogo = $('brandLogo');
+
+
+
   const showLogo = () => { if(brandLogo.complete && brandLogo.naturalWidth > 0) { brandLogo.hidden = false; $('brandFallback').hidden = true; } };
+
+
+
   brandLogo.addEventListener('load', showLogo);
+
+
+
   showLogo();
 
+
+
+  // ============================================================
+
+  // FECHA DEL TICKET
+
+  // Permitido: HOY + los 3 días anteriores
+
+  // Ejemplo si hoy es 01/10: 01/10, 30/09, 29/09 y 28/09
+
+  // ============================================================
+
   const dateInput = $('factura-fecha');
-  if (dateInput) {
-    const today = new Date();
-    const local = new Date(today.getTime() - today.getTimezoneOffset()*60000).toISOString().slice(0,10);
-    dateInput.max = local;
+
+
+
+  function localISO(d) {
+
+
+
+    const y=d.getFullYear();
+
+
+
+    const m=String(d.getMonth()+1).padStart(2,'0');
+
+
+
+    const day=String(d.getDate()).padStart(2,'0');
+
+
+
+    return `${y}-${m}-${day}`;
+
+
+
   }
+
+
+
+  function configureTicketDate() {
+
+
+
+    if(!dateInput) return;
+
+
+
+    const today=new Date();
+
+
+
+    today.setHours(12,0,0,0);
+
+
+
+    const minDate=new Date(today);
+
+
+
+    minDate.setDate(minDate.getDate()-3);
+
+
+
+    const maxDate=new Date(today);
+
+
+
+    maxDate.setDate(maxDate.getDate());
+
+
+
+    dateInput.min=localISO(minDate);
+
+
+
+    dateInput.max=localISO(maxDate);
+
+
+
+  }
+
+
+
+  function ticketDateIsAllowed(value) {
+
+
+
+    if(!value) return false;
+
+
+
+    const picked=new Date(value+'T12:00:00');
+
+
+
+    if(Number.isNaN(picked.getTime())) return false;
+
+
+
+    const today=new Date();
+
+
+
+    today.setHours(12,0,0,0);
+
+
+
+    const minDate=new Date(today);
+
+
+
+    minDate.setDate(minDate.getDate()-3);
+
+
+
+    const maxDate=new Date(today);
+
+
+
+    maxDate.setDate(maxDate.getDate());
+
+
+
+    return picked>=minDate && picked<=maxDate;
+
+
+
+  }
+
+
 
   function selectedText(select) {
-    const option = select && select.options ? select.options[select.selectedIndex] : null;
-    return option ? option.textContent.trim() : '';
+
+
+
+    if(!select || select.selectedIndex<0) return '';
+
+
+
+    return select.options[select.selectedIndex].textContent.trim();
+
+
+
   }
 
-  function formatDate(value) {
-    if (!value) return '';
-    const parts = value.split('-');
-    return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : value;
+
+
+  function displayDate(value) {
+
+
+
+    const p=String(value||'').split('-');
+
+
+
+    return p.length===3 ? `${p[2]}/${p[1]}/${p[0]}` : value;
+
+
+
   }
 
-  function reviewItem(label, value, full = false) {
-    const div = document.createElement('div');
-    div.className = 'review-item' + (full ? ' full' : '');
-    const small = document.createElement('small');
-    small.textContent = label;
-    const strong = document.createElement('strong');
-    strong.textContent = value || '—';
-    div.append(small, strong);
+
+
+  function reviewItem(label,value,full=false) {
+
+
+
+    const div=document.createElement('div');
+
+
+
+    div.className='review-item'+(full?' full':'');
+
+
+
+    const small=document.createElement('small');
+
+
+
+    small.textContent=label;
+
+
+
+    const strong=document.createElement('strong');
+
+
+
+    strong.textContent=value||'—';
+
+
+
+    div.append(small,strong);
+
+
+
     return div;
+
+
+
   }
+
+
 
   function openFacturaReview(values) {
-    const grid = $('reviewGrid');
-    grid.replaceChildren(
-      reviewItem('Estación', selectedText($('factura-estacion'))),
-      reviewItem('RFC', values.rfc),
-      reviewItem('Folio del ticket', values.ticket),
-      reviewItem('Fecha del ticket', formatDate(values.fecha_ticket)),
-      reviewItem('Forma de pago', selectedText($('factura-pago'))),
-      reviewItem('Uso de CFDI', selectedText($('factura-uso')), true),
-      reviewItem('Correo de factura', values.correo, true)
+
+
+
+    $('reviewGrid').replaceChildren(
+
+
+
+      reviewItem('Estación',selectedText($('factura-estacion'))),
+
+
+
+      reviewItem('RFC',values.rfc),
+
+
+
+      reviewItem('Folio del ticket',values.ticket),
+
+
+
+      reviewItem('Fecha del ticket',displayDate(values.fecha_ticket)),
+
+
+
+      reviewItem('Forma de pago',selectedText($('factura-pago'))),
+
+
+
+      reviewItem('Uso de CFDI',selectedText($('factura-uso')),true),
+
+
+
+      reviewItem('Correo',values.correo,true)
+
+
+
     );
-    const dialog = $('reviewDialog');
-    if (typeof dialog.showModal === 'function') dialog.showModal();
-    else if (window.confirm('Verifica todos los datos antes de facturar. ¿Deseas enviar la solicitud?')) {
-      reviewApproved = true;
+
+
+
+    const dialog=$('reviewDialog');
+
+
+
+    if(typeof dialog.showModal==='function') {
+
+
+
+      dialog.showModal();
+
+
+
+    } else if(window.confirm('Verifica todos los datos antes de facturar. ¿Enviar solicitud?')) {
+
+
+
+      reviewApproved=true;
+
+
+
       $('form-factura').requestSubmit();
+
+
+
     }
+
+
+
   }
 
+
+
+  configureTicketDate();
+
+
+
+  // ============================================================
+
+  // CATÁLOGOS: estaciones, forma de pago y CFDI
+
+  // ============================================================
 
   function options(select, rows, placeholder = '', chosen = '') {
+
+
+
     select.replaceChildren();
+
+
+
     if (placeholder) select.add(new Option(placeholder, ''));
+
+
+
     rows.forEach(row => select.add(new Option(row.texto, row.valor)));
+
+
+
     select.value = chosen;
+
+
+
   }
+
+
+
   function setCatalogs(data) {
+
+
+
     document.querySelectorAll('.station').forEach(select => options(select, data.estaciones, 'Selecciona tu estación', select.value));
+
+
+
     options($('factura-pago'), data.formas_pago, 'Selecciona tu forma de pago', $('factura-pago').value);
+
+
+
     options($('factura-uso'), data.usos_cfdi, '', $('factura-uso').value || 'G03');
+
+
+
   }
+
+
+
   setCatalogs(INITIAL);
 
+
+
   function selectTab(name, focus = false) {
+
+
+
     if (busy || snapshots.factura || snapshots.alta) return;
+
+
+
     active = name;
+
+
+
     ['factura','alta'].forEach(key => {
+
+
+
       $('panel-'+key).hidden = key !== name;
+
+
+
       $('tab-'+key).setAttribute('aria-selected', String(key === name));
+
+
+
       $('tab-'+key).tabIndex = key === name ? 0 : -1;
+
+
+
     });
+
+
+
     if (focus) $('tab-'+name).focus();
+
+
+
   }
+
+
+
   ['factura','alta'].forEach(key => $('tab-'+key).addEventListener('click', () => selectTab(key)));
+
+
   $('tabs').addEventListener('keydown', event => {
+
+
+
     if (['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) {
+
+
+
       event.preventDefault();
+
+
+
       selectTab(event.key === 'Home' ? 'factura' : event.key === 'End' ? 'alta' : active === 'factura' ? 'alta' : 'factura', true);
+
+
+
     }
+
+
+
   });
+
+
+
   $('menuButton').addEventListener('click', () => {
+
+
+
     const open = $('mainNav').classList.toggle('open');
+
+
+
     $('menuButton').setAttribute('aria-expanded', String(open));
+
+
+
   });
+
+
+
   document.addEventListener('keydown', event => { if(event.key==='Escape') { $('mainNav').classList.remove('open'); $('menuButton').setAttribute('aria-expanded','false'); } });
+
+
+
   document.querySelectorAll('.rfc').forEach(input => input.addEventListener('input', () => { input.value = input.value.toUpperCase(); }));
+
+
+
   document.querySelectorAll('input[name="correo_confirmacion"]').forEach(input => input.addEventListener('input', () => input.setCustomValidity('')));
 
+
+
+  // ============================================================
+
+  // COMUNICACIÓN CON EL BOT
+
+  // ============================================================
+
   async function call(path, body, headers = {}) {
+
+
+
     const controller = new AbortController();
+
+
+
     const timeout = setTimeout(() => controller.abort(), 20000);
+
+
+
     try {
+
+
+
       const response = await fetch(API+path, { method: body ? 'POST' : 'GET', credentials:'same-origin',
+
+
+
         cache:'no-store', signal:controller.signal, headers: body ? {'Content-Type':'application/json','X-ARY-CSRF':csrf, ...headers} : headers,
+
+
+
         ...(body ? {body: JSON.stringify(body)} : {}) });
+
+
+
       let data;
+
+
+
       try { data = await response.json(); } catch (_) { throw new Error('El servidor no devolvió una respuesta válida. No envíes el mismo ticket desde otro formulario.'); }
+
+
+
       if (!response.ok) { const error = new Error(data.error || 'No se confirmó la solicitud.'); error.status = response.status; throw error; }
+
+
+
       return data;
+
+
+
     } finally { clearTimeout(timeout); }
+
+
+
   }
+
+
+
   function formError(kind, message) {
+
+
+
     const box = $('error-'+kind); box.textContent = message; box.hidden = false; box.focus();
+
+
+
   }
+
+
+
   function storeReceipt(data) {
+
+
+
     receipt = data;
+
+
+
     storage.set('ary_portal_seguimiento', JSON.stringify({seguimiento:data.seguimiento, referencia:data.referencia}));
+
+
+
     storage.remove('ary_portal_pendiente');
+
+
+
   }
+
+
+
   const PHONE_DISPLAY = '871 165 1404';
   const PHONE_LINK = 'tel:+528711651404';
+
   const PROGRESS = {
     EN_COLA:{pct:18,title:'Solicitud recibida',msg:'Tu solicitud está en espera para ser atendida.'},
     EJECUTANDO:{pct:68,title:'Generando tu factura…',msg:'Estamos procesando tu solicitud. No cierres esta página.'},
-    PREPARADA_FACTURA:{pct:82,title:'Factura preparada',msg:'La solicitud está preparada y requiere revisión antes de continuar.'},
-    ACEPTAR_ALTA:{pct:78,title:'Confirmando registro…',msg:'Estamos confirmando tu alta en el sistema.'},
-    PREPARADA_ALTA:{pct:82,title:'Alta preparada',msg:'El registro está preparado y requiere revisión.'},
+    PREPARADA_FACTURA:{pct:82,title:'Prueba preparada',msg:'La prueba quedó preparada sin emitir una factura.',warning:true},
+    PREPARADA_ALTA:{pct:82,title:'Alta preparada',msg:'Tu alta está preparada y pendiente de confirmación.'},
+    ACEPTAR_ALTA:{pct:88,title:'Confirmando registro…',msg:'Estamos confirmando tu alta en el sistema.'},
     ALTA_CONFIRMADA:{pct:100,title:'Alta confirmada',msg:'Tu registro quedó confirmado correctamente.'},
     ENVIO_SOLICITADO:{pct:100,title:'Factura generada',msg:'Se ha enviado por correo su factura.'},
-    YA_FACTURADO:{pct:100,title:'Ticket ya facturado',msg:'Este ticket ya aparece facturado en el sistema.'},
+    YA_FACTURADO:{pct:100,title:'Ticket ya facturado',msg:'Este ticket ya aparece facturado en el sistema.',warning:true},
     REVISION_REQUERIDA:{pct:100,title:'No fue posible facturar',msg:'Error al facturar. Comuníquese con ARY al '+PHONE_DISPLAY+'.',error:true},
-    REVISION_CERRADA:{pct:100,title:'Revisión cerrada',msg:'No fue posible completar la facturación. Comuníquese con ARY al '+PHONE_DISPLAY+'.',error:true},
+    REVISION_CERRADA:{pct:100,title:'No fue posible facturar',msg:'Error al facturar. Comuníquese con ARY al '+PHONE_DISPLAY+'.',error:true},
     ESPERANDO_DATOS:{pct:100,title:'Faltan datos',msg:'No fue posible completar la solicitud. Comuníquese con ARY al '+PHONE_DISPLAY+'.',error:true},
     CANCELADA:{pct:100,title:'Solicitud cancelada',msg:'La solicitud fue cancelada. Comuníquese con ARY al '+PHONE_DISPLAY+'.',error:true},
-    PRUEBA_CERRADA:{pct:100,title:'Prueba finalizada',msg:'La prueba terminó sin emitir una factura.'}
+    PRUEBA_CERRADA:{pct:100,title:'Prueba finalizada',msg:'La prueba terminó sin emitir una factura.',warning:true}
   };
-  const TERMINAL = new Set(['ALTA_CONFIRMADA','ENVIO_SOLICITADO','YA_FACTURADO','REVISION_REQUERIDA','REVISION_CERRADA','ESPERANDO_DATOS','CANCELADA','PRUEBA_CERRADA']);
+
+  const TERMINAL = new Set([
+    'PREPARADA_FACTURA','ALTA_CONFIRMADA','ENVIO_SOLICITADO','YA_FACTURADO',
+    'REVISION_REQUERIDA','REVISION_CERRADA','ESPERANDO_DATOS','CANCELADA','PRUEBA_CERRADA'
+  ]);
 
   function updateProgress(data) {
-    const state = PROGRESS[data.estado] || {pct:45,title:'Procesando solicitud…',msg:data.mensaje || 'Estamos atendiendo tu solicitud.'};
-    const card=$('progressCard'), bar=$('progressBar'), track=bar.parentElement, result=$('finalResult');
+    const state = PROGRESS[data.estado] || {
+      pct:45,
+      title:data.tipo==='FACTURA' ? 'Generando tu factura…' : 'Procesando solicitud…',
+      msg:data.mensaje || 'Estamos atendiendo tu solicitud.'
+    };
+    const card=$('progressCard'), bar=$('progressBar'), track=$('progressTrack'), result=$('finalResult');
     $('progressTitle').textContent=state.title;
     $('progressPercent').textContent=state.pct+'%';
     $('progressMessage').textContent=state.msg;
     bar.style.width=state.pct+'%';
     track.setAttribute('aria-valuenow',String(state.pct));
     bar.classList.toggle('loading',!TERMINAL.has(data.estado));
-    card.dataset.result=state.error ? 'error' : TERMINAL.has(data.estado) ? 'success' : '';
-
+    card.dataset.result=state.error ? 'error' : state.warning ? 'warning' : TERMINAL.has(data.estado) ? 'success' : '';
     result.hidden=true;
     result.className='result-box';
-    result.textContent='';
+    result.replaceChildren();
+
     if(data.tipo==='FACTURA' && data.estado==='ENVIO_SOLICITADO') {
       result.classList.add('success'); result.hidden=false;
       const strong=document.createElement('strong'); strong.textContent='✓ Se ha enviado por correo su factura.';
-      const text=document.createElement('span'); text.textContent=' Revise la bandeja de entrada y también correo no deseado.';
-      result.append(strong,text);
+      const txt=document.createElement('span'); txt.textContent=' Revise su bandeja de entrada y también correo no deseado.';
+      result.append(strong,txt);
     } else if(data.tipo==='FACTURA' && state.error) {
       result.classList.add('error'); result.hidden=false;
       const strong=document.createElement('strong'); strong.textContent='Error al facturar.';
-      const text=document.createTextNode(' Comuníquese con ARY al ');
+      const txt=document.createTextNode(' Comuníquese con ARY al ');
       const link=document.createElement('a'); link.href=PHONE_LINK; link.textContent=PHONE_DISPLAY;
-      result.append(strong,text,link,document.createTextNode('.'));
+      result.append(strong,txt,link,document.createTextNode('.'));
+    } else if(data.tipo==='FACTURA' && data.estado==='YA_FACTURADO') {
+      result.classList.add('warning'); result.hidden=false;
+      const strong=document.createElement('strong'); strong.textContent='Este ticket ya aparece facturado.';
+      const txt=document.createTextNode(' Si no recibió su comprobante, comuníquese con ARY al ');
+      const link=document.createElement('a'); link.href=PHONE_LINK; link.textContent=PHONE_DISPLAY;
+      result.append(strong,txt,link,document.createTextNode('.'));
     }
   }
 
   function renderReceipt(data) {
-    $('tabs').hidden = true; $('panel-factura').hidden = true; $('panel-alta').hidden = true;
-    $('receipt').hidden = false;
-    $('receiptRef').textContent = data.referencia;
-    $('receiptState').textContent = data.estado.replaceAll('_',' ');
-    $('receiptSafe').hidden = !data.modo_seguro;
-    $('receiptMessage').textContent = data.mensaje;
+    $('tabs').hidden=true; $('panel-factura').hidden=true; $('panel-alta').hidden=true; $('receipt').hidden=false;
+    $('receiptRef').textContent=data.referencia;
+    $('receiptState').textContent=data.estado.replaceAll('_',' ');
+    $('receiptSafe').hidden=!data.modo_seguro;
+    const state=PROGRESS[data.estado];
+    $('receiptMessage').textContent=state ? state.msg : data.mensaje;
     updateProgress(data);
-    if (poll) clearTimeout(poll);
-    if (!TERMINAL.has(data.estado) && !document.hidden) poll = setTimeout(refresh, 2000);
+    if(poll) clearTimeout(poll);
+    if(!TERMINAL.has(data.estado) && !document.hidden) poll=setTimeout(refresh,2000);
   }
+
   async function refresh() {
     if(!receipt || !csrf) return;
-    $('refreshStatus').disabled = true;
-    $('statusError').hidden = true;
-    try { renderReceipt(await call('/estado', {seguimiento:receipt.seguimiento})); }
-    catch (error) {
-      $('statusError').textContent = 'No se pudo actualizar el avance en este momento. La solicitud no se volvió a enviar.';
-      $('statusError').hidden = false;
-      if (!document.hidden) poll = setTimeout(refresh, 4000);
+    $('refreshStatus').disabled=true;
+    $('statusError').hidden=true;
+    try {
+      renderReceipt(await call('/estado',{seguimiento:receipt.seguimiento}));
+    } catch(error) {
+      $('statusError').textContent='No se pudo actualizar el avance en este momento. La solicitud no se volvió a enviar.';
+      $('statusError').hidden=false;
+      if(!document.hidden) poll=setTimeout(refresh,4000);
+    } finally {
+      $('refreshStatus').disabled=false;
     }
-    finally { $('refreshStatus').disabled = false; }
   }
+
   $('refreshStatus').addEventListener('click', refresh);
+
+
+
   document.addEventListener('visibilitychange', () => { if(document.hidden && poll) clearTimeout(poll); else if(receipt) refresh(); });
+
+
+
   $('copyReference').addEventListener('click', async () => {
+
+
+
     try { await navigator.clipboard.writeText($('receiptRef').textContent); $('copyReference').textContent='Copiado'; }
+
+
+
     catch (_) { const range=document.createRange();range.selectNodeContents($('receiptRef'));const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);$('copyReference').textContent='Seleccionado'; }
+
+
+
   });
+
+
+
   $('newRequest').addEventListener('click', () => {
+
+
+
     if(!window.confirm('Conserva tu referencia. No vuelvas a enviar el mismo ticket o la misma alta pendiente. ¿Iniciar un trámite diferente?')) return;
+
+
+
     if(poll) clearTimeout(poll); receipt=null; storage.remove('ary_portal_seguimiento');
+
+
+
     ['factura','alta'].forEach(kind => { const form=$('form-'+kind);form.reset();form.querySelector('fieldset').disabled=false;$('error-'+kind).hidden=true; });
+
+
+
     snapshots={factura:null,alta:null};reviewApproved=false;ids={factura:id(),alta:id()};
+
+
+
     setCatalogs(INITIAL);$('receipt').hidden=true;$('tabs').hidden=false;selectTab('factura',true);
+
+
+
   });
+
+
+
   $('reviewBack').addEventListener('click', () => {
-    reviewApproved = false;
-    snapshots.factura = null;
+
+
+
+    reviewApproved=false;
+
+
+
     $('reviewDialog').close();
-    $('factura-estacion').focus();
+
+
+
   });
+
+
 
   $('reviewConfirm').addEventListener('click', () => {
-    reviewApproved = true;
+
+
+
+    reviewApproved=true;
+
+
+
     $('reviewDialog').close();
+
+
+
     $('form-factura').requestSubmit();
+
+
+
   });
+
+
 
   $('reviewDialog').addEventListener('cancel', () => {
-    reviewApproved = false;
-    snapshots.factura = null;
+
+
+
+    reviewApproved=false;
+
+
+
   });
 
+
+
+  // ============================================================
+
+  // ENVÍO DE SOLICITUDES
+
+  // ============================================================
+
   async function send(kind, event) {
+
+
+
     event.preventDefault();
+
+
+
     if(busy || !ready) return;
+
+
+
     const form=$('form-'+kind), button=form.querySelector('.submit');
+
+
+
     if(!snapshots[kind]) {
+
+
+
       const email=form.elements.correo, confirmation=form.elements.correo_confirmacion;
+
+
+
       confirmation.setCustomValidity(email.value.trim() === confirmation.value.trim() ? '' : 'Los dos correos deben coincidir.');
+
+
+
       if(!form.reportValidity()) return;
+
+
+
       const values=Object.fromEntries(new FormData(form).entries());
+
+
+
       values.tipo=kind==='factura' ? 'FACTURA' : 'ALTA'; values.confirmado=form.elements.confirmado.checked;
+
+
+
       values.rfc=values.rfc.trim().toUpperCase();
 
-      if (kind === 'factura' && !reviewApproved) {
-        openFacturaReview(values);
+
+
+      if(kind==='factura' && !ticketDateIsAllowed(values.fecha_ticket)) {
+
+
+
+        formError(kind,'La fecha del ticket debe ser de hoy o de uno de los 3 días anteriores.');
+
+
+
         return;
+
+
+
       }
-      if (kind === 'factura') reviewApproved = false;
+
+
+
+      if(kind==='factura' && !reviewApproved) {
+
+
+
+        openFacturaReview(values);
+
+
+
+        return;
+
+
+
+      }
+
+
+
+      if(kind==='factura') reviewApproved=false;
+
+
+
       snapshots[kind]=values;
+
+
+
     }
+
+
+
     busy=true;button.disabled=true;button.textContent='Enviando…';form.querySelector('fieldset').disabled=true;$('error-'+kind).hidden=true;
+
+
+
     storage.set('ary_portal_pendiente',ids[kind]);
+
+
+
     try {
+
+
+
       const data=await call('/solicitudes',snapshots[kind],{'X-ARY-Request-Id':ids[kind], 'X-ARY-Mode':serverSafe?'seguro':'real'});
+
+
+
       storeReceipt(data);snapshots[kind]=null;renderReceipt(data);$('receipt').focus();
+
+
+
     } catch(error) {
+
+
+
       const certain=error.status && error.status < 500;
+
+
+
       if(certain || error.status===503) { snapshots[kind]=null;storage.remove('ary_portal_pendiente');form.querySelector('fieldset').disabled=false; }
+
+
+
       formError(kind, certain || error.status===503 ? error.message : 'No se confirmó la recepción. Conservé el mismo envío para evitar duplicarlo. Pulsa «Confirmar recepción» sin cambiar los datos.');
+
+
+
     } finally {
+
+
+
       busy=false;button.disabled=!ready;
+
+
+
       button.textContent=snapshots[kind] ? 'Confirmar recepción' : kind==='factura' ? 'Enviar solicitud →' : 'Solicitar alta →';
+
+
+
     }
+
+
+
   }
+
+
+
   ['factura','alta'].forEach(kind => $('form-'+kind).addEventListener('submit', event => send(kind,event)));
+
+
+
+  // ============================================================
+
+  // CONEXIÓN INICIAL Y SEGUIMIENTO
+
+  // ============================================================
+
   async function connect() {
+
+
+
     if(location.protocol==='file:') {
+
+
+
       $('connection').textContent='Vista previa sin conexión';$('connection').dataset.state='error';
+
+
+
       $('connectionError').hidden=false;$('connectionError').textContent='Esta es una vista previa. Para enviar solicitudes, abre el portal desde el bot o desde el sitio con el API configurado. Abrir el archivo por sí solo no conecta con Polaris.';return;
+
+
+
     }
+
+
+
     try {
+
+
+
       const data=await call('/opciones');
+
+
+
       if(!data.csrf || !Array.isArray(data.estaciones)) throw new Error('Respuesta del portal no válida.');
+
+
+
       csrf=data.csrf;serverSafe=data.modo_seguro===true;setCatalogs(data);ready=data.aceptando===true;
+
+
+
       $('modeBanner').hidden=!data.modo_seguro;
+
+
+
       $('connection').textContent=ready ? 'Conectado al portal' : 'Recepción pausada';$('connection').dataset.state=ready?'ok':'error';
+
+
+
       document.querySelectorAll('.submit').forEach(button => button.disabled=!ready);
+
+
+
       if(!ready){$('connectionError').hidden=false;$('connectionError').textContent='La recepción de nuevas solicitudes está pausada. El seguimiento de las ya registradas continúa disponible.';}
+
+
+
       const saved=storage.get('ary_portal_seguimiento');
+
+
+
       if(saved){try{receipt=JSON.parse(saved);if(receipt.seguimiento){const result=await call('/estado',{seguimiento:receipt.seguimiento});renderReceipt(result);return;}}catch(_){receipt=null;storage.remove('ary_portal_seguimiento');}}
+
+
+
       const pending=storage.get('ary_portal_pendiente');
+
+
+
       if(pending){
+
+
+
         try{const result=await call('/recepcion',{request_id:pending});storeReceipt(result);renderReceipt(result);}
+
+
+
         catch(error){
+
+
+
           if(error.status===404){storage.remove('ary_portal_pendiente');}
+
+
+
           else{ready=false;document.querySelectorAll('.submit').forEach(button=>button.disabled=true);throw new Error('Hay un envío pendiente de confirmar. Recarga la página para consultar su recepción antes de iniciar otro.');}
+
+
+
         }
+
+
+
       }
+
+
+
     } catch(error) {
+
+
+
       ready=false;document.querySelectorAll('.submit').forEach(button=>button.disabled=true);
+
+
+
       $('connection').textContent='Sin conexión al bot';$('connection').dataset.state='error';
+
+
+
       $('connectionError').hidden=false;$('connectionError').textContent='No se pudo conectar con el portal de facturación. No se ha registrado una nueva solicitud desde esta pantalla. '+(error.name==='AbortError' ? 'Revisa la conexión.' : error.message);
+
+
+
     }
+
+
+
   }
+
+
+
   connect();
+
+
+
 })();
-</script>
-</body>
+
+  </script>
+
+ </body>
+
 </html>
