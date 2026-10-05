@@ -31,8 +31,9 @@
     "ventana_login_regex": ".*Entrada al Sistema.*Polaris.*",
     "espera_corta": 0.5,
     "espera_media": 1.5,
-    "espera_larga": 6.0,
-    "espera_timbrado": 45.0
+    "espera_larga": 6,
+    "espera_timbrado": 45,
+    "espera_post_envio": 15
   },
   "ocr": {
     "tesseract_cmd": "",
