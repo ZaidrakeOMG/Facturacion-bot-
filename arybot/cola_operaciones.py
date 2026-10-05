@@ -132,10 +132,15 @@ class ColaOperaciones:
 
     def ejecutar_una(self):
         if not self._consumer.acquire(blocking=False):return False
+        job=None
+        cerrar_sesion=False
+        motivo_cierre=""
         try:
             job=self.store.claim(production_allowed=self.cfg.get('app',{}).get('modo_prueba',True) is False)
             if not job:return False
             ident=job['id'];safe=job['seguro'];kind=job['tipo'];data=job['datos']
+            cerrar_sesion=kind in {'FACTURA','ALTA'}
+            motivo_cierre=kind
             self._changed(ident)
             if job['accion']!='aceptar':self._notice(self.store.get(ident),'procesando')
             try:
@@ -143,6 +148,7 @@ class ColaOperaciones:
                 if kind=='FACTURA':
                     result=self.polaris.invoice(como_solicitud(data),test_mode=safe)
                     if result=='PRUEBA_OK' and safe:
+                        cerrar_sesion=False
                         self.store.finish(ident,'PREPARADA_FACTURA',result={'resultado':result},hold=True,
                                           reason='Factura preparada SIN TIMBRAR. Resuelva manualmente la captura antes de continuar la cola.')
                     elif result=='ENVIO_SOLICITADO' and not safe:
@@ -159,11 +165,13 @@ class ColaOperaciones:
                         self.store.finish(ident,'ALTA_CONFIRMADA',result=result,reason='Número de cliente confirmado en pantalla.')
                         self._notice(self.store.get(ident),'completada')
                     else:
+                        cerrar_sesion=False
                         result=self.alta.preparar(sol)
                         self.store.finish(ident,'PREPARADA_ALTA',result=result,hold=True,
                                           reason='Alta preparada SIN GUARDAR. Requiere revisar duplicados y autorizar Aceptar en Alta de cliente.')
                         self._notice(self.store.get(ident),'revision_alta')
                 else:
+                    cerrar_sesion=False
                     if kind=='ESTACION':result=self.polaris.test_station_only(data['estacion'])
                     elif kind=='PAGO':result=self.polaris.test_payment_only(data['forma_pago'])
                     elif kind=='LIMPIEZA':result=self.polaris.test_cleanup_only()
@@ -187,6 +195,7 @@ class ColaOperaciones:
                 step=getattr(self.polaris,'etapa_alerta','Operación de pantalla')
                 if not isinstance(step,str):step='Operación de pantalla'
                 # Se pausa ANTES de leer la ventana: nunca capturar una ventana de otro cliente.
+                motivo_cierre='ERROR '+kind
                 self.store.finish(ident,'REVISION_REQUERIDA',hold=False,reason=str(exc))
                 self._notice(self.store.get(ident),'revision')
                 if self.alertas:
@@ -195,10 +204,22 @@ class ColaOperaciones:
                              'rfc':data.get('rfc',''),'folio':data.get('ticket',''),'correo_cliente':job['correo']}
                     try:self.alertas.reportar(category,step,exc,contexto=context,modo_seguro=safe,bot=self.polaris)
                     except Exception:self.log('No se pudo preparar la alerta interna; revise la solicitud.')
-                self.log('Polaris requiere revisión en esta solicitud. Se apartó el caso y la cola continúa con trabajos distintos.')
+                self.log('Polaris requiere revisión en esta solicitud. Se apartó el caso, NO bloquea la cola y no se reintentará automáticamente.')
             self._changed(ident)
             return True
-        finally:self._consumer.release()
+        finally:
+            try:
+                if cerrar_sesion and self.polaris:
+                    try:
+                        self.polaris.cerrar_polaris_tras_solicitud(motivo_cierre)
+                    except Exception as close_exc:
+                        self.log('No se pudo cerrar Polaris al terminar la solicitud: '+str(close_exc))
+            finally:
+                self._consumer.release()
+                # Despierta inmediatamente el consumidor: una revisión individual
+                # no debe frenar solicitudes distintas que ya estén en cola.
+                try:self._wake.set()
+                except Exception:pass
 
     def aceptar_alta(self,ident,*,autorizado,inexistencia_revisada):
         if not autorizado or not inexistencia_revisada:raise ColaError('Falta autorización del operador y revisión de que el RFC no existe.')
