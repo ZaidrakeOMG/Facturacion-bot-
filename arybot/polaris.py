@@ -1034,20 +1034,18 @@ class PolarisBot:
             time.sleep(.20)
         return None
 
-    def _station_menu_command(self, main):
-        """Obtiene y valida el comando nativo de Utilerías -> Cambio de estación.
+    def _station_menu_path(self, main):
+        """Localiza Cambio de estación por el ID nativo 140, no por texto.
 
-        En la VM medida (Polaris Exe 3.8.2.4) el menú superior Utilerías es el
-        índice 6 y su comando Cambio de estación es el ID 140, posición 6 del
-        submenú. No se ejecuta el ID a ciegas: se valida en cada intento contra
-        el menú real de la ventana principal.
+        En esta instalación Delphi expone los textos de los submenús de forma
+        inconsistente en RDP, pero los ID de comando sí permanecen estables.
+        Se busca el único submenú superior que contenga el ID 140 y se valida
+        que esa opción esté habilitada antes de usarla.
         """
         from ctypes import wintypes as w
         u=ctypes.WinDLL("user32",use_last_error=True)
         u.GetMenu.argtypes=[w.HWND]; u.GetMenu.restype=w.HMENU
         u.GetMenuItemCount.argtypes=[w.HMENU]; u.GetMenuItemCount.restype=ctypes.c_int
-        u.GetMenuStringW.argtypes=[w.HMENU,w.UINT,w.LPWSTR,ctypes.c_int,w.UINT]
-        u.GetMenuStringW.restype=ctypes.c_int
         u.GetSubMenu.argtypes=[w.HMENU,ctypes.c_int]; u.GetSubMenu.restype=w.HMENU
         u.GetMenuItemID.argtypes=[w.HMENU,ctypes.c_int]; u.GetMenuItemID.restype=w.UINT
         u.GetMenuState.argtypes=[w.HMENU,w.UINT,w.UINT]; u.GetMenuState.restype=w.UINT
@@ -1061,160 +1059,115 @@ class PolarisBot:
         if not menu:
             raise PolarisError("Polaris no expone su menú principal de Windows.")
 
-        util_pos=None
-        count=u.GetMenuItemCount(menu)
-        for pos in range(max(0,count)):
-            buf=ctypes.create_unicode_buffer(256)
-            u.GetMenuStringW(menu,pos,buf,len(buf),MF_BYPOSITION)
-            if self._norm(buf.value)=="UTILERIAS":
-                util_pos=pos
-                break
-        if util_pos is None:
-            raise PolarisError("No encontré el menú Utilerías en la ventana principal de Polaris.")
+        matches=[]
+        top_count=u.GetMenuItemCount(menu)
+        for top_pos in range(max(0,top_count)):
+            submenu=u.GetSubMenu(menu,top_pos)
+            if not submenu:
+                continue
+            sub_count=u.GetMenuItemCount(submenu)
+            for sub_pos in range(max(0,sub_count)):
+                command_id=int(u.GetMenuItemID(submenu,sub_pos)) & 0xFFFFFFFF
+                if command_id==140:
+                    state=int(u.GetMenuState(submenu,sub_pos,MF_BYPOSITION)) & 0xFFFFFFFF
+                    matches.append((top_pos,submenu,sub_pos,state,sub_count))
 
-        submenu=u.GetSubMenu(menu,util_pos)
-        if not submenu:
-            raise PolarisError("El menú Utilerías no expone su submenú nativo.")
-        subcount=u.GetMenuItemCount(submenu)
-        if subcount <= 6:
-            raise PolarisError(f"El menú Utilerías cambió: solo tiene {subcount} elementos.")
-
-        command_id=int(u.GetMenuItemID(submenu,6)) & 0xFFFFFFFF
-        state=int(u.GetMenuState(submenu,6,MF_BYPOSITION)) & 0xFFFFFFFF
-        if command_id != 140:
+        if len(matches)!=1:
             raise PolarisError(
-                f"El menú Utilerías no coincide con esta instalación: "
-                f"esperaba Cambio de estación ID 140 en posición 6 y obtuve {command_id}."
+                f"No se pudo identificar una única ruta a Cambio de estación (ID 140). "
+                f"Coincidencias: {len(matches)}. No se ejecutó ninguna otra opción."
             )
-        if state == 0xFFFFFFFF or state & (MF_DISABLED|MF_GRAYED|MF_SEPARATOR):
-            raise PolarisError("Cambio de estación está deshabilitado o no disponible en Polaris.")
-        return command_id
+
+        top_pos,submenu,sub_pos,state,sub_count=matches[0]
+        if state==0xFFFFFFFF or state & (MF_DISABLED|MF_GRAYED|MF_SEPARATOR):
+            raise PolarisError("Cambio de estación (ID 140) está deshabilitado en Polaris.")
+
+        # Evidencia medida en esta VM: Utilerías está en posición 6 y contiene 14 items.
+        # No se exige el texto porque Delphi/RDP puede devolverlo vacío.
+        if top_pos!=6 or sub_count<7:
+            raise PolarisError(
+                f"Se encontró ID 140, pero la estructura del menú cambió "
+                f"(menú superior={top_pos}, elementos={sub_count}). No se hizo clic."
+            )
+        return menu,top_pos,submenu,sub_pos,140
 
     def _open_station_catalog(self, main):
-        """Abre Utilerías -> Cambio de estación con rectángulos nativos de Windows.
-
-        En la PC física 0.241*1600 caía en Utilerías; en la VM 0.241*1920 cae
-        en Ventanas. Por eso aquí NO se usan porcentajes de pantalla.
-        """
+        """Abre Cambio de estación por la ruta nativa ID 140 medida en la VM."""
         from ctypes import wintypes as w
 
         self._activate(main,maximize=True)
         pyautogui.failSafeCheck()
 
         u=ctypes.WinDLL("user32",use_last_error=True)
-        u.GetMenu.argtypes=[w.HWND]; u.GetMenu.restype=w.HMENU
-        u.GetMenuItemCount.argtypes=[w.HMENU]; u.GetMenuItemCount.restype=ctypes.c_int
-        u.GetMenuStringW.argtypes=[w.HMENU,w.UINT,w.LPWSTR,ctypes.c_int,w.UINT]
-        u.GetMenuStringW.restype=ctypes.c_int
-        u.GetSubMenu.argtypes=[w.HMENU,ctypes.c_int]; u.GetSubMenu.restype=w.HMENU
-        u.GetMenuItemID.argtypes=[w.HMENU,ctypes.c_int]; u.GetMenuItemID.restype=w.UINT
-        u.GetMenuState.argtypes=[w.HMENU,w.UINT,w.UINT]; u.GetMenuState.restype=w.UINT
         u.GetMenuItemRect.argtypes=[w.HWND,w.HMENU,w.UINT,ctypes.POINTER(w.RECT)]
         u.GetMenuItemRect.restype=w.BOOL
         u.SendMessageW.argtypes=[w.HWND,w.UINT,w.WPARAM,w.LPARAM]
         u.SendMessageW.restype=w.LPARAM
-
-        MF_BYPOSITION=0x0400
-        MF_DISABLED=0x0002
-        MF_GRAYED=0x0001
-        MF_SEPARATOR=0x0800
         WM_COMMAND=getattr(win32con,"WM_COMMAND",0x0111)
 
-        menu=u.GetMenu(main)
-        if not menu:
-            raise PolarisError("Polaris no expone el menú principal de Windows.")
-
-        util_pos=None
-        for pos in range(max(0,u.GetMenuItemCount(menu))):
-            buf=ctypes.create_unicode_buffer(256)
-            u.GetMenuStringW(menu,pos,buf,len(buf),MF_BYPOSITION)
-            if self._norm(buf.value)=="UTILERIAS":
-                util_pos=pos
-                break
-        if util_pos is None:
-            raise PolarisError("No se encontró Utilerías en el menú real de Polaris.")
-
-        submenu=u.GetSubMenu(menu,util_pos)
-        if not submenu:
-            raise PolarisError("Utilerías no expone su submenú nativo.")
-
-        target_pos=None
-        for pos in range(max(0,u.GetMenuItemCount(submenu))):
-            if (int(u.GetMenuItemID(submenu,pos)) & 0xFFFFFFFF)==140:
-                target_pos=pos
-                break
-        if target_pos is None:
-            raise PolarisError(
-                "No se encontró Cambio de estación (ID 140) dentro de Utilerías. "
-                "No se pulsó ninguna otra opción."
-            )
-        state=int(u.GetMenuState(submenu,target_pos,MF_BYPOSITION)) & 0xFFFFFFFF
-        if state==0xFFFFFFFF or state & (MF_DISABLED|MF_GRAYED|MF_SEPARATOR):
-            raise PolarisError("Cambio de estación está deshabilitado en Polaris.")
+        menu,util_pos,submenu,target_pos,command_id=self._station_menu_path(main)
 
         def rect_menu(owner,hmenu,pos):
             rr=w.RECT()
             if not u.GetMenuItemRect(owner,hmenu,pos,ctypes.byref(rr)):
                 return None
-            rect=(int(rr.left),int(rr.top),int(rr.right),int(rr.bottom))
-            return rect if rect[2]>rect[0] and rect[3]>rect[1] else None
+            result=(int(rr.left),int(rr.top),int(rr.right),int(rr.bottom))
+            return result if result[2]>result[0] and result[3]>result[1] else None
 
-        # Abrir el menú superior exactamente donde Windows dice que está.
+        # Abrir el sexto menú superior (Utilerías) usando el rectángulo real
+        # devuelto por Windows, sin porcentajes de resolución.
         top_rect=rect_menu(main,menu,util_pos)
-        if not top_rect:
-            raise PolarisError("Windows no devolvió la posición real de Utilerías.")
-        x=(top_rect[0]+top_rect[2])//2
-        y=(top_rect[1]+top_rect[3])//2
-        self.log(f"VM-P04: Utilerías real rect={top_rect}; clic=({x},{y}); destino ID 140.")
-        pyautogui.moveTo(x,y,duration=.10)
-        pyautogui.click()
-
-        # Esperar el popup y obtener la fila real del ID 140.
-        item_rect=None
-        deadline=time.monotonic()+3.0
-        while time.monotonic()<deadline:
-            pyautogui.failSafeCheck()
-            candidate=rect_menu(0,submenu,target_pos)
-            if candidate:
-                cx=(candidate[0]+candidate[2])//2
-                cy=(candidate[1]+candidate[3])//2
-                try:
-                    under=win32gui.WindowFromPoint((cx,cy))
-                    if under and win32gui.GetClassName(under)=="#32768":
-                        item_rect=candidate
-                        break
-                except Exception:
-                    pass
-            time.sleep(.05)
-
-        if item_rect:
-            cx=(item_rect[0]+item_rect[2])//2
-            cy=(item_rect[1]+item_rect[3])//2
-            self.log(f"VM-P04: Cambio de estación ID 140 rect={item_rect}; clic=({cx},{cy}).")
-            pyautogui.moveTo(cx,cy,duration=.10)
+        if top_rect:
+            x=(top_rect[0]+top_rect[2])//2
+            y=(top_rect[1]+top_rect[3])//2
+            self.log(f"VM-P06: ruta ID 140 localizada. Menú 6 rect={top_rect}.")
+            pyautogui.moveTo(x,y,duration=.08)
             pyautogui.click()
-            dlg=self._wait_text_dialog("Seleccione el registro deseado",5)
-            if dlg:
-                self.log("VM-P04: catálogo de estaciones abierto por clic nativo.")
-                return dlg
 
-        # Respaldo seguro: el MISMO ID ya validado, de forma síncrona.
+            deadline=time.monotonic()+2.5
+            item_rect=None
+            while time.monotonic()<deadline:
+                pyautogui.failSafeCheck()
+                candidate=rect_menu(0,submenu,target_pos)
+                if candidate:
+                    cx=(candidate[0]+candidate[2])//2
+                    cy=(candidate[1]+candidate[3])//2
+                    try:
+                        under=win32gui.WindowFromPoint((cx,cy))
+                        if under and win32gui.GetClassName(under)=="#32768":
+                            item_rect=candidate
+                            break
+                    except Exception:
+                        pass
+                time.sleep(.04)
+
+            if item_rect:
+                cx=(item_rect[0]+item_rect[2])//2
+                cy=(item_rect[1]+item_rect[3])//2
+                self.log(f"VM-P06: clic real en Cambio de estación ID 140 rect={item_rect}.")
+                pyautogui.moveTo(cx,cy,duration=.08)
+                pyautogui.click()
+                dlg=self._wait_text_dialog("Seleccione el registro deseado",5)
+                if dlg:
+                    return dlg
+
+        # Delphi a veces no materializa el popup en RDP. El mismo ID ya fue
+        # localizado y validado dentro del menú real, así que se envía directamente.
         try:
             pyautogui.press("esc")
         except Exception:
             pass
         self._activate(main,maximize=True)
-        self.log("VM-P04: clic nativo no respondió; SendMessage WM_COMMAND ID 140.")
-        u.SendMessageW(main,WM_COMMAND,140,0)
-        dlg=self._wait_text_dialog("Seleccione el registro deseado",6)
+        self.log("VM-P06: enviando WM_COMMAND validado ID 140.")
+        u.SendMessageW(main,WM_COMMAND,command_id,0)
+        dlg=self._wait_text_dialog("Seleccione el registro deseado",7)
         if dlg:
-            self.log("VM-P04: catálogo abierto por WM_COMMAND ID 140.")
             return dlg
 
-        self._screenshot_error("vm_p04_cambio_estacion_id140")
+        self._screenshot_error("vm_p06_cambio_estacion_id140")
         raise PolarisError(
-            "Polaris no abrió 'Seleccione el registro deseado' con la opción real "
-            "Cambio de estación (ID 140). No se ejecutó ninguna otra opción."
+            "Polaris no abrió 'Seleccione el registro deseado' después de ejecutar "
+            "el comando nativo validado Cambio de estación (ID 140)."
         )
 
     def _find_descendant_text(self, root, wanted):
