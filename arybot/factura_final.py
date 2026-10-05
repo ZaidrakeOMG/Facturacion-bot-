@@ -389,8 +389,15 @@ class PantallaFinalFactura:
         self.b.etapa_alerta='ENVIO_CORREO: Aceptar envío solicitado / esperando resultado'
         self.b.log('FINAL 4/4: Aceptar envío, una sola vez.')
         self._click(main, dlg, accept)
-        end = self.reloj() + max(15, min(180, float(self.b.pcfg.get('espera_envio', 45))))
+        # Después de que el diálogo de envío desaparece, Polaris todavía puede
+        # estar terminando tareas internas (correo/archivos/MDI). No devolver el
+        # control a la cola hasta acumular 15 s completos sin progreso ni avisos;
+        # el finally de la cola cierra Polaris apenas este método retorna.
+        post_wait = max(0, min(60, float(self.b.pcfg.get('espera_post_envio', 15))))
+        send_wait = max(15, min(180, float(self.b.pcfg.get('espera_envio', 45))))
+        end = self.reloj() + send_wait + post_wait
         quiet_since = None
+        quiet_logged = False
         while self.reloj() < end:
             windows = self._dialogos(main, {main, dlg})
             if any(state == 'AVISO' for _, state in windows):
@@ -400,20 +407,28 @@ class PantallaFinalFactura:
             progress = [state for _, state in windows if state in PROGRESOS]
             if progress:
                 quiet_since = None
+                quiet_logged = False
                 self._registrar_espera('CORREO', progress[0])
             elif not self.b._window_exists_visible(dlg):
                 # El cierre mientras aún hay progreso NO se declara terminado.
-                # Además se esperan varios sondeos sin nuevos avisos.
+                # La espera vuelve a empezar si reaparece cualquier progreso.
                 if quiet_since is None:
                     quiet_since = self.reloj()
-                elif self.reloj() - quiet_since >= 1:
+                    quiet_logged = False
+                if not quiet_logged:
+                    self.b.log(f'FINAL: diálogo de envío cerrado; esperando {post_wait:g} s '
+                               'de seguridad antes de permitir el cierre de Polaris.')
+                    quiet_logged = True
+                if self.reloj() - quiet_since >= post_wait:
                     registro.actualizar('ENVIO_SOLICITADO')
                     self._registrar_espera('CORREO', 'DIALOGO_CERRADO_SIN_AVISOS')
                     self.b.log('Envío solicitado en Polaris (XML + PDF). '
-                               'El cierre del diálogo no confirma recepción en el buzón.')
+                               f'Se completaron {post_wait:g} s de espera final; '
+                               'el cierre del diálogo no confirma recepción en el buzón.')
                     return 'ENVIO_SOLICITADO'
             else:
                 quiet_since = None
+                quiet_logged = False
             self.dormir(.25)
         self._registrar_espera('CORREO', 'TIEMPO_AGOTADO')
         raise FinalFacturaError('Aceptar de envío se pulsó una vez, pero el cierre/proceso no quedó confirmado. '
