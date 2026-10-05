@@ -1244,49 +1244,31 @@ class PolarisBot:
         return self._station_catalog_dialog(.35)
 
     def _accept_station_row(self, dlg):
-        """Acepta la estación seleccionada y confirma que aparece el diálogo de series."""
-        self.log("Estación seleccionada. Pulsando Aceptar...")
-        self._click_button_text_or_rel(dlg,"Aceptar",self.ESTACION_DLG["aceptar"],wait=.65)
-        series=self._series_dialog(2.5)
+        """Acepta la fila con clic directo, igual que el flujo manual confirmado."""
+        self.log("VM-P10: fila seleccionada. Clic directo en Aceptar...")
+        self._activate(dlg)
+        self._click_rel(dlg,self.ESTACION_DLG["aceptar"],wait=.35)
+        series=self._series_dialog(5.0)
         if series:
+            self.log("VM-P10: diálogo de Series detectado.")
             return series
 
-        # Algunos controles VCL reciben el clic visual pero no disparan el evento.
-        # Si el catálogo sigue abierto, ENTER activa el botón Aceptar predeterminado.
-        dlg2=self._station_dialog_alive()
-        if dlg2:
-            self.log("Aceptar no respondió al primer clic; reintentando con ENTER...")
-            self._activate(dlg2)
-            pyautogui.press("enter")
-            series=self._series_dialog(3.0)
-            if series:
-                return series
-
-        # Último reintento físico sobre la misma zona del botón.
-        dlg3=self._station_dialog_alive()
-        if dlg3:
-            self.log("Segundo reintento: clic físico en Aceptar...")
-            self._click_rel(dlg3,self.ESTACION_DLG["aceptar"],wait=.65)
-            series=self._series_dialog(3.0)
-            if series:
-                return series
+        self._screenshot_error("vm_p10_no_series_tras_aceptar_estacion")
         return None
 
     def _accept_series_dialog(self, series):
-        """Conserva las series predeterminadas y cierra el diálogo con Aceptar."""
+        """Conserva las series y pulsa Aceptar directamente, como en el video manual."""
         self._activate(series)
-        self.log("Series de facturación: conservando valores y pulsando Aceptar...")
-        self._click_button_text_or_rel(series,"Aceptar",self.SERIES_DLG["aceptar"],wait=.65)
-
-        # Confirma que el diálogo desapareció; si no, ENTER como respaldo VCL.
-        if self._series_dialog(.7):
-            self.log("El diálogo de Series sigue abierto; reintentando Aceptar con ENTER...")
-            series2=self._series_dialog(.3)
-            if series2:
-                self._activate(series2)
-                pyautogui.press("enter")
-                time.sleep(.65)
-        return self._series_dialog(.5) is None
+        self.log("VM-P10: Series abiertas. Clic directo en Aceptar...")
+        self._click_rel(series,self.SERIES_DLG["aceptar"],wait=.40)
+        end=time.monotonic()+4.0
+        while time.monotonic()<end:
+            if not self._series_dialog(.15):
+                self.log("VM-P10: Series cerradas correctamente.")
+                return True
+            time.sleep(.08)
+        self._screenshot_error("vm_p10_series_no_cerro")
+        return False
 
     def _change_station(self, main, station, force=False):
         """Cambia la estación antes de abrir Facturación de Efectivo.
