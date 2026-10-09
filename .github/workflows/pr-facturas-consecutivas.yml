@@ -1,6 +1,8 @@
 name: Regression de facturas consecutivas
 
 on:
+  push:
+    branches: [fix/facturas-consecutivas-envio-20261009]
   pull_request:
     branches: [main]
 
