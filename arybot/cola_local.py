@@ -127,9 +127,19 @@ class ColaLocal:
                 old=c.execute('SELECT * FROM trabajos WHERE fuente_id=?',(source_id,)).fetchone()
                 if old:return self.unpack(old),False
             if clave:
-                # FACTURA: solo una solicitud ACTIVA del mismo ticket puede existir a la vez.
-                # Revisiones/resultados históricos NO bloquean una nueva consulta en Polaris.
-                # ALTA conserva la preparación interactiva como bloqueo porque puede dejar una ficha abierta.
+                # Si el mismo ticket quedó a mitad de un envío, debe revisarse
+                # antes de permitir otra solicitud con el mismo folio.
+                if kind == 'FACTURA':
+                    uncertain=c.execute(
+                        "SELECT t.clave FROM trabajos t JOIN ajustes a "
+                        "ON a.clave='bloqueo' AND a.valor=t.id "
+                        "WHERE t.estado='REVISION_REQUERIDA' LIMIT 1").fetchone()
+                    if uncertain and uncertain[0] == clave:
+                        raise SolicitudDuplicada(
+                            'Ese folio tiene timbrado o envío pendiente de revisión. '
+                            'Confirma en Polaris antes de intentar otra factura.')
+                # Fuera del bloqueo incierto se permiten nuevas consultas históricas
+                # a Polaris (que determina si el ticket ya fue procesado).
                 blockers = BLOQUEAN_CLAVE_ALTA if kind == 'ALTA' else BLOQUEAN_CLAVE
                 marks=','.join('?' for _ in blockers)
                 old=c.execute(f'SELECT id FROM trabajos WHERE clave=? AND estado IN ({marks}) LIMIT 1',
