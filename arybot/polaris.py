@@ -2274,73 +2274,102 @@ class PolarisBot:
             return ""
 
     def _send_dialog_estable(self, main, inv, email):
-        """Final estable: detectar el diálogo REAL y luego conservar el envío v3.1.
+        """Envío del CFDI sin sobrescribir destinatarios registrados en Polaris.
 
-        El diálogo actual de ``Envío e Impresión de CFDI`` es pequeño (aprox.
-        220-300 px de ancho). El detector legado ``_wait_text_dialog`` solo aceptaba
-        ancestros de más de 450 px, por lo que el diálogo SÍ aparecía en Polaris pero
-        el bot lo descartaba hasta agotar el tiempo.
-
-        Se usa el detector específico de ``PantallaFinalFactura`` para esperar el
-        diálogo pequeño y, además, reconocer avisos/progreso de CFDI sin volver a
-        pulsar Aceptar. Una vez localizado, el envío conserva el flujo v3.1 que ya
-        funcionaba en esta instalación.
+        El Aceptar de timbrado ya se pulsó antes de entrar; no se vuelve a intentar.
         """
-        from .factura_final import PantallaFinalFactura, FinalFacturaError
-        final=PantallaFinalFactura(self)
+        from .factura_final import PantallaFinalFactura, FinalFacturaError, validar_correo
+        from .dialogos_cfdi import PROGRESOS
+        final = PantallaFinalFactura(self)
         try:
-            dlg=final._esperar_envio(main,inv)
+            dlg = final._esperar_envio(main, inv)
         except FinalFacturaError as exc:
             self._screenshot_error("sin_dialogo_envio")
             raise PolarisError(str(exc)) from exc
 
         self.log("Diálogo 'Envío e Impresión de CFDI' detectado y listo.")
         self._activate(dlg)
-        self.etapa_alerta="ENVIO_CORREO: seleccionar Enviar por Correo"
+        self.etapa_alerta = "ENVIO_CORREO: seleccionar Enviar por Correo"
         self.log("FINAL 2/4: seleccionando Enviar por Correo.")
-        self._assert_point_inside_window(dlg,self.ENVIO["correo_radio"],"enviar_por_correo")
-        self._click_rel(dlg,self.ENVIO["correo_radio"],wait=.35)
+        self._assert_point_inside_window(dlg, self.ENVIO["correo_radio"], "enviar_por_correo")
+        self._click_rel(dlg, self.ENVIO["correo_radio"], wait=.35)
 
-        self.etapa_alerta="ENVIO_CORREO: revisar destinatario"
-        self._assert_point_inside_window(dlg,self.ENVIO["correo"],"correo_destino")
-        self._click_rel(dlg,self.ENVIO["correo"],wait=.25)
-        current=self._copy_current_fresh()
+        self.etapa_alerta = "ENVIO_CORREO: revisar destinatario"
+        self._assert_point_inside_window(dlg, self.ENVIO["correo"], "correo_destino")
+        self._click_rel(dlg, self.ENVIO["correo"], wait=.25)
+        current = self._copy_current_fresh()
         if current:
-            from .factura_final import validar_correo
-            validar_correo(current)
-            self.diag.evento('ENVIO_CORREO: destinatario','OK','Polaris ya trae correo válido; se conserva',{'vacio':False,'longitud':len(current)})
-            self.log("FINAL 3/4: Polaris ya trae correo; se conserva sin sobrescribir.")
+            # El correo registrado en Polaris tiene prioridad sobre el del portal.
+            # No reemplazarlo ni someterlo al validador ASCII del formulario;
+            # Polaris determina si acepta el destinatario cuando se pulsa Aceptar.
+            if any(char in current for char in ("\r", "\n", "\x00")):
+                raise PolarisError("El correo precargado contiene caracteres de control. "
+                                   "No se sustituyó ni se envió automáticamente.")
+            self.diag.evento('ENVIO_CORREO: destinatario', 'OK',
+                             'Correo precargado conservado sin cambios',
+                             {'vacio': False, 'longitud': len(current)})
+            self.log("FINAL 3/4: Polaris ya tiene correo; se conserva SIN sobrescribir.")
         else:
-            email=str(email or "").strip()
-            if not email:
-                raise PolarisError("El correo está vacío en Polaris y la solicitud no contiene correo destino. No se envió.")
-            self.log("FINAL 3/4: correo vacío en Polaris; escribiendo carácter por carácter (sin portapapeles).")
+            # Solamente si Polaris está vacío, escribir el de la solicitud.
+            email = validar_correo(email)
+            self.log("FINAL 3/4: correo vacío en Polaris; escribiendo correo de solicitud.")
             self._captura_factura().escribir_rel(
                 dlg, self.ENVIO["correo"], "correo", email
             )
             time.sleep(.25)
-            confirmed=self._copy_current_fresh()
-            if not confirmed:
-                self.diag.evento('ENVIO_CORREO: destinatario','ERROR','Campo de correo quedó vacío',{'vacio':True})
-                raise PolarisError("El correo no quedó escrito en Polaris. No se pulsó Aceptar de envío.")
-            from .factura_final import validar_correo
-            validar_correo(confirmed)
-            self.diag.evento('ENVIO_CORREO: destinatario','OK','Correo escrito y confirmado',{'vacio':False,'longitud':len(confirmed)})
+            confirmed = self._copy_current_fresh()
+            if confirmed != email:
+                self.diag.evento('ENVIO_CORREO: destinatario', 'ERROR',
+                                 'El correo nuevo no quedó confirmado',
+                                 {'vacio': not bool(confirmed)})
+                raise PolarisError("El correo nuevo no quedó confirmado en Polaris. "
+                                   "No se pulsó Aceptar de envío.")
+            self.diag.evento('ENVIO_CORREO: destinatario', 'OK',
+                             'Correo nuevo escrito y confirmado',
+                             {'vacio': False, 'longitud': len(confirmed)})
 
-        # Igual que en v3.1: se conservan las selecciones XML/PDF que Polaris ya trae.
-        self.etapa_alerta="ENVIO_CORREO: Aceptar envío"
-        self.log("FINAL 4/4: pulsando Aceptar de envío.")
-        self._assert_point_inside_window(dlg,self.ENVIO["aceptar"],"aceptar_envio")
-        self._click_rel(dlg,self.ENVIO["aceptar"],wait=.40)
+        # Conservar selección actual de XML y PDF; el flujo de timbrado no se repite.
+        self.etapa_alerta = "ENVIO_CORREO: Aceptar envío"
+        self.log("FINAL 4/4: pulsando Aceptar de envío una sola vez.")
+        self._assert_point_inside_window(dlg, self.ENVIO["aceptar"], "aceptar_envio")
+        self._click_rel(dlg, self.ENVIO["aceptar"], wait=.40)
 
-        end=time.time()+max(8.0,min(90.0,float(self.pcfg.get("espera_envio",30))))
-        while time.time()<end:
-            if not self._window_exists_visible(dlg):
-                self.log("CFDI terminado y envío por correo solicitado en Polaris.")
-                return "ENVIO_SOLICITADO"
+        # No terminar Polaris sólo porque el diálogo desaparece. Se requieren
+        # 20 segundos (mínimo 15) sin progreso/avisos en el MISMO proceso.
+        self.etapa_alerta = "ENVIO_CORREO: comprobar cierre y actividad"
+        post_wait = max(15.0, min(90.0, float(self.pcfg.get("espera_post_envio", 20))))
+        send_wait = max(20.0, min(180.0, float(self.pcfg.get("espera_envio", 45))))
+        deadline = time.monotonic() + send_wait + post_wait
+        quiet_since = None
+        last_progress = None
+        while time.monotonic() < deadline:
+            dialogs = final._dialogos(main, {main, dlg})
+            if any(state == 'AVISO' for _, state in dialogs):
+                raise PolarisError("Polaris mostró un aviso durante el envío. "
+                                   "La factura puede estar timbrada: no repetirla.")
+            progress = next((state for _, state in dialogs if state in PROGRESOS), None)
+            if progress:
+                quiet_since = None
+                if progress != last_progress:
+                    self.log("FINAL: Polaris sigue preparando CFDI/archivos/correo; esperando.")
+                    last_progress = progress
+            elif self._window_exists_visible(dlg):
+                quiet_since = None
+                last_progress = None
+            else:
+                if quiet_since is None:
+                    quiet_since = time.monotonic()
+                    self.log(f"FINAL: diálogo cerrado; esperando {post_wait:g} s "
+                             "sin actividad antes de cambiar de cliente.")
+                if time.monotonic() - quiet_since >= post_wait:
+                    self.log("CFDI: envío solicitado; espera final terminada. "
+                             "No confirma que el correo llegó al destinatario.")
+                    return "ENVIO_SOLICITADO"
             time.sleep(.25)
-        self._screenshot_error("dialogo_envio_no_cerro")
-        raise PolarisError("Se pulsó Aceptar de envío, pero el diálogo no cerró. No se repetirá automáticamente; revisa Polaris.")
+
+        self._screenshot_error("dialogo_envio_no_confirmado")
+        raise PolarisError("No se confirmó el cierre estable del envío de CFDI. "
+                           "No cerrar Polaris ni volver a timbrar hasta revisar.")
 
     def _guardia_campos_solicitud(self, sol, test_mode):
         efectivos={
