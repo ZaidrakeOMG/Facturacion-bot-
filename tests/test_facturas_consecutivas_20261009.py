@@ -55,6 +55,26 @@ def test_facturacion_mdi_815x284_espera_y_termina_lista(monkeypatch):
     b._screenshot_error.assert_not_called()
 
 
+def test_polaris_original_no_aborta_mdi_815x284(monkeypatch):
+    # Es el método de la aplicación original (error exacto del video).
+    clock = simulated_time(monkeypatch, polaris)
+    windows = [(0, 0, 815, 284)] * 3 + [(0, 0, 833, 638)] * 40
+    b = object.__new__(polaris.PolarisBot)
+    b.log = Mock()
+    b._activate = Mock()
+    b._screenshot_error = Mock()
+    b._window_exists_visible = Mock(return_value=True)
+    b._invoice_window = Mock(return_value=900)
+    b._rect = Mock(side_effect=(polaris.Rect(*x) for x in windows))
+    monkeypatch.setattr(
+        polaris, 'win32gui',
+        SimpleNamespace(IsWindowEnabled=lambda h: True), raising=False)
+    assert b._open_cash_invoice(1) == 900
+    assert clock.now() >= 1
+    b._activate.assert_called_once_with(900)
+    b._screenshot_error.assert_not_called()
+
+
 def test_facturacion_que_nunca_carga_no_recibe_clics(monkeypatch):
     simulated_time(monkeypatch, vm)
     b = vm_bot(monkeypatch, [(0, 0, 815, 284)] * 200)
@@ -210,4 +230,34 @@ def test_cola_no_cierra_polaris_con_cfdi_incierto(tmp_path):
     assert q.store.get(j['id'])['estado'] == 'REVISION_REQUERIDA'
     assert q.store.status()['pausada']
     bot.cerrar_polaris_tras_solicitud.assert_not_called()
+    assert not q.ejecutar_una()
+
+
+def test_tres_solicitudes_se_procesan_una_por_una(tmp_path):
+    from arybot.cola_operaciones import ColaOperaciones
+    from arybot.cola_modelo import DEFAULTS
+    from arybot.parser import Solicitud
+    cfg = {'app': {'modo_prueba': False, 'correo': 'bot@example.com'},
+           'gmail': {}, 'ocr': {}, 'polaris': {}, 'cola': dict(DEFAULTS)}
+    bot = Mock()
+    bot.invoice.return_value = 'ENVIO_SOLICITADO'
+    bot.diag = None
+    bot.etapa_alerta = 'ENVIO_CORREO: comprobar cierre y actividad'
+    q = ColaOperaciones(tmp_path, cfg, bot, Mock(), avisos=Mock())
+    jobs = []
+    for ticket in ('000111', '000222', '000333'):
+        sol = Solicitud(estacion='ARY V', rfc='AAA010101AAA', ticket=ticket,
+                       fecha_ticket=date.today().strftime('%d/%m/%Y'),
+                       forma_pago='EFECTIVO',
+                       correo_destino='cliente@example.com',
+                       remitente='cliente@example.com')
+        job, _ = q.encolar_factura(sol, safe=False)
+        jobs.append(job)
+    q.iniciar_cola()
+    for job in jobs:
+        assert q.ejecutar_una()
+        assert q.store.get(job['id'])['estado'] == 'ENVIO_SOLICITADO'
+    assert bot.invoice.call_count == 3
+    assert bot.cerrar_polaris_tras_solicitud.call_count == 3
+    assert not q.store.status()['pausada']
     assert not q.ejecutar_una()
