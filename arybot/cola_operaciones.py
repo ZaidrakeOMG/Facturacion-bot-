@@ -194,9 +194,20 @@ class ColaOperaciones:
                     return True
                 step=getattr(self.polaris,'etapa_alerta','Operación de pantalla')
                 if not isinstance(step,str):step='Operación de pantalla'
-                # Se pausa ANTES de leer la ventana: nunca capturar una ventana de otro cliente.
-                motivo_cierre='ERROR '+kind
-                self.store.finish(ident,'REVISION_REQUERIDA',hold=False,reason=str(exc))
+                # Después del Aceptar de TIMBRADO, un error puede significar
+                # que el CFDI existe aunque todavía no se haya enviado correo.
+                # NO cerrar/terminar Polaris ni abrir otro cliente sobre un envío vivo.
+                fiscal_incierto=(kind=='FACTURA' and
+                                 step.startswith(('TIMBRADO:', 'ENVIO_CORREO:')))
+                if fiscal_incierto:
+                    cerrar_sesion=False
+                    reason=(str(exc)+' | Posible CFDI timbrado o correo pendiente. '
+                            'Revisa Polaris y el folio antes de liberar esta revisión.')
+                else:
+                    motivo_cierre='ERROR '+kind
+                    reason=str(exc)
+                self.store.finish(ident,'REVISION_REQUERIDA',
+                                  hold=fiscal_incierto,reason=reason)
                 self._notice(self.store.get(ident),'revision')
                 if self.alertas:
                     category='ALTA_CLIENTE' if kind=='ALTA' else ('ENVIO_FACTURA' if step.startswith('ENVIO_CORREO') else 'FACTURACION')
@@ -204,7 +215,12 @@ class ColaOperaciones:
                              'rfc':data.get('rfc',''),'folio':data.get('ticket',''),'correo_cliente':job['correo']}
                     try:self.alertas.reportar(category,step,exc,contexto=context,modo_seguro=safe,bot=self.polaris)
                     except Exception:self.log('No se pudo preparar la alerta interna; revise la solicitud.')
-                self.log('Polaris requiere revisión en esta solicitud. Se apartó el caso, NO bloquea la cola y no se reintentará automáticamente.')
+                if fiscal_incierto:
+                    self.log('Resultado fiscal incierto: Polaris sigue abierto y la cola '
+                             'queda pausada hasta liberar esta revisión; no se repetirá timbrado.')
+                else:
+                    self.log('Error antes del timbrado: solicitud a revisión. '
+                             'Las demás solicitudes pueden continuar tras limpiar Polaris.')
             self._changed(ident)
             return True
         finally:
