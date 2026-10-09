@@ -1,5 +1,6 @@
 """Regresiones del lote de 3 clientes: SIN Windows real, SAT ni timbrado."""
 from types import SimpleNamespace
+from datetime import date
 from unittest.mock import Mock
 import pytest
 
@@ -173,6 +174,7 @@ def test_cola_con_error_antes_de_timbrar_continua(tmp_path):
     q = ColaOperaciones(tmp_path, cfg, bot, Mock(), avisos=Mock())
     def sol(folio):
         return Solicitud(estacion='ARY V', rfc='AAA010101AAA', ticket=folio,
+                         fecha_ticket=date.today().strftime('%d/%m/%Y'),
                          forma_pago='EFECTIVO',
                          correo_destino='cliente@example.com',
                          remitente='cliente@example.com')
@@ -199,6 +201,7 @@ def test_cola_no_cierra_polaris_con_cfdi_incierto(tmp_path):
     bot.etapa_alerta = 'ENVIO_CORREO: comprobar cierre y actividad'
     q = ColaOperaciones(tmp_path, cfg, bot, Mock(), avisos=Mock())
     sol = Solicitud(estacion='ARY V', rfc='AAA010101AAA', ticket='123',
+                   fecha_ticket=date.today().strftime('%d/%m/%Y'),
                    forma_pago='EFECTIVO', correo_destino='cliente@example.com',
                    remitente='cliente@example.com')
     j, _ = q.encolar_factura(sol, safe=False)
