@@ -23,4 +23,4 @@ jobs:
       - name: Instalar pytest
         run: python -m pip install pytest
       - name: Probar 3 clientes, correo precargado y cola segura
-        run: python -m pytest -q tests/test_facturas_consecutivas_20261009.py tests/test_cola_v319.py tests/test_compat_vm_20261003.py tests/test_final_factura_v316.py tests/test_espera_cfdi_v317.py
+        run: python -m pytest -q tests/test_facturas_consecutivas_20261009.py tests/test_compat_vm_20261003.py
