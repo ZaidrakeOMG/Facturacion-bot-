@@ -105,11 +105,19 @@ class ColaLocal:
                           ('La aplicación se cerró con una operación o captura pendiente. Verifique Polaris; no se reintenta.',now,r['id']))
             c.execute("UPDATE avisos SET estado='ENVIO_INCIERTO',detalle=?,actualizado=? WHERE estado='ENVIANDO'",
                       ('El programa se cerró durante un envío. Revisar Enviados antes de reenviar.',now))
-            # Una revisión incierta conserva el mismo folio bloqueado contra duplicados,
-            # pero NO congela solicitudes distintas. La cola arranca sola.
-            self._set(c,'bloqueo','')
-            self._set(c,'pausada','0')
-            self._set(c,'motivo_pausa','')
+            # Una revisión individual puede continuar en paralelo con otros casos,
+            # SALVO si se reservó la pantalla durante timbrado/envío incierto.
+            old=c.execute("SELECT valor FROM ajustes WHERE clave='bloqueo'").fetchone()
+            reserved = old[0] if old else ''
+            pending = c.execute("SELECT 1 FROM trabajos WHERE id=? AND estado='REVISION_REQUERIDA'",
+                                (reserved,)).fetchone() if reserved else None
+            if pending:
+                self._set(c,'pausada','1')
+                self._set(c,'motivo_pausa','Hay un CFDI o envío incierto pendiente de revisión.')
+            else:
+                self._set(c,'bloqueo','')
+                self._set(c,'pausada','0')
+                self._set(c,'motivo_pausa','')
         return [self.get(r['id']) for r in rows]
 
     def enqueue(self,kind,data,*,source,source_id=None,safe=True,correo='',clave='',minutes=5,state='EN_COLA',reason=''):
@@ -133,8 +141,14 @@ class ColaLocal:
 
     def resume(self):
         with self.connect(True) as c:
-            # Sólo una preparación interactiva que todavía ocupa Polaris bloquea la cola.
-            # REVISION_REQUERIDA es una incidencia individual y no bloquea otros trabajos.
+            # Un cierre incierto del envío deja Polaris reservado hasta que
+            # el operador revise el CFDI y LIBERE ese trabajo explícitamente.
+            block=c.execute("SELECT valor FROM ajustes WHERE clave='bloqueo'").fetchone()
+            if block and block[0] and c.execute(
+                    "SELECT 1 FROM trabajos WHERE id=? AND estado='REVISION_REQUERIDA' LIMIT 1",
+                    (block[0],)).fetchone():
+                raise ColaError('Revisa la factura o envío incierto y libera la revisión '
+                                'antes de continuar con otro cliente.')
             if c.execute("SELECT 1 FROM trabajos WHERE estado IN ('PREPARADA_ALTA','PREPARADA_FACTURA','PRUEBA_PENDIENTE','ACEPTAR_ALTA') LIMIT 1").fetchone():
                 raise ColaError('Hay una captura interactiva pendiente en Polaris. Resuélvala antes de continuar.')
             self._set(c,'pausada','0');self._set(c,'motivo_pausa','');self._set(c,'bloqueo','')
@@ -166,16 +180,12 @@ class ColaLocal:
             c.execute('UPDATE trabajos SET estado=?,resultado=?,motivo=?,actualizado=?,terminado=? WHERE id=?',
                       (state,json.dumps(result or {},ensure_ascii=False),reason,now,now,ident))
             if hold:
-                if state == 'REVISION_REQUERIDA':
-                    # Error/revisión individual: no congela toda la cola.
-                    self._set(c,'bloqueo','')
-                    self._set(c,'pausada','0')
-                    self._set(c,'motivo_pausa','')
-                else:
-                    # En modo seguro, una captura preparada sí ocupa la pantalla y espera revisión.
-                    self._set(c,'bloqueo',ident)
-                    self._set(c,'pausada','1')
-                    self._set(c,'motivo_pausa',reason or 'Captura pendiente de revisión en Polaris.')
+                # hold=True sólo se usa si hay una ventana todavía comprometida:
+                # preparación interactiva o CFDI/envío posiblemente en proceso.
+                # No dejar que el siguiente cliente herede esa pantalla.
+                self._set(c,'bloqueo',ident)
+                self._set(c,'pausada','1')
+                self._set(c,'motivo_pausa',reason or 'Captura o envío pendiente de revisión en Polaris.')
             else:
                 old=c.execute("SELECT valor FROM ajustes WHERE clave='bloqueo'").fetchone()
                 if old and old[0]==ident:
