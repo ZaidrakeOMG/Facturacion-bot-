@@ -1471,35 +1471,55 @@ class PolarisBot:
         return self._find_parent_containing_text("Datos de Facturación")
 
     def _open_cash_invoice(self, main):
-        h=self._invoice_window()
-        if h: self._activate(h); return h
-        self.log("Polaris: Facturación -> Efectivo")
-        r=self._rect(main)
-        # Menú Facturación observado en el video. Después Down+Enter abre el primer elemento: Efectivo.
-        pyautogui.click(r.left+int(r.width*.124), r.top+int(r.height*.038)); time.sleep(.35)
-        pyautogui.press("down"); pyautogui.press("enter")
-        end=time.time()+10
-        while time.time()<end:
-            h=self._invoice_window()
+        """Espera a que el formulario MDI termine de cambiar de tamaño.
+
+        Polaris puede abrir Facturación de Efectivo como 815x284 durante
+        la carga: usar ese rectángulo para los clics sería incorrecto.
+        """
+        h = self._invoice_window()
+        if not h:
+            self.log("Polaris: Facturación -> Efectivo")
+            r = self._rect(main)
+            pyautogui.click(r.left + int(r.width*.124), r.top + int(r.height*.038))
+            time.sleep(.35)
+            pyautogui.press("down")
+            pyautogui.press("enter")
+        deadline = time.monotonic() + 25
+        previous = None
+        stable_since = None
+        last_size = None
+        warned = False
+        while time.monotonic() < deadline:
+            h = self._invoice_window()
             if h:
-                r=self._rect(h)
-                # En los videos del usuario la ventana real mide aprox. 820x635.
-                # Si obtenemos un panel demasiado pequeño, no seguimos a ciegas.
-                if r.width < 650 or r.height < 450:
-                    self._screenshot_error("factura_rect_invalido")
-                    raise PolarisError(
-                        f"Detecté 'Facturación de Efectivo' con tamaño inesperado "
-                        f"{r.width}x{r.height}. Se detuvo antes de hacer clics."
-                    )
-                self.log(
-                    f"Ventana Facturación detectada correctamente: "
-                    f"{r.width}x{r.height} en ({r.left},{r.top})."
-                )
-                self._activate(h)
-                return h
-            time.sleep(.25)
-        self._screenshot_error("abrir_factura")
-        raise PolarisError("No se abrió la ventana 'Facturación de Efectivo'.")
+                r = self._rect(h)
+                last_size = (r.width, r.height)
+                ready = (r.width >= 650 and r.height >= 450
+                         and self._window_exists_visible(h)
+                         and win32gui.IsWindowEnabled(h))
+                if ready:
+                    signature = (h, r.left, r.top, r.width, r.height)
+                    if signature != previous:
+                        previous, stable_since = signature, time.monotonic()
+                    elif time.monotonic() - stable_since >= .7:
+                        self.log(f"Ventana Facturación estable: "
+                                 f"{r.width}x{r.height} en ({r.left},{r.top}).")
+                        self._activate(h)
+                        return h
+                else:
+                    previous = stable_since = None
+                    if not warned:
+                        self.log(f"Facturación todavía cargando "
+                                 f"({r.width}x{r.height}); esperando formulario completo.")
+                        warned = True
+            else:
+                previous = stable_since = None
+            time.sleep(.2)
+        self._screenshot_error("facturacion_rect_no_estable")
+        detail = f"{last_size[0]}x{last_size[1]}" if last_size else "sin ventana"
+        raise PolarisError(
+            f"Facturación de Efectivo no alcanzó tamaño utilizable en 25 s "
+            f"(última lectura: {detail}). No se capturaron campos ni se timbró.")
 
     def _captura_factura(self):
         from .factura_captura import CapturaFactura
