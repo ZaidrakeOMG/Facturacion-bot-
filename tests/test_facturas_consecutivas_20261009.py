@@ -37,6 +37,7 @@ def vm_bot(monkeypatch, rects):
     b._menu_path = Mock()
     b._window_exists_visible = Mock(return_value=True)
     b._invoice_window = Mock(return_value=900)
+    b._factura_controles_listos = Mock(return_value=True)
     b._rect = Mock(side_effect=(polaris.Rect(*x) for x in rects))
     monkeypatch.setattr(
         polaris, 'win32gui',
@@ -65,6 +66,7 @@ def test_polaris_original_no_aborta_mdi_815x284(monkeypatch):
     b._screenshot_error = Mock()
     b._window_exists_visible = Mock(return_value=True)
     b._invoice_window = Mock(return_value=900)
+    b._factura_controles_listos = Mock(return_value=True)
     b._rect = Mock(side_effect=(polaris.Rect(*x) for x in windows))
     monkeypatch.setattr(
         polaris, 'win32gui',
@@ -82,6 +84,60 @@ def test_facturacion_que_nunca_carga_no_recibe_clics(monkeypatch):
         b._open_cash_invoice(1)
     b._activate.assert_not_called()
     b._screenshot_error.assert_called_once()
+
+
+
+def test_formulario_blanco_con_tamano_final_se_espera_en_vm(monkeypatch):
+    clock=simulated_time(monkeypatch, vm)
+    b=vm_bot(monkeypatch,[(0,0,833,638)]*60)
+    b._factura_controles_listos=Mock(side_effect=[False]*8+[True]*30)
+    assert b._open_cash_invoice(1)==900
+    assert clock.now()>=2.7
+    b._activate.assert_called_once_with(900)
+    b._screenshot_error.assert_not_called()
+
+
+def test_formulario_blanco_con_tamano_final_se_espera_en_original(monkeypatch):
+    clock=simulated_time(monkeypatch, polaris)
+    b=object.__new__(polaris.PolarisBot)
+    b.log=Mock()
+    b._activate=Mock()
+    b._screenshot_error=Mock()
+    b._window_exists_visible=Mock(return_value=True)
+    b._invoice_window=Mock(return_value=900)
+    b._rect=Mock(return_value=polaris.Rect(0,0,833,638))
+    b._factura_controles_listos=Mock(side_effect=[False]*6+[True]*40)
+    monkeypatch.setattr(
+        polaris,'win32gui',SimpleNamespace(IsWindowEnabled=lambda h:True),raising=False)
+    assert b._open_cash_invoice(1)==900
+    assert clock.now()>=2.5
+    b._activate.assert_called_once_with(900)
+
+
+def test_formulario_vacio_nunca_se_considera_listo(monkeypatch):
+    simulated_time(monkeypatch, vm)
+    b=vm_bot(monkeypatch, [(0,0,833,638)]*300)
+    b._factura_controles_listos=Mock(return_value=False)
+    with pytest.raises(vm.PolarisError, match='controles'):
+        b._open_cash_invoice(1)
+    b._activate.assert_not_called()
+    b._screenshot_error.assert_called_once()
+
+
+def test_verificador_exige_controles_no_solo_titulo(monkeypatch):
+    b=object.__new__(polaris.PolarisBot)
+    names=['TcxPageControl','TcxCustomInnerTextEdit']
+    def children(h, cb, param):
+        for i in range(len(names)):
+            cb(i+1, param)
+    monkeypatch.setattr(
+        polaris,'win32gui',
+        SimpleNamespace(IsWindowVisible=lambda h:True,EnumChildWindows=children),
+        raising=False)
+    b._class_name=lambda h: names[h-1]
+    assert not b._factura_controles_listos(900)
+    names.extend(['TcxGrid','TcxButton'])
+    assert b._factura_controles_listos(900)
 
 
 def final_bot(monkeypatch, current, progress=None):
