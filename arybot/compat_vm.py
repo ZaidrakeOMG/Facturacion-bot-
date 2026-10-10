@@ -401,10 +401,11 @@ class PolarisBotVM(original.PolarisBot):
         return dlg
 
     def _esperar_factura_lista(self, timeout=25):
-        """Una MDI puede aparecer primero como 815x284 y crecer al terminar de cargar.
+        """Esperar MDI con dimensiones correctas Y controles realmente dibujados.
 
-        Esperar dimensiones útiles y estables; jamás capturar una pantalla parcial.
-        No fuerza la maximización (alteraría las coordenadas fiscales calibradas).
+        A veces Polaris ya muestra la ventana 833x638, pero está en blanco.
+        La estructura de editores, rejilla y botones también debe estar presente.
+        No se maximiza la MDI ni cambian coordenadas fiscales calibradas.
         """
         deadline = time.monotonic() + timeout
         last_size = None
@@ -418,12 +419,13 @@ class PolarisBotVM(original.PolarisBot):
                 last_size = (r.width, r.height)
                 ready = (r.width >= 650 and r.height >= 450
                          and self._window_exists_visible(h)
-                         and original.win32gui.IsWindowEnabled(h))
+                         and original.win32gui.IsWindowEnabled(h)
+                         and self._factura_controles_listos(h))
                 if ready:
                     current = (h, r.left, r.top, r.width, r.height)
                     if signature != current:
                         signature, stable_since = current, time.monotonic()
-                    elif time.monotonic() - stable_since >= .7:
+                    elif time.monotonic() - stable_since >= 1.5:
                         self.log(f'Facturación estable: {r.width}x{r.height} en '
                                  f'{r.left},{r.top}. Se puede capturar.')
                         self._activate(h)
@@ -439,7 +441,7 @@ class PolarisBotVM(original.PolarisBot):
             time.sleep(.2)
         self._screenshot_error('vm_facturacion_no_estable')
         size = f'{last_size[0]}x{last_size[1]}' if last_size else 'sin ventana'
-        raise PolarisError('Facturación de Efectivo no alcanzó dimensiones utilizables '
+        raise PolarisError('Facturación de Efectivo no terminó de cargar los controles '
                            f'y estables en {timeout:g} s (última lectura: {size}). '
                            'No se enviaron datos ni se intentó timbrar.')
 
