@@ -1,0 +1,26 @@
+name: Regression de facturas consecutivas
+
+on:
+  push:
+    branches: [fix/facturas-consecutivas-envio-20261009]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  pruebas-sin-timbrado:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Instalar pytest
+        run: python -m pip install pytest
+      - name: Probar 3 clientes, correo precargado y cola segura
+        run: python -m pytest -q tests/test_facturas_consecutivas_20261009.py tests/test_compat_vm_20261003.py

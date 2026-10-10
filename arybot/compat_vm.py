@@ -400,23 +400,54 @@ class PolarisBotVM(original.PolarisBot):
             raise PolarisError('Se pulsó Cambio de estación, pero no apareció el catálogo. No se repitió ni se abrió otra opción.')
         return dlg
 
-    def _open_cash_invoice(self, main):
-        h = self._invoice_window()
-        if h:
-            self._activate(h)
-            return h
-        self.etapa_alerta = 'FACTURACIÓN: abrir menú real'
-        self._menu_path(main, 'Facturación', 'Efectivo')
-        deadline = time.monotonic() + 15
+    def _esperar_factura_lista(self, timeout=25):
+        """Esperar MDI con dimensiones correctas Y controles realmente dibujados.
+
+        A veces Polaris ya muestra la ventana 833x638, pero está en blanco.
+        La estructura de editores, rejilla y botones también debe estar presente.
+        No se maximiza la MDI ni cambian coordenadas fiscales calibradas.
+        """
+        deadline = time.monotonic() + timeout
+        last_size = None
+        signature = None
+        stable_since = None
+        transient_logged = False
         while time.monotonic() < deadline:
             h = self._invoice_window()
             if h:
                 r = self._rect(h)
-                if r.width < 650 or r.height < 450:
-                    raise PolarisError(f'La ventana de facturación tiene tamaño inesperado: {r.width}x{r.height}.')
-                self.log(f'Facturación identificada: {r.width}x{r.height} en {r.left},{r.top}. Captura original sin cambios.')
-                self._activate(h)
-                return h
+                last_size = (r.width, r.height)
+                ready = (r.width >= 650 and r.height >= 450
+                         and self._window_exists_visible(h)
+                         and original.win32gui.IsWindowEnabled(h)
+                         and self._factura_controles_listos(h))
+                if ready:
+                    current = (h, r.left, r.top, r.width, r.height)
+                    if signature != current:
+                        signature, stable_since = current, time.monotonic()
+                    elif time.monotonic() - stable_since >= 1.5:
+                        self.log(f'Facturación estable: {r.width}x{r.height} en '
+                                 f'{r.left},{r.top}. Se puede capturar.')
+                        self._activate(h)
+                        return h
+                else:
+                    signature = stable_since = None
+                    if not transient_logged:
+                        self.log(f'Facturación todavía cargando '
+                                 f'({r.width}x{r.height}); esperando sin tocar campos...')
+                        transient_logged = True
+            else:
+                signature = stable_since = None
             time.sleep(.2)
-        self._screenshot_error('vm_facturacion_sin_ventana')
-        raise PolarisError('Se pulsó Facturación > Efectivo pero no apareció el formulario. No se enviaron datos.')
+        self._screenshot_error('vm_facturacion_no_estable')
+        size = f'{last_size[0]}x{last_size[1]}' if last_size else 'sin ventana'
+        raise PolarisError('Facturación de Efectivo no terminó de cargar los controles '
+                           f'y estables en {timeout:g} s (última lectura: {size}). '
+                           'No se enviaron datos ni se intentó timbrar.')
+
+    def _open_cash_invoice(self, main):
+        # Si la ventana ya existe pero está a medio cargar, NO volver a abrir el menú.
+        if not self._invoice_window():
+            self.etapa_alerta = 'FACTURACIÓN: abrir menú real'
+            self._menu_path(main, 'Facturación', 'Efectivo')
+        return self._esperar_factura_lista(timeout=25)
