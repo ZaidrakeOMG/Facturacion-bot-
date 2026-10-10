@@ -1470,11 +1470,44 @@ class PolarisBot:
         # Último fallback legado; se valida después antes de hacer clics críticos.
         return self._find_parent_containing_text("Datos de Facturación")
 
-    def _open_cash_invoice(self, main):
-        """Espera a que el formulario MDI termine de cambiar de tamaño.
+    def _factura_controles_listos(self, h):
+        """Comprueba que la MDI ya tiene controles cargados, no sólo marco/título.
 
-        Polaris puede abrir Facturación de Efectivo como 815x284 durante
-        la carga: usar ese rectángulo para los clics sería incorrecto.
+        Se observó una ventana de Facturación de Efectivo COMPLETAMENTE en blanco
+        con tamaño final. No se deben pulsar coordenadas hasta ver la estructura
+        esperada: páginas DevExpress, editores, botones y rejilla del ticket.
+        No se leen ni registran valores fiscales ni personales.
+        """
+        kinds=set()
+
+        def cb(child, _):
+            try:
+                if not win32gui.IsWindowVisible(child):
+                    return True
+                cls=self._class_name(child).upper()
+                if 'TCXPAGECONTROL' in cls or 'TCXTABSHEET' in cls:
+                    kinds.add('PAGINAS')
+                if 'TCXGRID' in cls:
+                    kinds.add('TICKETS')
+                if 'TCXBUTTON' in cls or 'TBITBTN' in cls:
+                    kinds.add('BOTONES')
+                if 'EDIT' in cls:
+                    kinds.add('EDITORES')
+            except Exception:
+                pass
+            return True
+
+        try:
+            win32gui.EnumChildWindows(h,cb,None)
+        except Exception:
+            return False
+        return kinds.issuperset(('PAGINAS','TICKETS','BOTONES','EDITORES'))
+
+    def _open_cash_invoice(self, main):
+        """Espera a que la MDI tenga geometría y controles totalmente listos.
+
+        Puede comenzar en 815x284 o mostrarse en blanco con el tamaño final.
+        No se capturan datos mientras la pantalla esté incompleta.
         """
         h = self._invoice_window()
         if not h:
@@ -1496,12 +1529,13 @@ class PolarisBot:
                 last_size = (r.width, r.height)
                 ready = (r.width >= 650 and r.height >= 450
                          and self._window_exists_visible(h)
-                         and win32gui.IsWindowEnabled(h))
+                         and win32gui.IsWindowEnabled(h)
+                         and self._factura_controles_listos(h))
                 if ready:
                     signature = (h, r.left, r.top, r.width, r.height)
                     if signature != previous:
                         previous, stable_since = signature, time.monotonic()
-                    elif time.monotonic() - stable_since >= .7:
+                    elif time.monotonic() - stable_since >= 1.5:
                         self.log(f"Ventana Facturación estable: "
                                  f"{r.width}x{r.height} en ({r.left},{r.top}).")
                         self._activate(h)
@@ -1518,7 +1552,7 @@ class PolarisBot:
         self._screenshot_error("facturacion_rect_no_estable")
         detail = f"{last_size[0]}x{last_size[1]}" if last_size else "sin ventana"
         raise PolarisError(
-            f"Facturación de Efectivo no alcanzó tamaño utilizable en 25 s "
+            f"Facturación de Efectivo no alcanzó ventana y controles listos en 25 s "
             f"(última lectura: {detail}). No se capturaron campos ni se timbró.")
 
     def _captura_factura(self):
