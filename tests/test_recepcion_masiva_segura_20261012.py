@@ -80,7 +80,7 @@ def factura(folio):
         "rfc": "ABC010101AB1",
         "ticket": str(folio),
         "fecha_ticket": date.today().strftime("%d/%m/%Y"),
-        "forma_pago": "Tarjeta de débito",
+        "forma_pago": "TARJETA DE DEBITO",
         "uso_cfdi": "G03",
         "correo": email,
         "correo_confirmacion": email,
