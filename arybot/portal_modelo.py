@@ -4,6 +4,7 @@ No conecta a Polaris ni a servicios fiscales. No captura datos de tarjeta.
 """
 from __future__ import annotations
 from .cliente_model import AltaCliente
+from .coincidencia_fiscal import CODIGO_VERIFICACION_FISCAL, MENSAJE_VERIFICACION_FISCAL
 from .constancia_fiscal import leer_constancia_pdf_base64, ConstanciaError
 from .cliente_facturacion import (CODIGO_SIN_REGIMEN, MENSAJE_SIN_REGIMEN,
                                  CODIGO_NO_REGISTRADO, MENSAJE_NO_REGISTRADO)
@@ -103,6 +104,7 @@ def estado_publico(job):
     es_revision_cliente = (job['tipo'] == 'FACTURA' and state in ('REVISION_REQUERIDA', 'REVISION_CERRADA'))
     sin_regimen = es_revision_cliente and codigo == CODIGO_SIN_REGIMEN
     no_registrado = es_revision_cliente and codigo == CODIGO_NO_REGISTRADO
+    verificacion = es_revision_cliente and codigo == CODIGO_VERIFICACION_FISCAL
     messages = {
         'EN_COLA': 'Solicitud recibida y registrada en la cola de atención.',
         'EJECUTANDO': 'El bot está atendiendo tu solicitud.',
@@ -123,7 +125,9 @@ def estado_publico(job):
         'modo_seguro': bool(job['seguro']),
         'mensaje': (MENSAJE_SIN_REGIMEN if sin_regimen else
                     MENSAJE_NO_REGISTRADO if no_registrado else
+                    MENSAJE_VERIFICACION_FISCAL if verificacion else
                     messages.get(state, 'Consulta el resultado con el área de facturación.')),
         'codigo_cliente': (CODIGO_SIN_REGIMEN if sin_regimen else
-                           CODIGO_NO_REGISTRADO if no_registrado else ''),
+                           CODIGO_NO_REGISTRADO if no_registrado else
+                           CODIGO_VERIFICACION_FISCAL if verificacion else ''),
     }
