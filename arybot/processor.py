@@ -53,8 +53,11 @@ class Processor:
             imgs,pdfs=classify_attachments(paths)
             if not pdfs:
                 raise ValueError('Adjunta la Constancia de Situación Fiscal original en PDF para esta solicitud.')
-            # El PDF adjunto queda en la descarga temporal existente de Gmail, NO
-            # se incorpora al trabajo en cola. Se conserva sólo identidad mínima.
+            # Gmail ya guarda adjuntos en su descarga temporal local existente.
+            # No incorporar el PDF a la cola, no registrar su contenido en logs.
+            from .constancia_fiscal import MAX_PDF_BYTES
+            if not 200 <= pdfs[0].stat().st_size <= MAX_PDF_BYTES:
+                raise ValueError('La Constancia de Situación Fiscal debe ser un PDF digital de máximo 2 MB.')
             identidad=leer_constancia_pdf_base64(base64.b64encode(pdfs[0].read_bytes()).decode('ascii'),
                                                  alta=kind=='ALTA')
             if kind=='ALTA':
