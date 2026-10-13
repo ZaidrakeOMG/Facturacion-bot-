@@ -13,6 +13,15 @@ import unicodedata
 
 MAX_PDF_BYTES = 2 * 1024 * 1024
 MAX_PDF_PAGES = 3
+# Un PDF del SAT puede separar la etiqueta "RFC" y el valor al extraer texto.
+# No se acepta "la primera coincidencia": siempre ha de existir un único RFC.
+RFC_EN_TEXTO = re.compile(
+    r'(?<![A-Z0-9Ñ&])([A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3})(?![A-Z0-9Ñ&])'
+)
+RFC_FRACCIONADO = re.compile(
+    r'(?<![A-Z0-9Ñ&])(?:R[.\s]*F[.\s]*C[.\s]*|REGISTRO\s+FEDERAL\s+DE\s+CONTRIBUYENTES)'
+    r'\s*[:：-]?\s*([A-ZÑ&]{3,4})[\s-]+([0-9]{6})[\s-]+([A-Z0-9]{3})(?![A-Z0-9Ñ&])'
+)
 
 
 class ConstanciaError(ValueError):
@@ -69,15 +78,30 @@ def _campo(lineas, *etiquetas):
     return ''
 
 
+def _leer_rfc_sin_adivinar(texto):
+    """Acepta variantes de extracción PDF, pero nunca un RFC ambiguo."""
+    normalizado = _simple(texto)
+    encontrados = set(RFC_EN_TEXTO.findall(normalizado))
+    for letras, fecha, homoclave in RFC_FRACCIONADO.findall(normalizado):
+        encontrados.add(letras + fecha + homoclave)
+    if len(encontrados) == 1:
+        return next(iter(encontrados))
+    if len(encontrados) > 1:
+        raise ConstanciaError(
+            'La constancia contiene más de un RFC diferente. No se eligió ninguno '
+            'para evitar facturar a otro cliente.')
+    raise ConstanciaError(
+        'No se pudo reconocer el RFC en el texto del PDF. '
+        'Sube el PDF digital original del SAT, no una fotografía o escaneo.')
+
+
 def _validar_identidad(texto, *, alta=False):
     lineas = [line.strip() for line in texto.splitlines() if line.strip()]
     conjunto = _simple(texto)
     if ('CONSTANCIA DE SITUACION FISCAL' not in conjunto
             or 'CONTRIBUYENTE' not in conjunto):
         raise ConstanciaError('El archivo no parece una Constancia de Situación Fiscal emitida por el SAT.')
-    rfc = _campo(lineas, 'RFC', 'Registro Federal de Contribuyentes')
-    if not re.fullmatch(r'[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}', rfc):
-        raise ConstanciaError('No se pudo identificar un RFC válido en la constancia PDF.')
+    rfc = _leer_rfc_sin_adivinar(texto)
     razon = _campo(lineas, 'Denominación/Razón Social',
                     'Denominación o Razón Social',
                     'Nombre, denominación o razón social')
