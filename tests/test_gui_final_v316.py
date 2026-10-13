@@ -17,6 +17,7 @@ with patch.dict(sys.modules,{'arybot.gmail_client':fake}):
     import arybot.gui as GUI
 from arybot.cola_operaciones import ColaOperaciones
 from arybot.cola_gui import ColaTab
+from arybot.constancia_fiscal import IdentidadFiscal
 
 class GuiTests(unittest.TestCase):
     def setUp(self):
@@ -33,7 +34,13 @@ class GuiTests(unittest.TestCase):
         a.cola=ColaOperaciones(Path(self.tmp.name),a.cfg,a.polaris,a.log)
         a.mode_var=tk.BooleanVar(master=self.root,value=True);a.mode_check=ttk.Checkbutton(self.root,variable=a.mode_var)
         a.tab_test=ttk.Frame(self.root);a.tab_panel=ttk.Frame(self.root);a.tab_cfg=ttk.Frame(self.root)
-        a._build_test();a.test_station.set('ARY I');a.test_rfc.set('AAA010101AAA');a.test_ticket.set('123');a.test_email.set('cliente@example.com')
+        a._build_test();a.test_station.set('ARY I')
+        self.constancia=Path(self.tmp.name)/'constancia-test.pdf'
+        self.constancia.write_bytes(b'%PDF-1.4\nDATOS SIMULADOS\n')
+        a.test_rfc.set(str(self.constancia));a.test_ticket.set('123');a.test_email.set('cliente@example.com')
+        pdfmock=patch('arybot.constancia_fiscal.leer_constancia_pdf_base64',
+                      return_value=IdentidadFiscal('AAA010101AAA','EMPRESA SA DE CV','CALZADA LEGARIA','12345678901'))
+        pdfmock.start();self.addCleanup(pdfmock.stop)
         self.ps=[patch.object(GUI,'BASE',Path(self.tmp.name)),patch.object(GUI.messagebox,'showwarning'),
                  patch.object(GUI.messagebox,'showinfo'),patch.object(GUI.messagebox,'askyesno',return_value=True)]
         self.mocks=[p.start() for p in self.ps];self.confirm=self.mocks[-1]
