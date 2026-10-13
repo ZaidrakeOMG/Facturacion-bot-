@@ -4386,7 +4386,9 @@ input[type="date"].control::-webkit-calendar-picker-indicator {
 
 
 
-      values.rfc=values.rfc.trim().toUpperCase();
+      try { values.constancia_pdf=await leerConstancia(form.elements.constancia_archivo.files[0]); }
+      catch(error) { formError(kind,error.message); return; }
+      delete values.constancia_archivo;
 
 
 
