@@ -1,7 +1,7 @@
-"""Aviso conocido de cliente sin régimen fiscal. Solo lectura de diálogos.
+"""Diagnóstico de avisos EXPLÍCITOS de cliente en Polaris.
 
-No interpreta campos del cliente, OCR, correos ni textos de otras aplicaciones.
-No confirma que el RFC sea inexistente: el aviso observado indica alta incompleta.
+La ausencia de un control, foco o respuesta HTTP NO demuestra que el RFC no exista.
+Solo se examinan textos visibles de avisos del proceso Polaris antes de timbrar.
 """
 from __future__ import annotations
 import re
@@ -18,6 +18,17 @@ ACCION_SIN_REGIMEN = (
     'Esta solicitud se detuvo antes de timbrar.'
 )
 
+CODIGO_NO_REGISTRADO = 'CLIENTE_NO_REGISTRADO'
+MENSAJE_NO_REGISTRADO = (
+    'Su cliente no está dado de alta en nuestro sistema de facturación. '
+    'Regístrese primero para poder solicitar su factura.'
+)
+ACCION_NO_REGISTRADO = (
+    'Ingrese a la opción Registrar cliente del portal de Grupo ARY y complete su alta. '
+    'Este ticket no se facturó. Conserve su referencia para aclaraciones.'
+)
+
+
 class ClienteSinRegimenError(RuntimeError):
     codigo_cliente = CODIGO_SIN_REGIMEN
 
@@ -25,20 +36,54 @@ class ClienteSinRegimenError(RuntimeError):
         super().__init__(MENSAJE_SIN_REGIMEN)
 
 
-def es_aviso_sin_regimen(texto: str) -> bool:
-    """Firma del aviso mostrado por Polaris; no basta con un campo vacío."""
+class ClienteNoRegistradoError(RuntimeError):
+    codigo_cliente = CODIGO_NO_REGISTRADO
+
+    def __init__(self):
+        super().__init__(MENSAJE_NO_REGISTRADO)
+
+
+def _normalizar(texto):
     value = unicodedata.normalize('NFKD', str(texto or ''))
-    value = ''.join(ch for ch in value if not unicodedata.combining(ch))
-    value = re.sub(r'[^A-Z0-9]', '', value.upper())
-    return ('ELCLIENTENOTIENEDEFINIDOELREGIMENFISCAL' in value
-            and 'NOSEPUEDEFACTURAR' in value)
+    return ''.join(ch for ch in value if not unicodedata.combining(ch)).upper()
+
+
+def es_aviso_sin_regimen(texto: str) -> bool:
+    """Firma observada del aviso de Polaris; no equivale a RFC inexistente."""
+    compact = re.sub(r'[^A-Z0-9]', '', _normalizar(texto))
+    return ('ELCLIENTENOTIENEDEFINIDOELREGIMENFISCAL' in compact
+            and 'NOSEPUEDEFACTURAR' in compact)
+
+
+def es_aviso_cliente_no_registrado(texto: str) -> bool:
+    """Sólo avisos inequívocos de inexistencia/no coincidencias de cliente.
+
+    NO clasifica RFC inválido, ventanas no abiertas o errores de foco como
+    inexistencia en el catálogo. Se invoca durante búsqueda de cliente.
+    """
+    compact = re.sub(r'[^A-Z0-9]', '', _normalizar(texto))
+    firmas = (
+        'ELRFCNOEXISTE', 'NOEXISTEELRFC', 'RFCNOEXISTE',
+        'ELRFCNOESTAREGISTRADO', 'RFCNOESTAREGISTRADO',
+        'ELRFCNOSEENCUENTRAREGISTRADO', 'RFCNOSEENCUENTRAREGISTRADO',
+        'RFCNOREGISTRADO', 'RFCNOENCONTRADO', 'NOSEENCONTROELRFC',
+        'CLIENTENOEXISTE', 'ELCLIENTENOEXISTE', 'CLIENTEINEXISTENTE',
+        'ELCLIENTENOESTAREGISTRADO', 'CLIENTENOESTAREGISTRADO',
+        'ELCLIENTENOSEENCUENTRAREGISTRADO', 'CLIENTENOSEENCUENTRAREGISTRADO',
+        'CLIENTENOENCONTRADO', 'NOSEENCONTROELCLIENTE',
+        'NOSEENCONTRONINGUNCLIENTE', 'NOSEENCONTRARONCLIENTES',
+        'NOHAYCLIENTESREGISTRADOS', 'NOEXISTENCLIENTESCONELRFC',
+        'NOSEENCONTRARONCOINCIDENCIAS', 'NOSEENCONTRARONREGISTROS',
+        'NOSEENCONTROREGISTRO', 'NOEXISTENREGISTROSPARAELRFC',
+    )
+    return any(firma in compact for firma in firmas)
 
 
 def exigir_cliente_facturable(bot, formulario):
-    """Detiene la captura si un diálogo DEL MISMO proceso contiene el aviso.
+    """Detecta avisos de cliente sin régimen o sin registro del mismo proceso.
 
-    No pulsa Aceptar ni convierte fallos de lectura en un diagnóstico fiscal.
-    Si no puede leerse, las guardias existentes conservan el error genérico.
+    No lee campos del formulario, no pulsa botones ni cierra un aviso. No se
+    usa tras pulsar timbrado; la cola conserva sus reglas de resultado incierto.
     """
     from . import polaris
     wg = getattr(polaris, 'win32gui', None)
@@ -49,26 +94,27 @@ def exigir_cliente_facturable(bot, formulario):
     except Exception:
         return
     for ventana in ventanas:
-        encontrado = False
         try:
             if (ventana == formulario or not wg.IsWindowVisible(ventana)
                     or not bot._same_polaris_process(formulario, ventana)):
                 continue
-            # El aviso del video es MessageBox de Windows. No se lee el
-            # formulario de factura ni una tabla que pudiera contener datos.
-            if wg.GetClassName(ventana) != '#32770':
+            # Windows MessageBox (#32770) y diálogo de mensaje VCL de Polaris.
+            clase = (wg.GetClassName(ventana) or '').upper()
+            if clase != '#32770' and 'MESSAGEFORM' not in clase:
                 continue
             captions = []
             def leer(control, _):
                 if len(captions) >= 64 or not wg.IsWindowVisible(control):
                     return
-                clase = wg.GetClassName(control).upper()
-                if clase == 'STATIC' or 'LABEL' in clase:
+                tipo = (wg.GetClassName(control) or '').upper()
+                if tipo == 'STATIC' or 'LABEL' in tipo:
                     captions.append((wg.GetWindowText(control) or '')[:4096])
             wg.EnumChildWindows(ventana, leer, None)
-            encontrado = es_aviso_sin_regimen(' '.join(captions))
+            aviso = ' '.join(captions)
         except Exception:
-            # Nunca sustituir un error desconocido por «cliente no registrado».
+            # Un fallo de lectura no significa que el cliente no exista.
             continue
-        if encontrado:
+        if es_aviso_sin_regimen(aviso):
             raise ClienteSinRegimenError()
+        if es_aviso_cliente_no_registrado(aviso):
+            raise ClienteNoRegistradoError()
