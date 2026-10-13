@@ -21,6 +21,6 @@ jobs:
         with:
           python-version: '3.12'
       - name: Instalar pytest
-        run: python -m pip install pytest
+        run: python -m pip install pytest pypdf reportlab
       - name: Probar facturas consecutivas, altas y avisos de RFC
-        run: python -m pytest -q tests/test_facturas_consecutivas_20261009.py tests/test_compat_vm_20261003.py tests/test_alta_aviso_20261013.py
+        run: python -m pytest -q tests/test_facturas_consecutivas_20261009.py tests/test_compat_vm_20261003.py tests/test_alta_aviso_20261013.py tests/test_constancia_fiscal_20261013.py

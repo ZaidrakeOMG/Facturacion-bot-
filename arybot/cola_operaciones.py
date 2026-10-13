@@ -9,6 +9,7 @@ from .cola_local import ColaLocal
 from .cola_modelo import (ajustes_cola,datos_alta,factura_datos,como_solicitud,clave_trabajo,
                          ColaError,ESTADOS_REVISION)
 from .cliente_model import AltaCliente
+from .coincidencia_fiscal import CoincidenciaFiscalError, CODIGO_VERIFICACION_FISCAL
 from .cliente_facturacion import (ClienteSinRegimenError, ClienteNoRegistradoError,
                                  CODIGO_SIN_REGIMEN, CODIGO_NO_REGISTRADO)
 from .avisos_cliente import AvisosCliente
@@ -159,7 +160,9 @@ class ColaOperaciones:
                     else:raise ColaError('Resultado de facturación no reconocido. No se repite el intento.')
                 elif kind=='ALTA':
                     if self.alta is None:raise ColaError('El módulo de alta no está disponible.')
-                    sol=AltaCliente.crear(data['estacion'],data['rfc'],data['idcif'],data.get('telefono',''),data['correo'])
+                    sol=AltaCliente.crear(data['estacion'],data['rfc'],data['idcif'],data.get('telefono',''),data['correo'],
+                                           razon_social=data.get('razon_social',''),
+                                           calle_constancia=data.get('calle_constancia',''))
                     if job['accion']=='aceptar':
                         if self.cfg.get('app',{}).get('modo_prueba',True) is not False:raise ColaError('MODO SEGURO activo: no se pulsa Aceptar.')
                         result=self.alta.aceptar(sol,autorizado=True,inexistencia_revisada=True)
@@ -206,6 +209,8 @@ class ColaOperaciones:
                              and step.startswith('FACTURACION:'))
                 no_registrado=(kind=='FACTURA' and isinstance(exc,ClienteNoRegistradoError)
                                and step.startswith('FACTURACION:'))
+                verificacion_fiscal=(kind=='FACTURA' and isinstance(exc,CoincidenciaFiscalError)
+                                     and step.startswith('FACTURACION:'))
                 alta_incierta=(kind=='ALTA' and step.startswith('ALTA: Aceptar solicitado'))
                 # Después del Aceptar de TIMBRADO, un error puede significar
                 # que el CFDI existe aunque todavía no se haya enviado correo.
@@ -225,11 +230,13 @@ class ColaOperaciones:
                 self.store.finish(ident,'REVISION_REQUERIDA',
                                   hold=fiscal_incierto or alta_incierta,reason=reason,
                                   result={'codigo_cliente': (CODIGO_SIN_REGIMEN if sin_regimen
-                                                            else CODIGO_NO_REGISTRADO)}
-                                  if (sin_regimen or no_registrado) and not (fiscal_incierto or alta_incierta)
-                                  else {})
+                                                            else CODIGO_NO_REGISTRADO if no_registrado
+                                                            else CODIGO_VERIFICACION_FISCAL)}
+                                  if (sin_regimen or no_registrado or verificacion_fiscal)
+                                     and not (fiscal_incierto or alta_incierta) else {})
                 self._notice(self.store.get(ident), 'cliente_sin_regimen' if sin_regimen
-                             else 'cliente_no_registrado' if no_registrado else 'revision')
+                             else 'cliente_no_registrado' if no_registrado
+                             else 'verificacion_fiscal' if verificacion_fiscal else 'revision')
                 if self.alertas:
                     category='ALTA_CLIENTE' if kind=='ALTA' else ('ENVIO_FACTURA' if step.startswith('ENVIO_CORREO') else 'FACTURACION')
                     context={'origen':job['origen'],'id_solicitud':ident,'estacion':data.get('estacion',''),

@@ -369,7 +369,7 @@ class App:
         self.direct_hint=tk.StringVar()
         self.direct_hint_label=ttk.Label(self.tab_test,textvariable=self.direct_hint,wraplength=820)
         self.direct_hint_label.grid(row=1,column=0,columnspan=4,sticky="w",pady=(0,14))
-        labels=[("Estación",0),("RFC del cliente",1),("Ticket/Folio",2),("Fecha del ticket",3),("Forma de pago",4),("Uso CFDI (opcional)",5),("Correo destino",6)]
+        labels=[("Estación",0),("Constancia fiscal PDF del SAT",1),("Ticket/Folio",2),("Fecha del ticket",3),("Forma de pago",4),("Uso CFDI (opcional)",5),("Correo destino",6)]
         self.test_station=tk.StringVar(value="ARY I")
         self.test_rfc=tk.StringVar(); self.test_ticket=tk.StringVar(); self.test_fecha_ticket=tk.StringVar(); self.test_payment=tk.StringVar(value="EFECTIVO"); self.test_cfdi=tk.StringVar(value=USO_CFDI["G03"]); self.test_email=tk.StringVar()
         vars=[self.test_station,self.test_rfc,self.test_ticket,self.test_fecha_ticket,self.test_payment,self.test_cfdi,self.test_email]
@@ -377,6 +377,13 @@ class App:
             ttk.Label(self.tab_test,text=text).grid(row=row+2,column=0,sticky="e",padx=8,pady=6)
             if row==0:
                 w=ttk.Combobox(self.tab_test,textvariable=vars[row],values=list(STATIONS.keys()),width=45,state="readonly")
+            elif row==1:
+                w=ttk.Entry(self.tab_test,textvariable=vars[row],width=56)
+                ttk.Button(self.tab_test,text='Seleccionar PDF…',
+                           command=lambda:self.test_rfc.set(
+                               filedialog.askopenfilename(title='Selecciona constancia fiscal PDF',
+                                                          filetypes=[('PDF del SAT','*.pdf')])
+                               or self.test_rfc.get())).grid(row=row+2,column=3,sticky='w')
             elif row==3:
                 w=SelectorFecha(self.tab_test, vars[row], width=45)
             elif row==4:
@@ -386,7 +393,7 @@ class App:
             else:
                 w=ttk.Entry(self.tab_test,textvariable=vars[row],width=56)
             w.grid(row=row+2,column=1,columnspan=2,sticky="w",pady=6)
-        ttk.Label(self.tab_test,text="Primero cambia/valida la ESTACIÓN. Después busca al cliente por RFC. Polaris llena Nombre/RFC/CP/Régimen solo. Uso CFDI vacío = GASTOS EN GENERAL.",foreground="#3a4a5a",wraplength=820).grid(row=9,column=0,columnspan=4,sticky="w",pady=(6,0))
+        ttk.Label(self.tab_test,text="Adjunta la constancia fiscal PDF digital. El bot compara RFC, razón social y calle y nunca selecciona la primera fila por defecto.",foreground="#3a4a5a",wraplength=820).grid(row=9,column=0,columnspan=4,sticky="w",pady=(6,0))
         self.btn_test=ttk.Button(self.tab_test,text="Ejecutar prueba segura en Polaris (NO TIMBRA)",command=self.test_polaris)
         self.btn_test.grid(row=10,column=1,sticky="w",pady=18)
         self.btn_station=ttk.Button(self.tab_test,text="Probar SOLO cambio de estación",command=self.test_station_only)
@@ -701,11 +708,21 @@ class App:
     def test_polaris(self):
         if not self._preparar_prueba_vm():return
         estacion=normalize_station(self.test_station.get())
-        rfc=self.test_rfc.get().strip().upper().replace(' ','');ticket=self.test_ticket.get().strip()
+        try:
+            import base64
+            from .constancia_fiscal import leer_constancia_pdf_base64
+            path_pdf=Path(self.test_rfc.get().strip())
+            if not path_pdf.is_file():raise ValueError('Selecciona una constancia fiscal PDF.')
+            identidad=leer_constancia_pdf_base64(
+                base64.b64encode(path_pdf.read_bytes()).decode('ascii'))
+        except Exception as exc:
+            self.direct_status.set(str(exc));return
+        rfc=identidad.rfc;ticket=self.test_ticket.get().strip()
         fecha_ticket=self.test_fecha_ticket.get().strip()
         fp=normalize_payment(self.test_payment.get());uso=normalize_cfdi_usage(self.test_cfdi.get())
         em=self.test_email.get().strip();safe=bool(self.mode_var.get())
-        sol=Solicitud(estacion=estacion,rfc=rfc,ticket=ticket,fecha_ticket=fecha_ticket,forma_pago=fp,uso_cfdi=uso,correo_destino=em,remitente=em)
+        sol=Solicitud(estacion=estacion,rfc=rfc,ticket=ticket,fecha_ticket=fecha_ticket,forma_pago=fp,uso_cfdi=uso,correo_destino=em,remitente=em,
+                      razon_social=identidad.razon_social,calle_constancia=identidad.calle)
         try:
             from .cola_modelo import factura_datos
             from .factura_final import RegistroFinalFactura

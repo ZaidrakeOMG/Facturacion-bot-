@@ -149,6 +149,12 @@ class AltaClientes:
             raise AltaClienteError('El RFC/idCIF en la pantalla no coincide con la solicitud. No se acepta.')
         if not vals.get('nombre','').strip() or not re.fullmatch(r'[0-9]{5}',vals.get('cp','').strip()):
             raise AltaClienteError('Polaris no completó nombre y código postal. Revisa la consulta idCIF.')
+        if sol.razon_social:
+            from .coincidencia_fiscal import _razon
+            if _razon(vals.get('nombre','')) != _razon(sol.razon_social):
+                raise AltaClienteError(
+                    'El nombre o razón social de Polaris no coincide exactamente con la constancia PDF. '
+                    'No se pulsará Aceptar para registrar al cliente.')
         phone=re.sub(r'[ ()-]','',vals.get('telefono','').strip())
         if phone!=sol.telefono or vals.get('correo','').strip()!=sol.correo:
             raise AltaClienteError('El teléfono/correo en Polaris no coincide con lo capturado. No se acepta.')

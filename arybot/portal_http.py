@@ -23,7 +23,7 @@ from .portal_modelo import validar_entrada, catalogos, estado_publico, EntradaPo
 
 PREFIX = '/api/facturacion'
 COOKIE_NAME = 'ary_portal_session'
-MAX_BODY = 16 * 1024
+MAX_BODY = 2 * 1024 * 1024 * 4 // 3 + 32768
 DEFAULTS = {
     'puerto': 8765,
     'escuchar_en': '127.0.0.1',

@@ -5,6 +5,7 @@ import re
 from dataclasses import fields
 from .parser import Solicitud, normalize_station, normalize_payment, normalize_cfdi_usage, normalize_ticket_date, _field, _plain
 from .cliente_model import AltaCliente
+from .coincidencia_fiscal import MENSAJE_VERIFICACION_FISCAL
 from .cliente_facturacion import (MENSAJE_SIN_REGIMEN, ACCION_SIN_REGIMEN,
                                  MENSAJE_NO_REGISTRADO, ACCION_NO_REGISTRADO)
 from .factura_final import validar_correo
@@ -61,7 +62,8 @@ def factura_datos(sol: Solicitud):
     email = validar_correo(sol.correo_destino or sol.remitente)
     return {'estacion':st,'rfc':rf,'ticket':ticket,'fecha_ticket':fecha_ticket,'forma_pago':payment,
             'uso_cfdi':normalize_cfdi_usage(sol.uso_cfdi), 'correo_destino':email,
-            'remitente':str(sol.remitente or email), 'razon_social':str(sol.razon_social or '')}
+            'remitente':str(sol.remitente or email), 'razon_social':str(sol.razon_social or ''),
+            'calle_constancia':str(getattr(sol, 'calle_constancia', '') or '')}
 
 
 def como_solicitud(data):
@@ -161,6 +163,8 @@ def texto_cliente(job, event, opts, *, eta=None, reason=''):
         lines += [MENSAJE_SIN_REGIMEN, ACCION_SIN_REGIMEN]
     elif event == 'cliente_no_registrado' and job['tipo']=='FACTURA':
         lines += [MENSAJE_NO_REGISTRADO, ACCION_NO_REGISTRADO]
+    elif event == 'verificacion_fiscal' and job['tipo']=='FACTURA':
+        lines += [MENSAJE_VERIFICACION_FISCAL]
     elif event == 'faltantes':
         lines += ['Para continuar con su solicitud necesitamos corregir o completar estos datos:', reason,
                   'Envíe una nueva solicitud completa con todos los campos. No se inició la operación en Polaris.']

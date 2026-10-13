@@ -67,7 +67,7 @@ def main():
                 return
             try:
                 args = dict(host=settings['escuchar_en'], port=settings['puerto'], threads=4,
-                            max_request_body_size=16384, max_request_header_size=16384,
+                            max_request_body_size=2 * 1024 * 1024 * 4 // 3 + 32768, max_request_header_size=16384,
                             connection_limit=50, channel_timeout=30, expose_tracebacks=False,
                             clear_untrusted_proxy_headers=True)
                 network_app = PortalRedWSGI(self.portal, settings)
