@@ -8,6 +8,13 @@ import re
 import unicodedata
 
 
+CODIGO_VERIFICACION_FISCAL = 'VERIFICACION_FISCAL_PENDIENTE'
+MENSAJE_VERIFICACION_FISCAL = (
+    'No fue posible confirmar una coincidencia única entre el RFC, la razón social '
+    'y la calle de su constancia fiscal y los clientes registrados. '
+    'No se generó una factura. El área de facturación revisará su solicitud.'
+)
+
 class CoincidenciaFiscalError(RuntimeError):
     pass
 
