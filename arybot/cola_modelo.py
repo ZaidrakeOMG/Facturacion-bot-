@@ -61,7 +61,8 @@ def factura_datos(sol: Solicitud):
     email = validar_correo(sol.correo_destino or sol.remitente)
     return {'estacion':st,'rfc':rf,'ticket':ticket,'fecha_ticket':fecha_ticket,'forma_pago':payment,
             'uso_cfdi':normalize_cfdi_usage(sol.uso_cfdi), 'correo_destino':email,
-            'remitente':str(sol.remitente or email), 'razon_social':str(sol.razon_social or '')}
+            'remitente':str(sol.remitente or email), 'razon_social':str(sol.razon_social or ''),
+            'calle_constancia':str(getattr(sol, 'calle_constancia', '') or '')}
 
 
 def como_solicitud(data):
