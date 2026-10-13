@@ -1572,10 +1572,11 @@ class PolarisBot:
         self.log('REVISIÓN ESTABLE v3.1: se omite la relectura DevExpress que detenía el Aceptar final.')
         return True
 
-    def _select_client(self, inv, rfc):
+    def _select_client(self, inv, rfc, razon_social='', calle=''):
         rfc=(rfc or "").strip().upper().replace(" ", "")
-        if not rfc:
-            raise PolarisError("No recibí RFC para buscar al cliente en Polaris.")
+        if not rfc or not razon_social.strip() or not calle.strip():
+            raise PolarisError("Debe existir RFC, razón social y calle extraídos de la constancia PDF. "
+                               "No se selecciona la primera fila ni se timbra.")
 
         self.log(f"Buscando cliente por RFC: {rfc}")
         self._click_rel(inv,self.FACTURA["buscar_cliente"])
@@ -1606,11 +1607,12 @@ class PolarisBot:
         self.log('RFC escrito y confirmado después de salir del campo. Ejecutando Buscar...')
         self._click_rel(dlg,self.BUSCAR["buscar"],wait=.20)
         time.sleep(1.2)
-        # Reconocer respuestas EXPLÍCITAS de RFC inexistente antes de intentar
-        # seleccionar la primera fila. Un grid vacío por sí solo no lo demuestra.
         from .cliente_facturacion import exigir_cliente_facturable
+        from .lectura_catalogo_fiscal import seleccionar_cliente_exacto
         exigir_cliente_facturable(self, dlg)
-        self._click_rel(dlg,self.BUSCAR["primera_fila"])
+        # Selección por RFC + razón social + calle, con listado completo de UIA.
+        # Ante cero, varias coincidencias o lectura parcial NO pulsa Aceptar.
+        seleccionar_cliente_exacto(dlg, rfc=rfc, razon_social=razon_social, calle=calle)
         exigir_cliente_facturable(self, dlg)
         self._click_rel(dlg,self.BUSCAR["aceptar"])
         time.sleep(1.0)
@@ -1630,7 +1632,8 @@ class PolarisBot:
             f"{rinv.width}x{rinv.height} en ({rinv.left},{rinv.top})."
         )
         self._activate(inv)
-        self.log("Cliente aceptado. Polaris cargó automáticamente Nombre/RFC/CP/Régimen; el bot no toca esos campos.")
+        self.log("Cliente elegido tras comparar RFC, razón social y calle con la constancia. "
+                 "Polaris cargó los datos fiscales; el bot no los sobrescribe.")
         self._pasos_factura['cliente']=True
         self.diag.evento('FACTURACION: cliente','OK','Cliente seleccionado por RFC',{'rfc_capturado':True})
         return inv
@@ -2485,7 +2488,8 @@ class PolarisBot:
             self.etapa_alerta="FACTURACION: buscar cliente por RFC"
             from .cliente_facturacion import exigir_cliente_facturable
             try:
-                inv=self._select_client(inv,sol.rfc)
+                inv=self._select_client(inv,sol.rfc, getattr(sol,'razon_social',''),
+                                        getattr(sol,'calle_constancia',''))
             except Exception:
                 # Algunas versiones bloquean/activan la ventana antes de volver.
                 exigir_cliente_facturable(self,inv)
