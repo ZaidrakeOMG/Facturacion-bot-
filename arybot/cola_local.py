@@ -5,6 +5,7 @@ from pathlib import Path
 import json
 import sqlite3
 import time
+import unicodedata
 import uuid
 from .cola_modelo import BLOQUEAN_CLAVE, BLOQUEAN_CLAVE_ALTA, ESTADOS_REVISION, SolicitudDuplicada, ColaError
 
@@ -205,6 +206,63 @@ class ColaLocal:
                     if not pending:
                         self._set(c,'pausada','0')
                         self._set(c,'motivo_pausa','')
+
+    @staticmethod
+    def _revision_protegida_en_lote(row, bloqueo):
+        """Nunca cerrar en lote un resultado fiscal/alta incierto o recuperado de un cierre."""
+        if row['id'] == bloqueo or row['tipo'] not in ('FACTURA', 'ALTA'):
+            return True
+        motivo = row['motivo'] or ''
+        if not motivo.strip():
+            return True
+        normal = unicodedata.normalize('NFKD', motivo)
+        normal = ''.join(ch for ch in normal if not unicodedata.combining(ch)).casefold()
+        # Defensa adicional para registros antiguos, incluso si falta el bloqueo persistido.
+        señales = ('inciert', 'posible cfdi', 'posible alta', 'posible factura',
+                   'timbrad', 'aceptar solicitado', 'guardado sin confirmar',
+                   'no se confirmo el numero de cliente', 'correo pendiente',
+                   'la aplicacion se cerro', 'operacion o captura pendiente',
+                   'verifique polaris antes de reintentar', 'revisar enviados')
+        return any(señal in normal for señal in señales)
+
+    @classmethod
+    def _contar_revisiones_en_lote(cls, rows, bloqueo):
+        protegidas = sum(cls._revision_protegida_en_lote(r, bloqueo) for r in rows)
+        return {'liberables': len(rows)-protegidas, 'protegidas': protegidas,
+                'total_revision': len(rows)}
+
+    def resumen_liberacion_masiva(self):
+        """Solo lectura; ninguna interacción con Polaris ni con la cola de avisos."""
+        with self.connect() as c:
+            bloqueo = c.execute("SELECT valor FROM ajustes WHERE clave='bloqueo'").fetchone()
+            rows = c.execute("SELECT id,tipo,motivo FROM trabajos WHERE estado='REVISION_REQUERIDA'").fetchall()
+            result = self._contar_revisiones_en_lote(rows, bloqueo[0] if bloqueo else '')
+            result['ejecutando'] = bool(c.execute("SELECT 1 FROM trabajos WHERE estado='EJECUTANDO' LIMIT 1").fetchone())
+            return result
+
+    def liberar_revisiones_masivas(self):
+        """Cierre transaccional de revisiones no bloqueadas. Nunca reenvía ni factura.
+
+        No libera PREPARADA_ALTA/PREPARADA_FACTURA, ACEPTAR_ALTA ni un resultado
+        incierto. No cambia la pausa manual ni retira trabajos EN_COLA.
+        """
+        with self.connect(True) as c:
+            if c.execute("SELECT 1 FROM trabajos WHERE estado='EJECUTANDO' LIMIT 1").fetchone():
+                raise ColaError('Hay una operación ejecutándose. Espere a que termine antes de liberar revisiones.')
+            bloqueo = c.execute("SELECT valor FROM ajustes WHERE clave='bloqueo'").fetchone()
+            bloqueo = bloqueo[0] if bloqueo else ''
+            rows = c.execute("SELECT id,tipo,motivo FROM trabajos WHERE estado='REVISION_REQUERIDA'").fetchall()
+            result = self._contar_revisiones_en_lote(rows, bloqueo)
+            now = time.time()
+            for row in rows:
+                if self._revision_protegida_en_lote(row, bloqueo):
+                    continue
+                c.execute(
+                    "UPDATE trabajos SET estado='REVISION_CERRADA', actualizado=?, "
+                    "motivo=? WHERE id=? AND estado='REVISION_REQUERIDA'",
+                    (now, row['motivo'] + ' | Revisión cerrada en lote con confirmación del operador.',
+                     row['id']))
+            return result
 
     def authorize_alta(self,ident):
         with self.connect(True) as c:
