@@ -5,7 +5,8 @@ import re
 from dataclasses import fields
 from .parser import Solicitud, normalize_station, normalize_payment, normalize_cfdi_usage, normalize_ticket_date, _field, _plain
 from .cliente_model import AltaCliente
-from .cliente_facturacion import MENSAJE_SIN_REGIMEN, ACCION_SIN_REGIMEN
+from .cliente_facturacion import (MENSAJE_SIN_REGIMEN, ACCION_SIN_REGIMEN,
+                                 MENSAJE_NO_REGISTRADO, ACCION_NO_REGISTRADO)
 from .factura_final import validar_correo
 
 VERSION = '3.4.0'
@@ -158,6 +159,8 @@ def texto_cliente(job, event, opts, *, eta=None, reason=''):
                   'Todavía no se considera registrado al cliente. Le avisaremos cuando se confirme el alta.']
     elif event == 'cliente_sin_regimen' and job['tipo']=='FACTURA':
         lines += [MENSAJE_SIN_REGIMEN, ACCION_SIN_REGIMEN]
+    elif event == 'cliente_no_registrado' and job['tipo']=='FACTURA':
+        lines += [MENSAJE_NO_REGISTRADO, ACCION_NO_REGISTRADO]
     elif event == 'faltantes':
         lines += ['Para continuar con su solicitud necesitamos corregir o completar estos datos:', reason,
                   'Envíe una nueva solicitud completa con todos los campos. No se inició la operación en Polaris.']

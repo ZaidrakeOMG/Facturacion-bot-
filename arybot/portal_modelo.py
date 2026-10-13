@@ -4,7 +4,8 @@ No conecta a Polaris ni a servicios fiscales. No captura datos de tarjeta.
 """
 from __future__ import annotations
 from .cliente_model import AltaCliente
-from .cliente_facturacion import CODIGO_SIN_REGIMEN, MENSAJE_SIN_REGIMEN
+from .cliente_facturacion import (CODIGO_SIN_REGIMEN, MENSAJE_SIN_REGIMEN,
+                                 CODIGO_NO_REGISTRADO, MENSAJE_NO_REGISTRADO)
 from .parser import STATIONS, USO_CFDI, Solicitud
 from .cola_modelo import datos_alta, factura_datos, tracking
 
@@ -89,8 +90,9 @@ def estado_publico(job):
     """No devuelve RFC, correo, idCIF, pantallas ni mensajes internos de Polaris."""
     state = job['estado']
     codigo = (job.get('resultado') or {}).get('codigo_cliente', '')
-    sin_regimen = (job['tipo'] == 'FACTURA' and state == 'REVISION_REQUERIDA'
-                   and codigo == CODIGO_SIN_REGIMEN)
+    es_revision_cliente = (job['tipo'] == 'FACTURA' and state in ('REVISION_REQUERIDA', 'REVISION_CERRADA'))
+    sin_regimen = es_revision_cliente and codigo == CODIGO_SIN_REGIMEN
+    no_registrado = es_revision_cliente and codigo == CODIGO_NO_REGISTRADO
     messages = {
         'EN_COLA': 'Solicitud recibida y registrada en la cola de atención.',
         'EJECUTANDO': 'El bot está atendiendo tu solicitud.',
@@ -110,6 +112,8 @@ def estado_publico(job):
         'referencia': tracking(job['id']), 'tipo': job['tipo'], 'estado': state,
         'modo_seguro': bool(job['seguro']),
         'mensaje': (MENSAJE_SIN_REGIMEN if sin_regimen else
+                    MENSAJE_NO_REGISTRADO if no_registrado else
                     messages.get(state, 'Consulta el resultado con el área de facturación.')),
-        'codigo_cliente': CODIGO_SIN_REGIMEN if sin_regimen else '',
+        'codigo_cliente': (CODIGO_SIN_REGIMEN if sin_regimen else
+                           CODIGO_NO_REGISTRADO if no_registrado else ''),
     }
