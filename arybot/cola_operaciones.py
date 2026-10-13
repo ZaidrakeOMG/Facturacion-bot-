@@ -9,6 +9,7 @@ from .cola_local import ColaLocal
 from .cola_modelo import (ajustes_cola,datos_alta,factura_datos,como_solicitud,clave_trabajo,
                          ColaError,ESTADOS_REVISION)
 from .cliente_model import AltaCliente
+from .cliente_facturacion import ClienteSinRegimenError, CODIGO_SIN_REGIMEN
 from .avisos_cliente import AvisosCliente
 
 class ColaOperaciones:
@@ -157,12 +158,18 @@ class ColaOperaciones:
                     else:raise ColaError('Resultado de facturación no reconocido. No se repite el intento.')
                 elif kind=='ALTA':
                     if self.alta is None:raise ColaError('El módulo de alta no está disponible.')
-                    sol=AltaCliente.crear(data['estacion'],data['rfc'],data['idcif'],data['telefono'],data['correo'])
+                    sol=AltaCliente.crear(data['estacion'],data['rfc'],data['idcif'],data.get('telefono',''),data['correo'])
                     if job['accion']=='aceptar':
                         if self.cfg.get('app',{}).get('modo_prueba',True) is not False:raise ColaError('MODO SEGURO activo: no se pulsa Aceptar.')
                         result=self.alta.aceptar(sol,autorizado=True,inexistencia_revisada=True)
                         if not isinstance(result,dict) or not result.get('numero_cliente'):raise ColaError('No se confirmó el número de cliente. Revise Polaris; no se repite.')
                         self.store.finish(ident,'ALTA_CONFIRMADA',result=result,reason='Número de cliente confirmado en pantalla.')
+                        self._notice(self.store.get(ident),'completada')
+                    elif not safe:
+                        result=self.alta.registrar(sol,autorizado=True)
+                        if not isinstance(result,dict) or not result.get('numero_cliente'):
+                            raise ColaError('No se confirmó el número de cliente. Revise Polaris; no se repite.')
+                        self.store.finish(ident,'ALTA_CONFIRMADA',result=result,reason='Alta registrada y número de cliente confirmado en pantalla.')
                         self._notice(self.store.get(ident),'completada')
                     else:
                         cerrar_sesion=False
@@ -194,12 +201,18 @@ class ColaOperaciones:
                     return True
                 step=getattr(self.polaris,'etapa_alerta','Operación de pantalla')
                 if not isinstance(step,str):step='Operación de pantalla'
+                sin_regimen=(kind=='FACTURA' and isinstance(exc,ClienteSinRegimenError)
+                             and step.startswith('FACTURACION:'))
+                alta_incierta=(kind=='ALTA' and step.startswith('ALTA: Aceptar solicitado'))
                 # Después del Aceptar de TIMBRADO, un error puede significar
                 # que el CFDI existe aunque todavía no se haya enviado correo.
                 # NO cerrar/terminar Polaris ni abrir otro cliente sobre un envío vivo.
                 fiscal_incierto=(kind=='FACTURA' and
                                  step.startswith(('TIMBRADO:', 'ENVIO_CORREO:')))
-                if fiscal_incierto:
+                if alta_incierta:
+                    cerrar_sesion=False
+                    reason=(str(exc)+' | Posible alta guardada. Revise el número de cliente en Polaris antes de liberar la revisión; no repita el registro.')
+                elif fiscal_incierto:
                     cerrar_sesion=False
                     reason=(str(exc)+' | Posible CFDI timbrado o correo pendiente. '
                             'Revisa Polaris y el folio antes de liberar esta revisión.')
@@ -207,15 +220,20 @@ class ColaOperaciones:
                     motivo_cierre='ERROR '+kind
                     reason=str(exc)
                 self.store.finish(ident,'REVISION_REQUERIDA',
-                                  hold=fiscal_incierto,reason=reason)
-                self._notice(self.store.get(ident),'revision')
+                                  hold=fiscal_incierto or alta_incierta,reason=reason,
+                                  result={'codigo_cliente':CODIGO_SIN_REGIMEN} if sin_regimen else {})
+                self._notice(self.store.get(ident),'cliente_sin_regimen' if sin_regimen else 'revision')
                 if self.alertas:
                     category='ALTA_CLIENTE' if kind=='ALTA' else ('ENVIO_FACTURA' if step.startswith('ENVIO_CORREO') else 'FACTURACION')
                     context={'origen':job['origen'],'id_solicitud':ident,'estacion':data.get('estacion',''),
                              'rfc':data.get('rfc',''),'folio':data.get('ticket',''),'correo_cliente':job['correo']}
                     try:self.alertas.reportar(category,step,exc,contexto=context,modo_seguro=safe,bot=self.polaris)
                     except Exception:self.log('No se pudo preparar la alerta interna; revise la solicitud.')
-                if fiscal_incierto:
+                if alta_incierta:
+                    self.log('Alta con guardado incierto: Polaris sigue abierto y la cola espera revisión; no se repite Aceptar.')
+                elif sin_regimen:
+                    self.log(str(exc)+' Se avisó al cliente; las demás solicitudes pueden continuar.')
+                elif fiscal_incierto:
                     self.log('Resultado fiscal incierto: Polaris sigue abierto y la cola '
                              'queda pausada hasta liberar esta revisión; no se repetirá timbrado.')
                 else:
@@ -228,6 +246,8 @@ class ColaOperaciones:
                 if cerrar_sesion and self.polaris:
                     try:
                         self.polaris.cerrar_polaris_tras_solicitud(motivo_cierre)
+                        if job and job['tipo']=='ALTA' and self.alta is not None:
+                            self.alta.liberar()
                     except Exception as close_exc:
                         self.log('No se pudo cerrar Polaris al terminar la solicitud: '+str(close_exc))
             finally:

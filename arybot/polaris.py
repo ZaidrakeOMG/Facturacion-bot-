@@ -2476,7 +2476,14 @@ class PolarisBot:
             inv=self._open_cash_invoice(main)
 
             self.etapa_alerta="FACTURACION: buscar cliente por RFC"
-            inv=self._select_client(inv,sol.rfc)
+            from .cliente_facturacion import exigir_cliente_facturable
+            try:
+                inv=self._select_client(inv,sol.rfc)
+            except Exception:
+                # Algunas versiones bloquean/activan la ventana antes de volver.
+                exigir_cliente_facturable(self,inv)
+                raise
+            exigir_cliente_facturable(self,inv)
 
             self.etapa_alerta="FACTURACION: forma de pago y Uso CFDI"
             payment_target=self._set_payment(inv,sol.forma_pago)

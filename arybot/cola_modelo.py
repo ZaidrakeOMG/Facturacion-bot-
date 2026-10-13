@@ -5,6 +5,7 @@ import re
 from dataclasses import fields
 from .parser import Solicitud, normalize_station, normalize_payment, normalize_cfdi_usage, normalize_ticket_date, _field, _plain
 from .cliente_model import AltaCliente
+from .cliente_facturacion import MENSAJE_SIN_REGIMEN, ACCION_SIN_REGIMEN
 from .factura_final import validar_correo
 
 VERSION = '3.4.0'
@@ -132,7 +133,7 @@ def texto_cliente(job, event, opts, *, eta=None, reason=''):
             lines += ['Al completar la facturación se solicitará el envío de su XML y PDF al correo indicado.']
         else:
             lines += ['Le avisaremos por correo cuando el registro quede confirmado. '
-                      'El alta requiere revisión del personal antes de guardar.']
+                      'En modo real el bot valida los datos y solicita guardar el registro; si surge un aviso, el personal debe revisarlo.']
         lines += ['En caso de alguna falla, el área de facturación se comunicará con usted al correo proporcionado.',
                   'No es necesario volver a enviar la misma solicitud.']
     elif event == 'procesando':
@@ -155,6 +156,8 @@ def texto_cliente(job, event, opts, *, eta=None, reason=''):
     elif event == 'revision_alta':
         lines += ['Sus datos fueron preparados y están pendientes de revisión del personal.',
                   'Todavía no se considera registrado al cliente. Le avisaremos cuando se confirme el alta.']
+    elif event == 'cliente_sin_regimen' and job['tipo']=='FACTURA':
+        lines += [MENSAJE_SIN_REGIMEN, ACCION_SIN_REGIMEN]
     elif event == 'faltantes':
         lines += ['Para continuar con su solicitud necesitamos corregir o completar estos datos:', reason,
                   'Envíe una nueva solicitud completa con todos los campos. No se inició la operación en Polaris.']
