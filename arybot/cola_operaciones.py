@@ -276,5 +276,25 @@ class ColaOperaciones:
         if job['tipo']=='ALTA' and self.alta is not None:self.alta.liberar()
         self.store.release(ident);self._changed(ident)
 
+    def resumen_liberacion_masiva(self):
+        return self.store.resumen_liberacion_masiva()
+
+    def liberar_revisiones_masivas(self, *, confirmado=False):
+        if confirmado is not True:
+            raise ColaError('Confirme primero que revisó en Polaris las solicitudes que se cerrarán.')
+        if self.ocupada:
+            raise ColaError('Hay una operación en curso. Espere a que termine.')
+        result = self.store.liberar_revisiones_masivas()
+        self.log('Cierre masivo de revisiones: '
+                 + str(result['liberables']) + ' cerrada(s), '
+                 + str(result['protegidas']) + ' protegida(s). '
+                 'No se volvió a facturar, registrar ni enviar correos.')
+        try:
+            self.on_event('cola', '')
+        except Exception:
+            self.log('No se pudo actualizar la vista; los cambios quedaron guardados.')
+        self._wake.set()
+        return result
+
     def cancelar(self,ident):
         self.store.cancel(ident);self._notice(self.store.get(ident),'cancelada');self._changed(ident)

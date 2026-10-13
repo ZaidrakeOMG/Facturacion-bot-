@@ -317,3 +317,95 @@ def test_tres_solicitudes_se_procesan_una_por_una(tmp_path):
     assert bot.cerrar_polaris_tras_solicitud.call_count == 3
     assert not q.store.status()['pausada']
     assert not q.ejecutar_una()
+
+
+# Liberación de revisiones históricas: nunca repetir un CFDI, alta ni correo.
+def _pendiente_de_revision_en_lote(store, folio, motivo, *, tipo='FACTURA', estado='REVISION_REQUERIDA'):
+    row, _ = store.enqueue(tipo, {'ticket': folio}, source='Portal web',
+                           correo='cliente@example.com', safe=False,
+                           state=estado, reason=motivo)
+    return row
+
+
+def test_liberacion_masiva_cierra_solo_revisiones_no_inciertas(tmp_path):
+    store = ColaLocal(tmp_path)
+    ok1 = _pendiente_de_revision_en_lote(store, '1', 'Error al abrir ventana.')
+    ok2 = _pendiente_de_revision_en_lote(store, '2', 'Cliente sin régimen fiscal.')
+    no1 = _pendiente_de_revision_en_lote(store, '3',
+                                        'Posible CFDI timbrado o correo pendiente.')
+    no2 = _pendiente_de_revision_en_lote(store, '4',
+                                        'La aplicación se cerró con una operación o captura pendiente.')
+    no3 = _pendiente_de_revision_en_lote(store, '5',
+                                        'Posible alta guardada.', tipo='ALTA')
+    preparado = _pendiente_de_revision_en_lote(store, '6', 'Captura preparada.',
+                                               estado='PREPARADA_FACTURA')
+    store.pause('Pausada voluntariamente por el operador')
+    prev = store.resumen_liberacion_masiva()
+    assert prev['liberables'] == 2
+    assert prev['protegidas'] == 3
+    assert not prev['ejecutando']
+    result = store.liberar_revisiones_masivas()
+    assert result == {k: prev[k] for k in ('liberables', 'protegidas', 'total_revision')}
+    for j in (ok1, ok2):
+        item = store.get(j['id'])
+        assert item['estado'] == 'REVISION_CERRADA'
+        assert 'cerrada en lote' in item['motivo']
+    for j in (no1, no2, no3):
+        assert store.get(j['id'])['estado'] == 'REVISION_REQUERIDA'
+    assert store.get(preparado['id'])['estado'] == 'PREPARADA_FACTURA'
+    assert store.status()['pausada']
+    assert store.status()['motivo'] == 'Pausada voluntariamente por el operador'
+    assert store.liberar_revisiones_masivas()['liberables'] == 0
+
+
+def test_liberacion_masiva_respeta_bloqueo_aunque_el_motivo_sea_generico(tmp_path):
+    store = ColaLocal(tmp_path)
+    bloqueado = _pendiente_de_revision_en_lote(store, 'A', 'Error genérico.')
+    libre = _pendiente_de_revision_en_lote(store, 'B', 'Falló búsqueda de RFC.')
+    with store.connect(True) as c:
+        store._set(c, 'bloqueo', bloqueado['id'])
+        store._set(c, 'pausada', '1')
+    result = store.liberar_revisiones_masivas()
+    assert result['liberables'] == 1
+    assert result['protegidas'] == 1
+    assert store.get(bloqueado['id'])['estado'] == 'REVISION_REQUERIDA'
+    assert store.get(libre['id'])['estado'] == 'REVISION_CERRADA'
+    assert store.status()['bloqueo'] == bloqueado['id']
+    assert store.status()['pausada']
+    with pytest.raises(ColaError):
+        store.resume()
+
+
+def test_liberacion_masiva_no_funciona_durante_polaris(tmp_path):
+    store = ColaLocal(tmp_path)
+    previa = _pendiente_de_revision_en_lote(store, 'A', 'Fallo antes del folio.')
+    nuevo, _ = store.enqueue('FACTURA', {'ticket': 'B'}, source='Portal web',
+                              correo='cliente@example.com', safe=False)
+    store.resume()
+    assert store.claim()['id'] == nuevo['id']
+    assert store.resumen_liberacion_masiva()['ejecutando']
+    with pytest.raises(ColaError, match='ejecutándose'):
+        store.liberar_revisiones_masivas()
+    assert store.get(previa['id'])['estado'] == 'REVISION_REQUERIDA'
+    assert store.get(nuevo['id'])['estado'] == 'EJECUTANDO'
+
+
+def test_coordinador_liberacion_masiva_exige_confirmacion_y_no_toca_polaris(tmp_path):
+    from arybot.cola_operaciones import ColaOperaciones
+    from arybot.cola_modelo import DEFAULTS
+    cfg = {'app': {'modo_prueba': False}, 'gmail': {},
+           'ocr': {}, 'polaris': {}, 'cola': dict(DEFAULTS)}
+    bot = Mock()
+    avisos = Mock()
+    ui_event = Mock()
+    q = ColaOperaciones(tmp_path, cfg, bot, Mock(), avisos=avisos, on_event=ui_event)
+    job = _pendiente_de_revision_en_lote(q.store, 'A', 'Error al buscar cliente')
+    with pytest.raises(ColaError, match='Confirme'):
+        q.liberar_revisiones_masivas()
+    assert q.store.get(job['id'])['estado'] == 'REVISION_REQUERIDA'
+    result = q.liberar_revisiones_masivas(confirmado=True)
+    assert result['liberables'] == 1
+    assert q.store.get(job['id'])['estado'] == 'REVISION_CERRADA'
+    bot.assert_not_called()
+    avisos.assert_not_called()
+    ui_event.assert_called_with('cola', '')
