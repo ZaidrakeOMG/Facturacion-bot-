@@ -159,7 +159,9 @@ class ColaOperaciones:
                     else:raise ColaError('Resultado de facturación no reconocido. No se repite el intento.')
                 elif kind=='ALTA':
                     if self.alta is None:raise ColaError('El módulo de alta no está disponible.')
-                    sol=AltaCliente.crear(data['estacion'],data['rfc'],data['idcif'],data.get('telefono',''),data['correo'])
+                    sol=AltaCliente.crear(data['estacion'],data['rfc'],data['idcif'],data.get('telefono',''),data['correo'],
+                                           razon_social=data.get('razon_social',''),
+                                           calle_constancia=data.get('calle_constancia',''))
                     if job['accion']=='aceptar':
                         if self.cfg.get('app',{}).get('modo_prueba',True) is not False:raise ColaError('MODO SEGURO activo: no se pulsa Aceptar.')
                         result=self.alta.aceptar(sol,autorizado=True,inexistencia_revisada=True)
