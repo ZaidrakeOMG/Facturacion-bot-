@@ -224,7 +224,10 @@ class ColaOperaciones:
                     reason=str(exc)
                 self.store.finish(ident,'REVISION_REQUERIDA',
                                   hold=fiscal_incierto or alta_incierta,reason=reason,
-                                  result={'codigo_cliente':CODIGO_SIN_REGIMEN} if sin_regimen else {})
+                                  result={'codigo_cliente': (CODIGO_SIN_REGIMEN if sin_regimen
+                                                            else CODIGO_NO_REGISTRADO)}
+                                  if (sin_regimen or no_registrado) and not (fiscal_incierto or alta_incierta)
+                                  else {})
                 self._notice(self.store.get(ident), 'cliente_sin_regimen' if sin_regimen
                              else 'cliente_no_registrado' if no_registrado else 'revision')
                 if self.alertas:
