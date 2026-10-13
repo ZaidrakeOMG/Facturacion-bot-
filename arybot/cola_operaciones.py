@@ -9,7 +9,8 @@ from .cola_local import ColaLocal
 from .cola_modelo import (ajustes_cola,datos_alta,factura_datos,como_solicitud,clave_trabajo,
                          ColaError,ESTADOS_REVISION)
 from .cliente_model import AltaCliente
-from .cliente_facturacion import ClienteSinRegimenError, CODIGO_SIN_REGIMEN
+from .cliente_facturacion import (ClienteSinRegimenError, ClienteNoRegistradoError,
+                                 CODIGO_SIN_REGIMEN, CODIGO_NO_REGISTRADO)
 from .avisos_cliente import AvisosCliente
 
 class ColaOperaciones:
@@ -203,6 +204,8 @@ class ColaOperaciones:
                 if not isinstance(step,str):step='Operación de pantalla'
                 sin_regimen=(kind=='FACTURA' and isinstance(exc,ClienteSinRegimenError)
                              and step.startswith('FACTURACION:'))
+                no_registrado=(kind=='FACTURA' and isinstance(exc,ClienteNoRegistradoError)
+                               and step.startswith('FACTURACION:'))
                 alta_incierta=(kind=='ALTA' and step.startswith('ALTA: Aceptar solicitado'))
                 # Después del Aceptar de TIMBRADO, un error puede significar
                 # que el CFDI existe aunque todavía no se haya enviado correo.
@@ -222,7 +225,8 @@ class ColaOperaciones:
                 self.store.finish(ident,'REVISION_REQUERIDA',
                                   hold=fiscal_incierto or alta_incierta,reason=reason,
                                   result={'codigo_cliente':CODIGO_SIN_REGIMEN} if sin_regimen else {})
-                self._notice(self.store.get(ident),'cliente_sin_regimen' if sin_regimen else 'revision')
+                self._notice(self.store.get(ident), 'cliente_sin_regimen' if sin_regimen
+                             else 'cliente_no_registrado' if no_registrado else 'revision')
                 if self.alertas:
                     category='ALTA_CLIENTE' if kind=='ALTA' else ('ENVIO_FACTURA' if step.startswith('ENVIO_CORREO') else 'FACTURACION')
                     context={'origen':job['origen'],'id_solicitud':ident,'estacion':data.get('estacion',''),
@@ -231,7 +235,7 @@ class ColaOperaciones:
                     except Exception:self.log('No se pudo preparar la alerta interna; revise la solicitud.')
                 if alta_incierta:
                     self.log('Alta con guardado incierto: Polaris sigue abierto y la cola espera revisión; no se repite Aceptar.')
-                elif sin_regimen:
+                elif sin_regimen or no_registrado:
                     self.log(str(exc)+' Se avisó al cliente; las demás solicitudes pueden continuar.')
                 elif fiscal_incierto:
                     self.log('Resultado fiscal incierto: Polaris sigue abierto y la cola '
