@@ -19,6 +19,7 @@ from arybot.cola_modelo import DEFAULTS, texto_cliente, leer_alta
 from arybot.cola_operaciones import ColaOperaciones
 from arybot.parser import Solicitud
 from arybot.portal_modelo import validar_entrada, estado_publico, EntradaPortalError
+from arybot.constancia_fiscal import IdentidadFiscal
 
 AVISO = ('El cliente no tiene definido el régimen fiscal por lo que no se puede '
          'facturar vaya al módulo de clientes de efectivo para asignarle un régimen.')
@@ -44,13 +45,15 @@ def test_telefono_valido_conserva_digitos_y_ceros():
 
 
 def entrada():
-    return dict(tipo='ALTA', estacion='ARY V', rfc='AAA010101AAA', idcif='00123456789',
+    return dict(tipo='ALTA', estacion='ARY V', constancia_pdf='BASE64-PDF-MOCK',
                 correo='cliente@example.com', correo_confirmacion='cliente@example.com',
                 confirmado=True, sitio_web='')
 
 
 @pytest.mark.parametrize('omitido', [True, False])
-def test_portal_acepta_telefono_omitido_o_vacio(omitido):
+def test_portal_acepta_telefono_omitido_o_vacio(omitido, monkeypatch):
+    monkeypatch.setattr('arybot.portal_modelo.leer_constancia_pdf_base64',
+        lambda *a, **k: IdentidadFiscal('AAA010101AAA','EMPRESA SA DE CV','CALZADA LEGARIA','00123456789'))
     body=entrada()
     if not omitido:
         body['telefono']=''
@@ -59,7 +62,9 @@ def test_portal_acepta_telefono_omitido_o_vacio(omitido):
 
 
 @pytest.mark.parametrize('valor', [None, 1234567890, [], '--- ---'])
-def test_portal_no_convierte_telefono_invalido_en_omision(valor):
+def test_portal_no_convierte_telefono_invalido_en_omision(valor, monkeypatch):
+    monkeypatch.setattr('arybot.portal_modelo.leer_constancia_pdf_base64',
+        lambda *a, **k: IdentidadFiscal('AAA010101AAA','EMPRESA SA DE CV','CALZADA LEGARIA','00123456789'))
     with pytest.raises(EntradaPortalError):
         validar_entrada(dict(entrada(), telefono=valor))
 
@@ -359,7 +364,7 @@ def test_formularios_marcan_solo_telefono_opcional(folder):
     parser=Inputs();parser.feed(text)
     assert 'required' not in parser.inputs['alta-telefono']
     assert 'Teléfono (opcional)' in text
-    for name in ('alta-rfc','alta-idcif','alta-correo','alta-confirmacion'):
+    for name in ('alta-constancia','factura-constancia','alta-correo','alta-confirmacion'):
         assert 'required' in parser.inputs[name]
     assert 'autorizo registrar mi alta' in text
 
