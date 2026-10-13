@@ -3,6 +3,7 @@ from __future__ import annotations
 from base64 import b64encode
 from io import BytesIO
 from pathlib import Path
+from datetime import date
 from unittest.mock import Mock
 import pytest
 
@@ -41,7 +42,7 @@ def cuerpo(*, tipo='FACTURA', pdf=None):
         'sitio_web':'','confirmado':True,
     }
     if tipo=='FACTURA':
-        values.update(ticket='123',fecha_ticket='2026-10-13',
+        values.update(ticket='123',fecha_ticket=date.today().isoformat(),
                       forma_pago='EFECTIVO',uso_cfdi='G03')
     return values
 
