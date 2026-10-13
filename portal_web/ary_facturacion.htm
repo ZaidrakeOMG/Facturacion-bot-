@@ -2754,23 +2754,7 @@ input[type="date"].control::-webkit-calendar-picker-indicator {
 
          </div>
 
-         <div class="field">
-
-          <label for="factura-rfc">
-
-           RFC del cliente
-
-           <span class="required">
-
-            *
-
-           </span>
-
-          </label>
-
-          <input autocapitalize="characters" class="control rfc" id="factura-rfc" maxlength="13" minlength="12" name="rfc" placeholder="RFC de 12 o 13 caracteres" required="" spellcheck="false"/>
-
-         </div>
+         <div class="field full"><label for="factura-constancia">Constancia de situación fiscal (PDF)<span class="required">*</span></label><input class="control" id="factura-constancia" name="constancia_archivo" type="file" accept=".pdf,application/pdf" required><small>Obligatoria: PDF digital original del SAT (máx. 2 MB). Verificaremos RFC, razón social y calle antes de elegir cliente en Polaris.</small></div>
 
          <div class="field">
 
@@ -2948,7 +2932,7 @@ input[type="date"].control::-webkit-calendar-picker-indicator {
 
          <span>
 
-          Revisé la estación, el RFC, el ticket, la fecha del ticket, la forma de pago, el uso de CFDI y el correo. Confirmo que corresponden a mi solicitud.
+          Revisé la estación, mi constancia PDF y el ticket, la fecha del ticket, la forma de pago, el uso de CFDI y el correo. Confirmo que corresponden a mi solicitud.
 
          </span>
 
@@ -3002,7 +2986,7 @@ input[type="date"].control::-webkit-calendar-picker-indicator {
 
         <p>
 
-         RFC, idCIF y correo electrónico. El teléfono es opcional.
+         Adjunta tu constancia fiscal PDF y correo electrónico. El teléfono es opcional.
 
         </p>
 
@@ -3059,47 +3043,9 @@ input[type="date"].control::-webkit-calendar-picker-indicator {
 
          </div>
 
-         <div class="field">
+         <div class="field full"><label for="alta-constancia">Constancia de situación fiscal (PDF)<span class="required">*</span></label><input class="control" id="alta-constancia" name="constancia_archivo" type="file" accept=".pdf,application/pdf" required><small>Obligatoria: PDF digital original del SAT (máx. 2 MB) que muestre el idCIF de 11 dígitos. RFC y razón social se leen del archivo.</small></div>
 
-          <label for="alta-rfc">
-
-           RFC
-
-           <span class="required">
-
-            *
-
-           </span>
-
-          </label>
-
-          <input autocapitalize="characters" class="control rfc" id="alta-rfc" maxlength="13" minlength="12" name="rfc" placeholder="RFC de 12 o 13 caracteres" required="" spellcheck="false"/>
-
-         </div>
-
-         <div class="field">
-
-          <label for="alta-idcif">
-
-           idCIF
-
-           <span class="required">
-
-            *
-
-           </span>
-
-          </label>
-
-          <input class="control" id="alta-idcif" inputmode="numeric" maxlength="11" minlength="11" name="idcif" pattern="[0-9]{11}" placeholder="11 dígitos" required=""/>
-
-          <small>
-
-           Captura los 11 dígitos de tu idCIF, sin espacios.
-
-          </small>
-
-         </div>
+         
 
          <div class="field full">
 
@@ -3179,7 +3125,7 @@ input[type="date"].control::-webkit-calendar-picker-indicator {
 
          <span>
 
-          Revisé mi RFC, idCIF y correo (teléfono opcional), y autorizo registrar mi alta de cliente en la estación seleccionada.
+          Adjunté mi constancia fiscal PDF, revisé mi correo (teléfono opcional), y autorizo registrar mi alta de cliente en la estación seleccionada.
 
          </span>
 
@@ -3876,7 +3822,7 @@ input[type="date"].control::-webkit-calendar-picker-indicator {
 
 
 
-      reviewItem('RFC',values.rfc),
+      reviewItem('Constancia fiscal','PDF adjunto: el bot verificará RFC, razón social y calle'),
 
 
 
@@ -4381,6 +4327,25 @@ input[type="date"].control::-webkit-calendar-picker-indicator {
 
   // ============================================================
 
+
+  const MAX_CONSTANCIA=2*1024*1024;
+  function leerConstancia(file) {
+    if(!file || !/\.pdf$/i.test(file.name||'') || file.size<200 || file.size>MAX_CONSTANCIA) {
+      throw new Error('Adjunta la Constancia de Situación Fiscal original en PDF (máximo 2 MB).');
+    }
+    return new Promise((resolve,reject)=>{
+      const reader=new FileReader();
+      reader.onerror=()=>reject(new Error('No pude leer el archivo PDF de la constancia.'));
+      reader.onload=()=>{
+        const content=String(reader.result||'');
+        const mark='base64,';
+        const i=content.indexOf(mark);
+        if(i<0) { reject(new Error('La constancia PDF no se pudo codificar.')); return; }
+        resolve(content.slice(i+mark.length));
+      };
+      reader.readAsDataURL(file);
+    });
+  }
   async function send(kind, event) {
 
 
