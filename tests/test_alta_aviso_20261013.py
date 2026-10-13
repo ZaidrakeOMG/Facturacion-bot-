@@ -12,7 +12,8 @@ from arybot.alta_clientes import AltaClientes, DiarioAltas
 from arybot.cliente_model import AltaCliente, AltaClienteError
 from arybot.cliente_facturacion import (
     ClienteSinRegimenError, CODIGO_SIN_REGIMEN, MENSAJE_SIN_REGIMEN,
-    es_aviso_sin_regimen, exigir_cliente_facturable,
+    ClienteNoRegistradoError, CODIGO_NO_REGISTRADO, MENSAJE_NO_REGISTRADO,
+    es_aviso_sin_regimen, es_aviso_cliente_no_registrado, exigir_cliente_facturable,
 )
 from arybot.cola_modelo import DEFAULTS, texto_cliente, leer_alta
 from arybot.cola_operaciones import ColaOperaciones
@@ -361,3 +362,97 @@ def test_formularios_marcan_solo_telefono_opcional(folder):
     for name in ('alta-rfc','alta-idcif','alta-correo','alta-confirmacion'):
         assert 'required' in parser.inputs[name]
     assert 'autorizo registrar mi alta' in text
+
+
+@pytest.mark.parametrize('aviso', [
+    'El RFC no existe',
+    'El R.F.C. no se encuentra registrado.',
+    'El cliente no está registrado.',
+    'No se encontraron clientes con ese RFC.',
+    'No se encontraron registros.',
+    'No se encontraron coincidencias.',
+])
+def test_aviso_confirmado_de_cliente_no_registrado(aviso):
+    assert es_aviso_cliente_no_registrado(aviso)
+
+
+@pytest.mark.parametrize('aviso', [
+    '', 'Error SQL', 'No se pudo abrir búsqueda de clientes',
+    'El RFC tiene un formato inválido', 'El cliente no tiene definido el régimen fiscal',
+    'RFC mal escrito', 'Error al obtener RFC', 'No fue posible leer los datos',
+    'No se encontró la ventana de Polaris',
+])
+def test_error_tecnico_o_rfc_malformado_no_implica_cliente_inexistente(aviso):
+    assert not es_aviso_cliente_no_registrado(aviso)
+
+
+@pytest.mark.parametrize('clase,texto,mismo,detecta', [
+    ('#32770', 'No se encontraron clientes con ese RFC', True, True),
+    ('TMessageForm', 'El RFC no existe', True, True),
+    ('#32770', 'El RFC no existe', False, False),
+    ('Edit', 'El RFC no existe', True, False),
+    ('#32770', 'Error de red', True, False),
+])
+def test_detector_de_cliente_no_registrado_solo_en_dialogo_de_polaris(
+        monkeypatch, clase, texto, mismo, detecta):
+    gui = SimpleNamespace(
+        IsWindowVisible=lambda h: True,
+        GetClassName=lambda h: clase if h == 300 else 'Static',
+        GetWindowText=lambda h: texto,
+        EnumChildWindows=lambda h, callback, param: callback(301,param))
+    monkeypatch.setattr(polaris, 'win32gui', gui, raising=False)
+    bot = SimpleNamespace(_enum=lambda: [300], _same_polaris_process=lambda a,b: mismo)
+    if detecta:
+        with pytest.raises(ClienteNoRegistradoError):
+            exigir_cliente_facturable(bot,200)
+    else:
+        exigir_cliente_facturable(bot,200)
+
+
+def test_cuatro_facturas_segunda_cliente_no_registrado_avisa_y_continua(tmp_path):
+    q, bot = cola(tmp_path)
+    def emitir(sol,**kwargs):
+        if sol.ticket == '2':
+            bot.etapa_alerta = 'FACTURACION: buscar cliente por RFC'
+            raise ClienteNoRegistradoError()
+        bot.etapa_alerta = 'ENVIO_CORREO: comprobar cierre y actividad'
+        return 'ENVIO_SOLICITADO'
+    bot.invoice.side_effect = emitir
+    jobs = [q.encolar_factura(factura(i),safe=False)[0] for i in range(1,5)]
+    q.iniciar_cola()
+    for job in jobs:
+        assert q.ejecutar_una()
+    records = [q.store.get(job['id']) for job in jobs]
+    assert [job['estado'] for job in records] == [
+        'ENVIO_SOLICITADO', 'REVISION_REQUERIDA',
+        'ENVIO_SOLICITADO', 'ENVIO_SOLICITADO']
+    assert records[1]['resultado']['codigo_cliente'] == CODIGO_NO_REGISTRADO
+    assert estado_publico(records[1])['mensaje'] == MENSAJE_NO_REGISTRADO
+    assert any(c.args[1] == 'cliente_no_registrado' for c in q.avisos.publicar.call_args_list)
+    _, body = texto_cliente(records[1], 'cliente_no_registrado', DEFAULTS)
+    assert MENSAJE_NO_REGISTRADO in body and 'Registrar cliente' in body
+    assert bot.cerrar_polaris_tras_solicitud.call_count == 4
+    assert not q.store.status()['pausada'] and not q.store.status()['bloqueo']
+
+
+def test_cliente_no_registrado_no_se_notifica_como_tal_despues_de_timbrar(tmp_path):
+    q, bot = cola(tmp_path)
+    bot.invoice.side_effect = ClienteNoRegistradoError()
+    bot.etapa_alerta = 'TIMBRADO: Aceptar factura'
+    job = q.encolar_factura(factura(1),safe=False)[0]
+    q.iniciar_cola()
+    assert q.ejecutar_una()
+    row = q.store.get(job['id'])
+    assert row['estado'] == 'REVISION_REQUERIDA'
+    assert q.store.status()['bloqueo']
+    assert not estado_publico(row)['codigo_cliente']
+    bot.cerrar_polaris_tras_solicitud.assert_not_called()
+
+
+def test_ambos_portales_pueden_mostrar_cliente_no_registrado():
+    raiz = Path(__file__).parents[1]
+    web = (raiz / 'portal_web' / 'ary_facturacion.htm').read_text(encoding='utf-8')
+    sitio = (raiz / 'para_el_sitio' / 'ary_facturacion.htm').read_text(encoding='utf-8')
+    assert 'CLIENTE_NO_REGISTRADO' in web
+    # El formulario IIS compacto pinta directamente el mensaje suministrado por el API.
+    assert "$('receiptMessage').textContent = data.mensaje" in sitio
