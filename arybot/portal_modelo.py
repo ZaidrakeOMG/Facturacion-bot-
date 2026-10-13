@@ -4,6 +4,7 @@ No conecta a Polaris ni a servicios fiscales. No captura datos de tarjeta.
 """
 from __future__ import annotations
 from .cliente_model import AltaCliente
+from .cliente_facturacion import CODIGO_SIN_REGIMEN, MENSAJE_SIN_REGIMEN
 from .parser import STATIONS, USO_CFDI, Solicitud
 from .cola_modelo import datos_alta, factura_datos, tracking
 
@@ -18,8 +19,8 @@ class EntradaPortalError(ValueError):
     pass
 
 
-def texto(body, key, *, max_len=254):
-    value = body.get(key)
+def texto(body, key, *, max_len=254, opcional=False):
+    value = body.get(key, '' if opcional else None)
     if not isinstance(value, str):
         raise EntradaPortalError('Falta el campo ' + key + ' o su formato no es válido.')
     if len(value) > max_len or any(ord(ch) < 32 or ord(ch) == 127 for ch in value):
@@ -50,7 +51,7 @@ def validar_entrada(body):
         if kind == 'ALTA':
             allowed |= {'idcif', 'telefono'}
             sol = AltaCliente.crear(station, rfc, texto(body, 'idcif', max_len=11),
-                                    texto(body, 'telefono', max_len=24), email)
+                                    texto(body, 'telefono', max_len=24, opcional=True), email)
             data = datos_alta(sol)
         else:
             allowed |= {'ticket', 'fecha_ticket', 'forma_pago', 'uso_cfdi'}
@@ -87,6 +88,9 @@ def catalogos():
 def estado_publico(job):
     """No devuelve RFC, correo, idCIF, pantallas ni mensajes internos de Polaris."""
     state = job['estado']
+    codigo = (job.get('resultado') or {}).get('codigo_cliente', '')
+    sin_regimen = (job['tipo'] == 'FACTURA' and state == 'REVISION_REQUERIDA'
+                   and codigo == CODIGO_SIN_REGIMEN)
     messages = {
         'EN_COLA': 'Solicitud recibida y registrada en la cola de atención.',
         'EJECUTANDO': 'El bot está atendiendo tu solicitud.',
@@ -105,5 +109,7 @@ def estado_publico(job):
     return {
         'referencia': tracking(job['id']), 'tipo': job['tipo'], 'estado': state,
         'modo_seguro': bool(job['seguro']),
-        'mensaje': messages.get(state, 'Consulta el resultado con el área de facturación.'),
+        'mensaje': (MENSAJE_SIN_REGIMEN if sin_regimen else
+                    messages.get(state, 'Consulta el resultado con el área de facturación.')),
+        'codigo_cliente': CODIGO_SIN_REGIMEN if sin_regimen else '',
     }

@@ -9,9 +9,10 @@ Mantiene Número como dato de salida y Nuevo / Insert Record obligatorio.
 Base de facturación intacta. Sin conexión SQL, sentencias de BD ni servicios SAT
 externos. La lupa de Polaris obtiene los datos fiscales, como en el video.
 
-Preparar NO pulsa Aceptar. Aceptar requiere una preparación válida, confirmación
-explícita y revisión previa del operador de que el RFC no exista. No se inventa
-una búsqueda automática de duplicados que no fue mostrada en el video.
+Preparar NO pulsa Aceptar. Registrar termina con Aceptar en modo real y con
+autorización explícita del coordinador. Conserva validación de captura, diario
+local y bloqueo de edición visible; no afirma buscar todo el catálogo por RFC.
+Las preparaciones manuales conservan su revisión previa del operador.
 """
 from __future__ import annotations
 from contextlib import contextmanager
@@ -128,7 +129,10 @@ class AltaClientes:
             self._paso('ALTA EFECTIVO 5/7: esperando nombre y C. P. de la lupa (C. P. debajo del RFC).')
             self.ui.esperar_fiscales(main,form,sol)
             self._paso('ALTA EFECTIVO 6/7: capturando Teléfono 1 y Correo Electrónico.')
-            self.ui.escribir(main,form,'telefono',sol.telefono)
+            # Si se omite el teléfono, no se inventa ni se pega un sustituto.
+            # _validar_captura exige que el campo de Polaris también esté vacío.
+            if sol.telefono:
+                self.ui.escribir(main,form,'telefono',sol.telefono)
             self.ui.escribir(main,form,'correo',sol.correo)
             vals=self.ui.snapshot(main,form)
             self._validar_captura(sol,vals)
@@ -151,11 +155,27 @@ class AltaClientes:
         if vals.get('numero') is not None and vals['numero'].strip():
             raise AltaClienteError('La pantalla ya tiene número de cliente. No se repetirá Aceptar.')
 
-    def aceptar(self, solicitud: AltaCliente, *, autorizado=False, inexistencia_revisada=False):
+    def registrar(self, solicitud: AltaCliente, *, autorizado=False):
+        """Alta completa solicitada en modo real, Aceptar una sola vez.
+
+        No equivale a una revisión humana de todo el catálogo de clientes.
+        Un intento incierto permanece en el diario local y no se reejecuta.
+        """
+        if autorizado is not True:
+            raise AltaClienteError('Falta autorizar el registro automático del cliente.')
+        if self.bot.cfg.get('app',{}).get('modo_prueba',True) is not False:
+            raise AltaClienteError('MODO SEGURO activo: el registro automático no guarda clientes.')
+        sol=solicitud.validar()
+        preparada=self.preparar(sol)
+        resultado=self.aceptar(sol,autorizado=True,registro_automatico=True)
+        return dict(preparada,**resultado)
+
+    def aceptar(self, solicitud: AltaCliente, *, autorizado=False, inexistencia_revisada=False,
+                registro_automatico=False):
         self.bot.etapa_alerta="ALTA: validar autorización antes de Aceptar"
         sol=solicitud.validar()
         with self._exclusive():
-            if not autorizado or not inexistencia_revisada:
+            if autorizado is not True or not (inexistencia_revisada is True or registro_automatico is True):
                 raise AltaClienteError('Hace falta autorizar el guardado y revisar que el RFC no esté registrado.')
             if self.bot.cfg.get('app',{}).get('modo_prueba',True):
                 raise AltaClienteError('MODO SEGURO activo: Aceptar está bloqueado. La preparación no guarda clientes.')

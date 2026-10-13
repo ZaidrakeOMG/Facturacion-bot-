@@ -1,4 +1,4 @@
-"""Datos del alta: cuatro campos del cliente + estación del contexto interno.
+"""Datos del alta: RFC, idCIF y correo; teléfono opcional + estación interna.
 
 No consulta servicios web, no importa controladores SQL, no guarda datos personales.
 """
@@ -41,10 +41,10 @@ class AltaCliente:
         if not re.fullmatch(r'[0-9]{11}',ci):
             raise AltaClienteError('Captura los 11 dígitos del idCIF, como texto, sin espacios.')
         ph=telefono.strip()
-        if not re.fullmatch(r'\+?[0-9 ()-]{7,24}',ph):
+        if ph and not re.fullmatch(r'\+?[0-9 ()-]{7,24}',ph):
             raise AltaClienteError('Revisa el teléfono; usa dígitos y, opcionalmente, +, espacios o guiones.')
         ph=re.sub(r'[ ()-]','',ph)
-        if not 7<=len(ph.lstrip('+'))<=15:
+        if telefono.strip() and not 7<=len(ph.lstrip('+'))<=15:
             raise AltaClienteError('Revisa la longitud del teléfono (7 a 15 dígitos).')
         em=correo.strip()
         if len(em)>254 or not re.fullmatch(r'[A-Za-z0-9.!#$%&\x27*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?\.[A-Za-z]{2,63}',em):

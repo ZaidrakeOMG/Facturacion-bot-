@@ -58,9 +58,9 @@ class AltaClientesTab(ttk.Frame):
         self.context=ttk.Combobox(body,textvariable=self.station,values=list(STATIONS),state='readonly',width=35)
         self.context.grid(row=2,column=1,sticky='w')
         ttk.Label(body,text='Contexto del sistema; no es un quinto dato fiscal.',foreground='#526173').grid(row=3,column=1,sticky='w')
-        ttk.Label(body,text='Los cuatro datos del cliente',font=('Segoe UI',10,'bold')).grid(row=4,column=0,columnspan=3,sticky='w',pady=(12,4))
+        ttk.Label(body,text='Datos del cliente (teléfono opcional)',font=('Segoe UI',10,'bold')).grid(row=4,column=0,columnspan=3,sticky='w',pady=(12,4))
         self.entries=[]
-        for i,(name,var) in enumerate((('RFC',self.rfc),('idCIF (11 dígitos)',self.idcif),('Teléfono',self.phone),('Correo electrónico',self.email)),5):
+        for i,(name,var) in enumerate((('RFC',self.rfc),('idCIF (11 dígitos)',self.idcif),('Teléfono (opcional)',self.phone),('Correo electrónico',self.email)),5):
             ttk.Label(body,text=name).grid(row=i,column=0,sticky='e',padx=8,pady=5)
             ent=ttk.Entry(body,textvariable=var,width=54)
             ent.grid(row=i,column=1,sticky='ew',padx=(0,20));self.entries.append(ent)
@@ -76,7 +76,7 @@ class AltaClientesTab(ttk.Frame):
         self.chk=ttk.Checkbutton(body,text='Revisión del operador: confirmé en Polaris que este RFC no está registrado.',
                                 variable=self.reviewed)
         self.chk.grid(row=11,column=0,columnspan=3,sticky='w',pady=(10,2))
-        ttk.Label(body,text='La búsqueda automática de duplicados aún no está conectada. Esta casilla NO se pedirá al cliente en la página.',
+        ttk.Label(body,text='En modo real se registra automáticamente tras validar la captura. Esta revisión manual se conserva para altas preparadas sin guardar; no hay búsqueda completa del catálogo por RFC.',
                   wraplength=880,foreground='#8a4c10').grid(row=12,column=0,columnspan=3,sticky='w')
         box=ttk.LabelFrame(body,text='Resultado de la preparación',padding=8)
         box.grid(row=13,column=0,columnspan=3,sticky='ew',pady=(10,6));box.columnconfigure(1,weight=1)
@@ -85,7 +85,7 @@ class AltaClientesTab(ttk.Frame):
             ttk.Entry(box,textvariable=var,state='readonly').grid(row=r,column=1,sticky='ew')
         ttk.Label(body,textvariable=self.status,wraplength=880,justify='left').grid(row=14,column=0,columnspan=3,sticky='w',pady=(6,4))
         ttk.Label(body,text='MODO SEGURO: solo prepara. Aceptar sí registra al cliente mediante Polaris; no genera una factura.\n'
-                            'Gmail también puede recibir solicitudes de alta. El guardado conserva la revisión y autorización del operador.',
+                            'En modo real, Registrar cliente y las solicitudes de Gmail/portal completan Aceptar una sola vez. Los avisos o guardados inciertos requieren revisión.',
                   wraplength=880,foreground='#526173').grid(row=15,column=0,columnspan=3,sticky='w',pady=(2,0))
         self._sync_buttons()
 
@@ -101,7 +101,8 @@ class AltaClientesTab(ttk.Frame):
 
     def _sync_buttons(self):
         on=bool(self.service)
-        self.btn_prepare.configure(state='normal' if on and not self.busy and not self.holding else 'disabled')
+        self.btn_prepare.configure(text='Preparar alta (SIN ACEPTAR)' if self.app.mode_var.get() else 'Registrar cliente',
+                                   state='normal' if on and not self.busy and not self.holding else 'disabled')
         can_accept=(on and not self.busy and self.holding and self.service.pendiente is not None
                     and self.reviewed.get() and not self.app.mode_var.get())
         self.btn_accept.configure(state='normal' if can_accept else 'disabled')
@@ -127,7 +128,8 @@ class AltaClientesTab(ttk.Frame):
             self.status.set(str(exc));return
         self.job_id=job['id'];self._last_state=None
         self.reviewed.set(False);self.nombre.set('');self.cp.set('');self.numero.set('')
-        self.status.set('ALTA EN COLA. Se preparará por turno sin Aceptar. Gmail y avisos siguen activos.')
+        self.status.set('ALTA EN COLA. Modo seguro: se preparará sin guardar.' if job['seguro'] else
+                        'ALTA EN COLA. Se validarán los datos y se pulsará Aceptar una sola vez en modo real.')
         self.busy=True;self._sync_buttons()
 
     def accept(self):
@@ -172,6 +174,7 @@ class AltaClientesTab(ttk.Frame):
                             self.nombre.set(data.get('nombre',''));self.cp.set(data.get('codigo_postal',''))
                             self.numero.set('Alta NO guardada')
                         elif state=='ALTA_CONFIRMADA':
+                            self.nombre.set(data.get('nombre',''));self.cp.set(data.get('codigo_postal',''))
                             self.numero.set(data.get('numero_cliente',''));self.reviewed.set(False)
                         self._sync_buttons()
             except Exception:pass

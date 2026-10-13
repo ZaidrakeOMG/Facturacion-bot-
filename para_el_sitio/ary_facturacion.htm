@@ -57,19 +57,19 @@
 <div class="form-bottom"><p>Recibir tu solicitud no significa que la factura ya esté emitida. Podrás consultar el avance.</p><button class="btn btn-primary submit" type="submit" disabled>Enviar solicitud <span aria-hidden="true">→</span></button></div>
 </form></section>
 <section class="content" id="panel-alta" role="tabpanel" aria-labelledby="tab-alta" hidden>
-<div class="form-title"><div><h2>Registra tus datos</h2><p>Los cuatro datos que utiliza el alta del bot.</p></div><span class="tag">02 / Alta</span></div>
+<div class="form-title"><div><h2>Registra tus datos</h2><p>RFC, idCIF y correo electrónico. El teléfono es opcional.</p></div><span class="tag">02 / Alta</span></div>
 <form id="form-alta" autocomplete="off"><fieldset class="fields"><legend hidden>Datos para alta de cliente</legend><div class="grid">
 <div class="field full"><label for="alta-estacion">Estación<span class="required">*</span></label><select class="control station" id="alta-estacion" name="estacion" required><option value="">Selecciona tu estación</option></select><small>Elige la estación en la que vas a solicitar tu factura.</small></div>
 <div class="field"><label for="alta-rfc">RFC<span class="required">*</span></label><input class="control rfc" id="alta-rfc" name="rfc" maxlength="13" minlength="12" placeholder="RFC de 12 o 13 caracteres" autocapitalize="characters" spellcheck="false" required></div>
 <div class="field"><label for="alta-idcif">idCIF<span class="required">*</span></label><input class="control" id="alta-idcif" name="idcif" inputmode="numeric" pattern="[0-9]{11}" minlength="11" maxlength="11" placeholder="11 dígitos" required><small>Captura los 11 dígitos de tu idCIF, sin espacios.</small></div>
-<div class="field full"><label for="alta-telefono">Teléfono<span class="required">*</span></label><input class="control" id="alta-telefono" name="telefono" type="tel" maxlength="24" placeholder="Tu número de contacto" autocomplete="tel" required></div>
+<div class="field full"><label for="alta-telefono">Teléfono (opcional)</label><input class="control" id="alta-telefono" name="telefono" type="tel" maxlength="24" placeholder="Tu número de contacto" autocomplete="tel"></div>
 <div class="field"><label for="alta-correo">Correo electrónico<span class="required">*</span></label><input class="control" id="alta-correo" name="correo" type="email" maxlength="254" placeholder="tu@correo.com" autocomplete="email" spellcheck="false" required></div>
 <div class="field"><label for="alta-confirmacion">Confirma tu correo<span class="required">*</span></label><input class="control" id="alta-confirmacion" name="correo_confirmacion" type="email" maxlength="254" placeholder="Escribe el mismo correo" autocomplete="off" spellcheck="false" required></div>
-</div><p class="inline-note">El bot consulta los datos fiscales desde Polaris. El personal revisa el registro antes de guardarlo; este trámite <strong>no emite una factura</strong>.</p>
+</div><p class="inline-note">El bot consulta los datos fiscales desde Polaris. En modo real, el bot valida los datos y pulsa Aceptar para guardar el registro; este trámite <strong>no emite una factura</strong>.</p>
 <div class="trap" aria-hidden="true"><label for="alta-web">Deja este campo vacío</label><input id="alta-web" name="sitio_web" tabindex="-1" autocomplete="off"></div>
-<label class="check"><input name="confirmado" type="checkbox" required><span>Revisé mi RFC, idCIF, teléfono y correo, y solicito que se atienda mi alta de cliente en la estación seleccionada.</span></label></fieldset>
+<label class="check"><input name="confirmado" type="checkbox" required><span>Revisé mi RFC, idCIF y correo (teléfono opcional), y autorizo registrar mi alta de cliente en la estación seleccionada.</span></label></fieldset>
 <div id="error-alta" class="error" tabindex="-1" role="alert" hidden></div>
-<div class="form-bottom"><p>El registro queda pendiente hasta que el personal confirme el alta en el sistema.</p><button class="btn btn-primary submit" type="submit" disabled>Solicitar alta <span aria-hidden="true">→</span></button></div>
+<div class="form-bottom"><p>El registro estará completo cuando Polaris confirme el número de cliente. En modo de prueba no se guarda.</p><button class="btn btn-primary submit" type="submit" disabled>Solicitar alta <span aria-hidden="true">→</span></button></div>
 </form></section>
 <section class="receipt" id="receipt" aria-labelledby="receiptTitle" hidden tabindex="-1">
 <div class="receipt-icon" aria-hidden="true"><svg width="27" height="27" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" fill="none"><path d="m5 12 4 4L19 6"/><path d="M20 13v6H4V4h10"/></svg></div>
