@@ -1,0 +1,71 @@
+name: Verificar correccion de altas 20261013
+
+on:
+  push:
+    branches: [fix/alta-telefono-aviso-20261013]
+    paths:
+      - '.github/apply_fix_alta_20261013.py'
+      - '.github/workflows/prepare-fix-alta-20261013.yml'
+      - 'arybot/cliente_facturacion.py'
+      - 'tests/test_alta_aviso_20261013.py'
+
+permissions:
+  contents: write
+
+jobs:
+  verificar-sin-polaris:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Instalar pruebas
+        run: python -m pip install pytest
+      - name: Aplicar cambios con preimagenes verificadas
+        run: python .github/apply_fix_alta_20261013.py
+      - name: Conservar finales de linea originales y comprobar JavaScript
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re, subprocess, tempfile
+          paths=subprocess.check_output(['git','diff','--name-only','--','*.py','*.htm'],text=True).splitlines()
+          for name in paths:
+              original=subprocess.check_output(['git','show','HEAD:'+name])
+              if b'\r\n' in original and b'\n' not in original.replace(b'\r\n',b''):
+                  p=Path(name)
+                  p.write_bytes(p.read_bytes().replace(b'\r\n',b'\n').replace(b'\n',b'\r\n'))
+          for folder in ('portal_web','para_el_sitio'):
+              text=(Path(folder)/'ary_facturacion.htm').read_text(encoding='utf-8')
+              for i,(attrs,script) in enumerate(re.findall(r'<script\b([^>]*)>(.*?)</script>',text,re.S|re.I)):
+                  if 'json' in attrs.lower() or 'src=' in attrs.lower(): continue
+                  p=Path(tempfile.gettempdir())/(folder+str(i)+'.js')
+                  p.write_text(script,encoding='utf-8')
+                  subprocess.run(['node','--check',str(p)],check=True)
+          PY
+      - name: Comprobar sintaxis Python
+        run: python -m compileall -q arybot
+      - name: Regresiones sin Windows real ni envios
+        run: |
+          set -o pipefail
+          python -m pytest -q tests/test_alta_aviso_20261013.py tests/test_facturas_consecutivas_20261009.py tests/test_compat_vm_20261003.py | tee ci-alta-tests.txt
+      - name: Guardar solamente cambios de codigo comprobados
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add arybot/cliente_model.py arybot/portal_modelo.py arybot/alta_clientes.py arybot/polaris.py arybot/cola_operaciones.py arybot/cola_modelo.py arybot/alta_gui.py portal_web/ary_facturacion.htm para_el_sitio/ary_facturacion.htm
+          git diff --cached --check
+          git diff --cached --stat
+          git commit -m 'Completar alta real con Aceptar, telefono opcional y aviso de regimen fiscal'
+          git push origin HEAD:refs/heads/fix/alta-telefono-aviso-20261013
+      - name: Conservar resultado de pruebas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pruebas-alta-20261013
+          path: ci-alta-tests.txt
+          if-no-files-found: ignore
+          retention-days: 7
