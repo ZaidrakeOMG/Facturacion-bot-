@@ -73,7 +73,9 @@ def validar_entrada(body):
             sol = Solicitud(estacion=station, rfc=rfc, ticket=texto(body, 'ticket', max_len=20),
                             fecha_ticket=texto(body, 'fecha_ticket', max_len=10),
                             forma_pago=payment, uso_cfdi=USO_CFDI[usage],
-                            correo_destino=email, remitente=email)
+                            correo_destino=email, remitente=email,
+                            razon_social=identidad.razon_social,
+                            calle_constancia=identidad.calle)
             data = factura_datos(sol)
         if set(body) - allowed:
             raise EntradaPortalError('El formulario contiene campos no admitidos.')
