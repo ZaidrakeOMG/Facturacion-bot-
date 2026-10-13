@@ -1,8 +1,10 @@
 """Recepción Gmail: valida y ENCOLA. Nunca maneja la pantalla ni timbra en este hilo."""
 from __future__ import annotations
 import threading
-from .parser import parse_body, classify_attachments, detect_station
-from .constancia import read_constancia
+import base64
+from .parser import parse_body, classify_attachments, detect_station, normalize_station, _field
+from .constancia_fiscal import leer_constancia_pdf_base64
+from .cliente_model import AltaCliente
 from .ocr_ticket import read_ticket
 from .cola_modelo import (es_alta,leer_alta,HEADER_AVISO,ASUNTO_AVISO,SolicitudDuplicada)
 from .factura_final import validar_correo, FinalFacturaError
@@ -47,19 +49,29 @@ class Processor:
             body=self.gmail.body_text(msg)
             if len(body)>100000:body=body[:100000]
             kind='ALTA' if es_alta(b['subject'],body) else 'FACTURA'
+            paths=self.gmail.download_attachments(msg,self.base/'descargas'/mid)
+            imgs,pdfs=classify_attachments(paths)
+            if not pdfs:
+                raise ValueError('Adjunta la Constancia de Situación Fiscal original en PDF para esta solicitud.')
+            # El PDF adjunto queda en la descarga temporal existente de Gmail, NO
+            # se incorpora al trabajo en cola. Se conserva sólo identidad mínima.
+            identidad=leer_constancia_pdf_base64(base64.b64encode(pdfs[0].read_bytes()).decode('ascii'),
+                                                 alta=kind=='ALTA')
             if kind=='ALTA':
-                sol=leer_alta(b['subject'],body,recipient)
+                estacion=normalize_station(_field(body,[r'estaci[oó]n',r'sucursal'])) or detect_station(b['subject'])
+                telefono=_field(body,[r'tel[eé]fono',r'celular'])
+                sol=AltaCliente.crear(estacion,identidad.rfc,identidad.idcif,telefono,recipient,
+                                      razon_social=identidad.razon_social,
+                                      calle_constancia=identidad.calle)
                 job,_=self.cola.encolar_alta(sol,source='Gmail',source_id=source_id,safe=safe,correo=recipient)
                 data=job['datos']
             else:
                 sol=parse_body(b['subject']+'\n'+body,recipient)
-                paths=self.gmail.download_attachments(msg,self.base/'descargas'/mid)
-                imgs,pdfs=classify_attachments(paths)
-                sol.foto_ticket=imgs[0] if imgs else None;sol.constancia_pdf=pdfs[0] if pdfs else None
-                if sol.constancia_pdf:
-                    info=read_constancia(sol.constancia_pdf)
-                    for key in ('rfc','razon_social','codigo_postal','regimen_fiscal'):
-                        if not getattr(sol,key):setattr(sol,key,info.get(key,''))
+                sol.foto_ticket=imgs[0] if imgs else None
+                sol.constancia_pdf=pdfs[0]
+                sol.rfc=identidad.rfc
+                sol.razon_social=identidad.razon_social
+                sol.calle_constancia=identidad.calle
                 if sol.foto_ticket and (not sol.ticket or not sol.estacion):
                     folio,text=read_ticket(sol.foto_ticket,self.cfg.get('ocr',{}).get('tesseract_cmd',''),self.cfg.get('ocr',{}).get('idiomas','spa+eng'))
                     if not sol.ticket:sol.ticket=folio or ''
