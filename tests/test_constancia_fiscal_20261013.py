@@ -162,3 +162,86 @@ def test_formularios_solo_tienen_pdf_obligatorio():
         assert 'id="alta-rfc"' not in html
         assert 'id="alta-idcif"' not in html
         assert 'values.constancia_pdf=' in html
+
+
+def test_no_se_confirma_cliente_si_la_uia_no_expone_total_de_filas(monkeypatch):
+    """No se debe elegir la primera fila cuando faltan controles accesibles."""
+    import sys
+    from types import SimpleNamespace
+    from arybot.lectura_catalogo_fiscal import seleccionar_cliente_exacto
+    class FakeWindow:
+        def descendants(self):
+            return []
+    fake = SimpleNamespace(Desktop=lambda backend: SimpleNamespace(
+        window=lambda handle: FakeWindow()))
+    monkeypatch.setitem(sys.modules, 'pywinauto', fake)
+    with pytest.raises(CoincidenciaFiscalError, match='total verificable'):
+        seleccionar_cliente_exacto(77, rfc='SEP1312171X9',
+            razon_social='EMPRESA SA DE CV',calle='CALZADA LEGARIA')
+
+
+def test_verificacion_fiscal_no_concluyente_continua_siguientes_facturas(tmp_path):
+    from datetime import date
+    from arybot.cola_operaciones import ColaOperaciones
+    from arybot.cola_modelo import DEFAULTS, texto_cliente
+    from arybot.parser import Solicitud
+    from arybot.portal_modelo import estado_publico
+    from arybot.coincidencia_fiscal import CODIGO_VERIFICACION_FISCAL, MENSAJE_VERIFICACION_FISCAL
+
+    config={'app':{'modo_prueba':False,'correo':'test@example.com'},
+            'gmail':{},'ocr':{},'polaris':{},'cola':dict(DEFAULTS)}
+    bot=Mock()
+    bot.diag=None
+    def ejecutar(sol,**kw):
+        if sol.ticket=='2':
+            bot.etapa_alerta='FACTURACION: buscar cliente por RFC'
+            raise CoincidenciaFiscalError('Ninguna coincidencia única.')
+        return 'ENVIO_SOLICITADO'
+    bot.invoice.side_effect=ejecutar
+    q=ColaOperaciones(tmp_path,config,bot,Mock(),avisos=Mock())
+    jobs=[]
+    for n in range(1,5):
+        sol=Solicitud(estacion='ARY V', rfc='SEP1312171X9',
+                      razon_social='SERVICIOS ESPECIALIZADOS PENOLES SA DE CV',
+                      calle_constancia='CALZADA LEGARIA',
+                      ticket=str(n), fecha_ticket=date.today().isoformat(),
+                      forma_pago='EFECTIVO',correo_destino='cliente@example.com',
+                      remitente='cliente@example.com')
+        jobs.append(q.encolar_factura(sol,safe=False)[0])
+    q.iniciar_cola()
+    for job in jobs: assert q.ejecutar_una()
+    records=[q.store.get(job['id']) for job in jobs]
+    assert [r['estado'] for r in records] == ['ENVIO_SOLICITADO',
+        'REVISION_REQUERIDA','ENVIO_SOLICITADO','ENVIO_SOLICITADO']
+    assert records[1]['resultado']['codigo_cliente']==CODIGO_VERIFICACION_FISCAL
+    assert estado_publico(records[1])['mensaje']==MENSAJE_VERIFICACION_FISCAL
+    assert any(c.args[1]=='verificacion_fiscal' for c in q.avisos.publicar.call_args_list)
+    _,text=texto_cliente(records[1],'verificacion_fiscal',DEFAULTS)
+    assert MENSAJE_VERIFICACION_FISCAL in text
+    assert not q.store.status()['bloqueo'] and not q.store.status()['pausada']
+    assert bot.cerrar_polaris_tras_solicitud.call_count==4
+
+
+def test_verificacion_fiscal_no_reclasifica_error_posterior_al_timbrado(tmp_path):
+    from datetime import date
+    from arybot.cola_operaciones import ColaOperaciones
+    from arybot.cola_modelo import DEFAULTS
+    from arybot.parser import Solicitud
+    from arybot.portal_modelo import estado_publico
+    config={'app':{'modo_prueba':False},'gmail':{},'ocr':{},'polaris':{},'cola':dict(DEFAULTS)}
+    bot=Mock()
+    bot.diag=None
+    bot.invoice.side_effect=CoincidenciaFiscalError('No pudo verificar la coincidencia.')
+    bot.etapa_alerta='TIMBRADO: Aceptar factura'
+    q=ColaOperaciones(tmp_path,config,bot,Mock(),avisos=Mock())
+    sol=Solicitud(estacion='ARY V',rfc='SEP1312171X9',ticket='1',
+                  fecha_ticket=date.today().isoformat(),forma_pago='EFECTIVO',
+                  correo_destino='cliente@example.com',remitente='cliente@example.com')
+    job=q.encolar_factura(sol,safe=False)[0]
+    q.iniciar_cola()
+    assert q.ejecutar_una()
+    saved=q.store.get(job['id'])
+    assert saved['estado']=='REVISION_REQUERIDA'
+    assert q.store.status()['bloqueo']==job['id']
+    assert not estado_publico(saved)['codigo_cliente']
+    bot.cerrar_polaris_tras_solicitud.assert_not_called()
