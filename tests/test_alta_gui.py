@@ -11,6 +11,7 @@ from unittest.mock import patch,Mock
 from arybot.alta_gui import AltaClientesTab
 from arybot.cola_operaciones import ColaOperaciones
 from arybot.alta_clientes import AltaClientes
+from arybot.constancia_fiscal import IdentidadFiscal
 
 
 @unittest.skipUnless(os.environ.get('DISPLAY') or os.name=='nt','Requiere escritorio Tk')
@@ -34,10 +35,16 @@ class GuiTests(unittest.TestCase):
         self.app.cola=ColaOperaciones(Path(self.tmp.name),cfg,bot,lambda *_:None,alta=self.app.alta_service)
         self.other=ttk.Button(self.app.tab_test,text='Prueba factura')
         self.was_disabled=ttk.Button(self.app.tab_panel,text='Detener',state='disabled')
+        self.constancia=Path(self.tmp.name)/'constancia-test.pdf'
+        self.constancia.write_bytes(b'%PDF-1.4\nDATOS SIMULADOS\n')
+        fake=patch('arybot.alta_gui.leer_constancia_pdf_base64',
+            return_value=IdentidadFiscal('AAA010101AAA','EMPRESA SA DE CV','CALZADA LEGARIA','12345678901'))
+        fake.start()
+        self.addCleanup(fake.stop)
         self.tab=AltaClientesTab(self.root,self.app);self.tab.pack(fill='both',expand=True);self.root.update()
     def ready(self):
         self.tab.holding=True;self.tab.service.pendiente=object();self.tab.reviewed.set(True)
-    def test_only_four_entries(self):self.assertEqual(len(self.tab.entries),4)
+    def test_pdf_phone_email_entries(self):self.assertEqual(len(self.tab.entries),3)
     def test_safe_default_blocks_accept(self):
         self.ready();self.tab._sync_buttons();self.assertTrue(self.tab.btn_accept.instate(['disabled']))
     def test_prepare_button_enabled_initially(self):self.assertFalse(self.tab.btn_prepare.instate(['disabled']))
@@ -69,11 +76,11 @@ class GuiTests(unittest.TestCase):
         self.assertAlmostEqual(self.tab.canvas.yview()[1],1.0,places=2)
     def test_invalid_data_no_worker(self):
         with patch('arybot.alta_gui.messagebox.showwarning') as warn:
-            self.tab.prepare();self.assertFalse(warn.called);self.assertIn('RFC',self.tab.status.get())
+            self.tab.prepare();self.assertFalse(warn.called);self.assertIn('Constancia',self.tab.status.get())
         self.assertFalse(self.tab.busy)
     def test_enqueued_alta_does_not_stop_gmail(self):
         self.app.worker=Mock();self.app.worker.is_alive.return_value=True
-        self.tab.rfc.set('AAA010101AAA');self.tab.idcif.set('12345678901')
+        self.tab.pdf_path.set(str(self.constancia))
         self.tab.phone.set('8711234567');self.tab.email.set('cliente@example.com')
         self.tab.prepare()
         self.assertTrue(self.tab.busy);self.app.worker.stop.assert_not_called()
@@ -91,7 +98,7 @@ class GuiTests(unittest.TestCase):
         self.assertIn('NO guardada',self.tab.numero.get());self.assertTrue(self.tab.btn_accept.instate(['disabled']))
 
     def test_no_validation_network(self):
-        self.tab.rfc.set('AAA010101AAA');self.tab.idcif.set('12345678901');self.tab.phone.set('8711234567');self.tab.email.set('cliente@example.com')
+        self.tab.pdf_path.set(str(self.constancia));self.tab.phone.set('8711234567');self.tab.email.set('cliente@example.com')
         self.assertEqual(self.tab._sol().rfc,'AAA010101AAA')
 
 if __name__=='__main__':unittest.main(verbosity=2)
