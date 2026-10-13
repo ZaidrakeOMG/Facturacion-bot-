@@ -245,3 +245,75 @@ def test_verificacion_fiscal_no_reclasifica_error_posterior_al_timbrado(tmp_path
     assert q.store.status()['bloqueo']==job['id']
     assert not estado_publico(saved)['codigo_cliente']
     bot.cerrar_polaris_tras_solicitud.assert_not_called()
+
+
+@pytest.mark.parametrize('linea_rfc', [
+    'RFC: SEP1312171X9',
+    'RFC : SEP1312171X9',
+    'R.F.C.: SEP1312171X9',
+    'Registro Federal de Contribuyentes:\nSEP1312171X9',
+    'RFC:\nSEP1312171X9',
+    'RFC: SEP 131217 1X9',
+    'RFC: SEP-131217-1X9',
+    'SEP1312171X9\nRFC:',
+])
+def test_constancia_pdf_sat_rfc_variantes_de_extraccion(linea_rfc):
+    from arybot.constancia_fiscal import _validar_identidad
+    texto = (
+        'Constancia de Situacion Fiscal\n'
+        'Datos de Identificacion del Contribuyente\n'
+        + linea_rfc + '\n'
+        'Denominacion/Razon Social: EMPRESA DE PRUEBA SA DE CV\n'
+        'Tipo de Vialidad: CALZADA\n'
+        'Nombre de Vialidad: LEGARIA\n'
+    )
+    identificacion = _validar_identidad(texto)
+    assert identificacion.rfc == 'SEP1312171X9'
+    assert identificacion.razon_social == 'EMPRESA DE PRUEBA SA DE CV'
+    assert identificacion.calle == 'CALZADA LEGARIA'
+
+
+def test_constancia_pdf_sat_rfc_fraccionado_en_pdf_end_to_end():
+    pdf = documento_pdf(rfc='SEP 131217 1X9')
+    fiscal = leer_constancia_pdf_base64(b64encode(pdf).decode('ascii'))
+    assert fiscal.rfc == 'SEP1312171X9'
+
+
+def test_constancia_pdf_con_dos_rfc_distintos_se_rechaza():
+    from arybot.constancia_fiscal import _validar_identidad
+    texto = (
+        'Constancia de Situacion Fiscal\n'
+        'Datos de Identificacion del Contribuyente\n'
+        'RFC: SEP1312171X9\n'
+        'RFC: ABC010101ABC\n'
+        'Denominacion/Razon Social: EMPRESA DE PRUEBA SA DE CV\n'
+        'Tipo de Vialidad: CALZADA\nNombre de Vialidad: LEGARIA\n'
+    )
+    with pytest.raises(ConstanciaError, match='más de un RFC'):
+        _validar_identidad(texto)
+
+
+def test_constancia_pdf_rfc_repetido_igual_es_valido():
+    from arybot.constancia_fiscal import _validar_identidad
+    texto = (
+        'Constancia de Situacion Fiscal\n'
+        'Datos de Identificacion del Contribuyente\n'
+        'RFC: SEP1312171X9\n'
+        'Registro Federal de Contribuyentes: SEP1312171X9\n'
+        'Denominacion/Razon Social: EMPRESA DE PRUEBA SA DE CV\n'
+        'Tipo de Vialidad: CALZADA\nNombre de Vialidad: LEGARIA\n'
+    )
+    assert _validar_identidad(texto).rfc == 'SEP1312171X9'
+
+
+def test_constancia_pdf_sin_rfc_no_inventa_y_bloquea():
+    from arybot.constancia_fiscal import _validar_identidad
+    texto = (
+        'Constancia de Situacion Fiscal\n'
+        'Datos de Identificacion del Contribuyente\n'
+        'CURP: SEP1312171X9ABC1234\n'
+        'Denominacion/Razon Social: EMPRESA DE PRUEBA SA DE CV\n'
+        'Tipo de Vialidad: CALZADA\nNombre de Vialidad: LEGARIA\n'
+    )
+    with pytest.raises(ConstanciaError, match='No se pudo reconocer el RFC'):
+        _validar_identidad(texto)
