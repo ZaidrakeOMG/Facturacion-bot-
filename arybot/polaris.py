@@ -1606,9 +1606,16 @@ class PolarisBot:
         self.log('RFC escrito y confirmado después de salir del campo. Ejecutando Buscar...')
         self._click_rel(dlg,self.BUSCAR["buscar"],wait=.20)
         time.sleep(1.2)
+        # Reconocer respuestas EXPLÍCITAS de RFC inexistente antes de intentar
+        # seleccionar la primera fila. Un grid vacío por sí solo no lo demuestra.
+        from .cliente_facturacion import exigir_cliente_facturable
+        exigir_cliente_facturable(self, dlg)
         self._click_rel(dlg,self.BUSCAR["primera_fila"])
+        exigir_cliente_facturable(self, dlg)
         self._click_rel(dlg,self.BUSCAR["aceptar"])
         time.sleep(1.0)
+        # Algunos avisos de Polaris aparecen únicamente después de Aceptar.
+        exigir_cliente_facturable(self, inv)
 
         inv=self._invoice_window() or inv
         rinv=self._rect(inv)
