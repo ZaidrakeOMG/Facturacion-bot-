@@ -3,7 +3,10 @@ from __future__ import annotations
 import queue
 import threading
 import tkinter as tk
-from tkinter import ttk,messagebox
+from tkinter import ttk,messagebox,filedialog
+from pathlib import Path
+import base64
+from .constancia_fiscal import leer_constancia_pdf_base64
 from .cliente_model import AltaCliente,AltaClienteError
 from .alta_clientes import AltaClientes
 from .parser import STATIONS
@@ -17,7 +20,7 @@ class AltaClientesTab(ttk.Frame):
         self.service=app.alta_service
         self.job_id=None;self._last_state=None
         self.station=tk.StringVar(value=app.test_station.get())
-        self.rfc=tk.StringVar();self.idcif=tk.StringVar();self.phone=tk.StringVar();self.email=tk.StringVar()
+        self.rfc=tk.StringVar();self.idcif=tk.StringVar();self.pdf_path=tk.StringVar();self.phone=tk.StringVar();self.email=tk.StringVar()
         self.reviewed=tk.BooleanVar(value=False)
         self.status=tk.StringVar(value='Listo: Clientes de Efectivo. La prueba no pulsa Aceptar.')
         self.nombre=tk.StringVar();self.cp=tk.StringVar();self.numero=tk.StringVar()
@@ -58,13 +61,19 @@ class AltaClientesTab(ttk.Frame):
         self.context=ttk.Combobox(body,textvariable=self.station,values=list(STATIONS),state='readonly',width=35)
         self.context.grid(row=2,column=1,sticky='w')
         ttk.Label(body,text='Contexto del sistema; no es un quinto dato fiscal.',foreground='#526173').grid(row=3,column=1,sticky='w')
-        ttk.Label(body,text='Datos del cliente (teléfono opcional)',font=('Segoe UI',10,'bold')).grid(row=4,column=0,columnspan=3,sticky='w',pady=(12,4))
+        ttk.Label(body,text='Constancia fiscal PDF obligatoria (teléfono opcional)',font=('Segoe UI',10,'bold')).grid(row=4,column=0,columnspan=3,sticky='w',pady=(12,4))
         self.entries=[]
-        for i,(name,var) in enumerate((('RFC',self.rfc),('idCIF (11 dígitos)',self.idcif),('Teléfono (opcional)',self.phone),('Correo electrónico',self.email)),5):
+        for i,(name,var) in enumerate((('Constancia fiscal PDF',self.pdf_path),('Teléfono (opcional)',self.phone),('Correo electrónico',self.email)),5):
             ttk.Label(body,text=name).grid(row=i,column=0,sticky='e',padx=8,pady=5)
             ent=ttk.Entry(body,textvariable=var,width=54)
             ent.grid(row=i,column=1,sticky='ew',padx=(0,20));self.entries.append(ent)
-        ttk.Label(body,text='Polaris consulta los datos fiscales con su lupa. No se pide nombre, domicilio ni régimen al cliente.',
+            if i==5:
+                ttk.Button(body,text='Seleccionar PDF…',
+                           command=lambda:self.pdf_path.set(
+                               filedialog.askopenfilename(title='Constancia de Situación Fiscal del SAT',
+                                                          filetypes=[('Archivos PDF','*.pdf')])
+                               or self.pdf_path.get())).grid(row=i,column=2,sticky='w')
+        ttk.Label(body,text='Se leerán RFC, razón social, calle e idCIF del PDF digital original del SAT. No se escriben manualmente.',
                   wraplength=880,foreground='#526173').grid(row=9,column=0,columnspan=3,sticky='w',pady=(6,9))
         bar=ttk.Frame(body);bar.grid(row=10,column=0,columnspan=3,sticky='w')
         self.btn_prepare=ttk.Button(bar,text='Preparar alta (SIN ACEPTAR)',command=self.prepare)
@@ -90,7 +99,25 @@ class AltaClientesTab(ttk.Frame):
         self._sync_buttons()
 
     def _sol(self):
-        return AltaCliente.crear(self.station.get(),self.rfc.get(),self.idcif.get(),self.phone.get(),self.email.get())
+        # Alta ya preparada desde el portal/Gmail: conservar su identidad validada
+        # en la cola sin exigir recuperar el PDF original, que NO se almacena.
+        if self.holding and self.job_id:
+            job=self.app.cola.store.get(self.job_id)
+            if job and job['tipo']=='ALTA' and job['estado']=='PREPARADA_ALTA':
+                d=job['datos']
+                return AltaCliente.crear(d['estacion'],d['rfc'],d['idcif'],
+                    d.get('telefono',''),d['correo'],
+                    razon_social=d.get('razon_social',''),
+                    calle_constancia=d.get('calle_constancia',''))
+        path=Path(self.pdf_path.get().strip())
+        if not path.is_file():
+            raise AltaClienteError('Adjunta la Constancia de Situación Fiscal original del SAT en PDF.')
+        identidad=leer_constancia_pdf_base64(
+            base64.b64encode(path.read_bytes()).decode('ascii'),alta=True)
+        self.rfc.set(identidad.rfc);self.idcif.set(identidad.idcif)
+        return AltaCliente.crear(self.station.get(),identidad.rfc,identidad.idcif,
+            self.phone.get(),self.email.get(),razon_social=identidad.razon_social,
+            calle_constancia=identidad.calle)
 
     def _freeze(self):
         # Solo se bloquean los campos de ESTA solicitud, nunca la recepción Gmail.
