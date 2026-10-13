@@ -1588,10 +1588,10 @@ class PolarisBot:
         self._activate(dlg)
 
         # Flujo estable v2.5/v3.1:
-        # 1) clic real en encabezado R.F.C.; 2) clic en el campo superior;
-        # 3) escribir RFC con teclado real y salir con Tab; 4) Buscar; 5) primera coincidencia; 6) Aceptar.
-        # La detección de controles DevExpress anidados ya está corregida; se usa
-        # captura por teclado real para que Polaris reciba OnKey/OnExit.
+        # clic real en encabezado R.F.C., escribir RFC, Buscar y seleccionar.
+        # Si el VCL no expone GridPattern se vuelve al clic + teclado del bot
+        # original, verificando RFC, razón social y calle antes de Aceptar.
+        # Nunca se presupone que la primera coincidencia sea el cliente correcto.
         self.log('Catálogo de clientes: activando búsqueda por RFC (flujo estable v3.1)...')
         rdlg=self._rect(dlg)
         hx=rdlg.left+int(rdlg.width*self.BUSCAR["columna_rfc"][0])
@@ -1612,7 +1612,7 @@ class PolarisBot:
         exigir_cliente_facturable(self, dlg)
         # Selección por RFC + razón social + calle, con listado completo de UIA.
         # Ante cero, varias coincidencias o lectura parcial NO pulsa Aceptar.
-        seleccionar_cliente_exacto(dlg, rfc=rfc, razon_social=razon_social, calle=calle)
+        seleccionar_cliente_exacto(dlg, rfc=rfc, razon_social=razon_social, calle=calle, bot=self)
         exigir_cliente_facturable(self, dlg)
         self._click_rel(dlg,self.BUSCAR["aceptar"])
         time.sleep(1.0)

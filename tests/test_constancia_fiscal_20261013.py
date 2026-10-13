@@ -317,3 +317,138 @@ def test_constancia_pdf_sin_rfc_no_inventa_y_bloquea():
     )
     with pytest.raises(ConstanciaError, match='No se pudo reconocer el RFC'):
         _validar_identidad(texto)
+
+
+
+def simular_catalogo_vcl_clipboard(monkeypatch, filas, *, copy_enabled=True):
+    """Sin GridPattern real; simula acciones antiguas del buscador en Polaris."""
+    import sys
+    from types import SimpleNamespace
+    from arybot import polaris
+
+    class WinClipboard:
+        CF_UNICODETEXT = 13
+        texto = 'Texto anterior de otro programa'
+        def OpenClipboard(self): pass
+        def CloseClipboard(self): pass
+        def EmptyClipboard(self): self.texto = None
+        def IsClipboardFormatAvailable(self, formato):
+            return self.texto is not None
+        def GetClipboardData(self, formato):
+            return self.texto
+        def SetClipboardText(self, texto, formato):
+            self.texto = texto
+
+    class Teclado:
+        indice = 0
+        acciones = []
+        def hotkey(self, *keys):
+            self.acciones.append(('hotkey',keys))
+            if keys == ('ctrl','end'):
+                self.indice = len(filas) - 1
+            if keys == ('ctrl','c') and copy_enabled:
+                self.portapapeles.texto = '\t'.join(
+                    filas[self.indice][campo] for campo in
+                    ('numero','razon_social','rfc','calle')
+                )
+        def press(self, key):
+            self.acciones.append(('press',key))
+            if key == 'down':
+                self.indice = min(len(filas) - 1, self.indice + 1)
+
+    class Bot:
+        BUSCAR = {'primera_fila': (0.45, 0.232)}
+        def __init__(self, keyboard):
+            self.keyboard=keyboard
+            self.clicks=[]
+        def _click_rel(self, dialogo, posicion):
+            assert dialogo == 733
+            self.keyboard.indice = 0
+            self.clicks.append(posicion)
+
+    teclado=Teclado()
+    clipboard=WinClipboard()
+    teclado.portapapeles=clipboard
+    bot=Bot(teclado)
+    monkeypatch.setattr(polaris, 'pyautogui', teclado, raising=False)
+    monkeypatch.setattr(polaris, 'win32clipboard', clipboard, raising=False)
+    fake=SimpleNamespace(Desktop=lambda backend:SimpleNamespace(
+        window=lambda handle:SimpleNamespace(descendants=lambda: [])))
+    monkeypatch.setitem(sys.modules, 'pywinauto', fake)
+    return bot, teclado, clipboard
+
+
+def test_polaris_vcl_sin_gridpattern_selecciona_cliente_exacto_con_teclado(monkeypatch):
+    from arybot.lectura_catalogo_fiscal import seleccionar_cliente_exacto
+    filas=[
+        {'numero':'1071', 'razon_social':'SERVICIOS ESPECIALIZADOS PENOLES',
+         'rfc':'SEP1312171X9', 'calle':'MANUEL GOMEZ MORIN'},
+        {'numero':'9281', 'razon_social':'SERVICIOS ESPECIALIZADOS PEÑOLES SA DE CV',
+         'rfc':'SEP1312171X9', 'calle':'CALZ. LEGARIA TORRE 2 PISO 3'},
+        {'numero':'10099', 'razon_social':'EMPRESA AJENA SA DE CV',
+         'rfc':'SEP1312171X9', 'calle':'OTRO DOMICILIO'},
+    ]
+    bot, teclado, clip = simular_catalogo_vcl_clipboard(monkeypatch,filas)
+    monkeypatch.setattr('arybot.lectura_catalogo_fiscal.time.sleep',lambda _:None)
+    seleccion=seleccionar_cliente_exacto(733,rfc='SEP1312171X9',
+        razon_social='SERVICIOS ESPECIALIZADOS PENOLES SA DE CV',
+        calle='CALZADA LEGARIA',bot=bot)
+    assert seleccion['numero']=='9281'
+    assert teclado.indice==1
+    assert len(bot.clicks)==2
+    assert ('hotkey',('ctrl','end')) in teclado.acciones
+    assert clip.texto=='Texto anterior de otro programa'
+
+
+def test_polaris_vcl_selecciona_unico_cliente_sin_gridpattern(monkeypatch):
+    from arybot.lectura_catalogo_fiscal import seleccionar_cliente_exacto
+    fila={'numero':'70', 'razon_social':'EMPRESA DE PRUEBA SA DE CV',
+          'rfc':'SEP1312171X9', 'calle':'CALZADA LEGARIA'}
+    bot,teclado,clip=simular_catalogo_vcl_clipboard(monkeypatch,[fila])
+    monkeypatch.setattr('arybot.lectura_catalogo_fiscal.time.sleep',lambda _:None)
+    elegido=seleccionar_cliente_exacto(733,rfc=fila['rfc'],
+        razon_social=fila['razon_social'],calle=fila['calle'],bot=bot)
+    assert elegido['numero']=='70'
+    assert teclado.indice==0
+    assert clip.texto=='Texto anterior de otro programa'
+
+
+def test_polaris_vcl_dos_clientes_con_misma_identidad_no_se_eligen(monkeypatch):
+    from arybot.lectura_catalogo_fiscal import seleccionar_cliente_exacto
+    fila={'numero':'70', 'razon_social':'EMPRESA DE PRUEBA SA DE CV',
+          'rfc':'SEP1312171X9', 'calle':'CALZADA LEGARIA'}
+    bot,teclado,clip=simular_catalogo_vcl_clipboard(
+        monkeypatch,[fila,dict(fila,numero='71')])
+    monkeypatch.setattr('arybot.lectura_catalogo_fiscal.time.sleep',lambda _:None)
+    with pytest.raises(CoincidenciaFiscalError,match='UNA coincidencia'):
+        seleccionar_cliente_exacto(733,rfc=fila['rfc'],razon_social=fila['razon_social'],
+                                   calle=fila['calle'],bot=bot)
+    assert len(bot.clicks)==1
+    assert clip.texto=='Texto anterior de otro programa'
+
+
+def test_polaris_vcl_no_copia_filas_no_elige_primera(monkeypatch):
+    from arybot.lectura_catalogo_fiscal import seleccionar_cliente_exacto
+    fila={'numero':'70', 'razon_social':'EMPRESA DE PRUEBA SA DE CV',
+          'rfc':'SEP1312171X9', 'calle':'CALZADA LEGARIA'}
+    bot,teclado,clip=simular_catalogo_vcl_clipboard(
+        monkeypatch,[fila],copy_enabled=False)
+    monkeypatch.setattr('arybot.lectura_catalogo_fiscal.time.sleep',lambda _:None)
+    with pytest.raises(CoincidenciaFiscalError,match='copiar una fila'):
+        seleccionar_cliente_exacto(733,rfc=fila['rfc'],razon_social=fila['razon_social'],
+                                   calle=fila['calle'],bot=bot)
+    assert len(bot.clicks)==1
+    assert clip.texto=='Texto anterior de otro programa'
+
+
+def test_polaris_vcl_calle_incorrecta_no_selecciona(monkeypatch):
+    from arybot.lectura_catalogo_fiscal import seleccionar_cliente_exacto
+    fila={'numero':'70', 'razon_social':'EMPRESA DE PRUEBA SA DE CV',
+          'rfc':'SEP1312171X9', 'calle':'CALZADA LEGARIA'}
+    bot,teclado,clip=simular_catalogo_vcl_clipboard(monkeypatch,[fila])
+    monkeypatch.setattr('arybot.lectura_catalogo_fiscal.time.sleep',lambda _:None)
+    with pytest.raises(CoincidenciaFiscalError,match='UNA coincidencia'):
+        seleccionar_cliente_exacto(733,rfc=fila['rfc'],razon_social=fila['razon_social'],
+                                   calle='MANUEL GOMEZ MORIN',bot=bot)
+    assert len(bot.clicks)==1
+    assert clip.texto=='Texto anterior de otro programa'
