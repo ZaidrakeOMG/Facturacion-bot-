@@ -4212,8 +4212,9 @@ input[type="date"].control::-webkit-calendar-picker-indicator {
     if(data.tipo==='ALTA' && data.estado==='EJECUTANDO') {
       state.title=data.modo_seguro ? 'Preparando prueba de alta…' : 'Registrando cliente…';state.msg=data.modo_seguro ? 'Se preparan los datos sin guardar un cliente.' : 'Estamos validando y guardando tu registro en Polaris.';
     }
-    if(data.tipo==='FACTURA' && data.codigo_cliente==='CLIENTE_SIN_REGIMEN') {
-      state.title='Alta fiscal incompleta';state.msg=data.mensaje;state.error=true;
+    if(data.tipo==='FACTURA' && ['CLIENTE_SIN_REGIMEN','CLIENTE_NO_REGISTRADO'].includes(data.codigo_cliente)) {
+      state.title=data.codigo_cliente==='CLIENTE_NO_REGISTRADO' ? 'Cliente no registrado' : 'Alta fiscal incompleta';
+      state.msg=data.mensaje;state.error=true;
     }
     const card=$('progressCard'), bar=$('progressBar'), track=$('progressTrack'), result=$('finalResult');
     $('progressTitle').textContent=state.title;
@@ -4234,7 +4235,7 @@ input[type="date"].control::-webkit-calendar-picker-indicator {
       result.append(strong,txt);
     } else if(data.tipo==='FACTURA' && state.error) {
       result.classList.add('error'); result.hidden=false;
-      const strong=document.createElement('strong'); strong.textContent=data.codigo_cliente==='CLIENTE_SIN_REGIMEN' ? data.mensaje : 'Error al facturar.';
+      const strong=document.createElement('strong'); strong.textContent=['CLIENTE_SIN_REGIMEN','CLIENTE_NO_REGISTRADO'].includes(data.codigo_cliente) ? data.mensaje : 'Error al facturar.';
       const txt=document.createTextNode(' Comuníquese con ARY al ');
       const link=document.createElement('a'); link.href=PHONE_LINK; link.textContent=PHONE_DISPLAY;
       result.append(strong,txt,link,document.createTextNode('.'));
@@ -4253,7 +4254,7 @@ input[type="date"].control::-webkit-calendar-picker-indicator {
     $('receiptState').textContent=data.estado.replaceAll('_',' ');
     $('receiptSafe').hidden=!data.modo_seguro;
     const state=PROGRESS[data.estado];
-    $('receiptMessage').textContent=(data.codigo_cliente==='CLIENTE_SIN_REGIMEN' || data.tipo==='ALTA') ? data.mensaje : state ? state.msg : data.mensaje;
+    $('receiptMessage').textContent=(data.codigo_cliente || data.tipo==='ALTA') ? data.mensaje : state ? state.msg : data.mensaje;
     updateProgress(data);
     if(poll) clearTimeout(poll);
     if(!TERMINAL.has(data.estado) && !document.hidden) poll=setTimeout(refresh,2000);
