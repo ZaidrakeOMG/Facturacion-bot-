@@ -32,9 +32,10 @@ class ColaTab(ttk.Frame):
         vs.pack(side='right',fill='y');self.tree.pack(fill='both',expand=True)
         acts=ttk.Frame(jobs);acts.pack(fill='x',pady=8)
         for txt,fn in [('Ver detalle',self.detail),('Revisar alta seleccionada',self.open_alta),
-                       ('Liberar revisión',self.release),('Retirar de la cola',self.cancel)]:
+                       ('Liberar revisión',self.release),('Liberar todas las revisiones',self.release_all),
+                       ('Retirar de la cola',self.cancel)]:
             ttk.Button(acts,text=txt,command=fn).pack(side='left',padx=(0,7))
-        ttk.Label(jobs,text='Liberar revisión NO toca Polaris ni repite la operación. Primero resuelve la captura/aviso manualmente.',
+        ttk.Label(jobs,text='Liberar revisiones solo cambia su estado local; no toca Polaris ni repite operaciones. Los casos inciertos quedan protegidos.',
                   wraplength=850).pack(anchor='w')
         self.enabled=tk.BooleanVar(value=self.options['avisar_cliente'])
         self.in_safe=tk.BooleanVar(value=self.options['avisar_en_modo_seguro'])
@@ -113,6 +114,54 @@ class ColaTab(ttk.Frame):
         try:self.cola.liberar_revision(job['id'],confirmado=True)
         except Exception as exc:messagebox.showwarning('Revisión',str(exc),parent=self)
         self.refresh()
+
+    def release_all(self):
+        if not self._can_dialog():
+            return
+        try:
+            resumen = self.cola.resumen_liberacion_masiva()
+        except Exception as exc:
+            messagebox.showwarning('Liberación masiva', str(exc), parent=self)
+            return
+        n = resumen['liberables']
+        excluidas = resumen['protegidas']
+        if resumen['ejecutando']:
+            messagebox.showwarning('Liberación masiva',
+                'Espera a que la operación actual de Polaris termine.', parent=self)
+            return
+        if not n:
+            messagebox.showinfo('Liberación masiva',
+                'No hay revisiones que puedan cerrarse en lote. '
+                + (f'{excluidas} revisión(es) protegida(s) requieren revisión individual.'
+                   if excluidas else 'Las solicitudes restantes no son revisiones liberables.'),
+                parent=self)
+            return
+        mensaje = (
+            f'Se cerrarán {n} solicitud(es) en REVISION_REQUERIDA.\n'
+            f'Se conservarán {excluidas} revisión(es) protegida(s) por posible '
+            'timbrado, correo, alta o cierre incierto.\n\n'
+            'CONFIRMACIÓN: revisé que las solicitudes a cerrar NO tienen '
+            'documentos timbrados, envíos ni guardados pendientes en Polaris.\n\n'
+            'Esto solo cambia su estado local a REVISION_CERRADA. '
+            'No borra registros, no toca Polaris, no emite facturas, '
+            'no envía avisos y no repite trámites.\n\n'
+            '¿Confirmas liberar las revisiones indicadas?'
+        )
+        if not messagebox.askyesno('Liberar todas las revisiones', mensaje,
+                                   parent=self, default='no'):
+            return
+        try:
+            resultado = self.cola.liberar_revisiones_masivas(confirmado=True)
+        except Exception as exc:
+            messagebox.showwarning('Liberación masiva', str(exc), parent=self)
+            self.refresh()
+            return
+        self.refresh()
+        messagebox.showinfo('Liberación masiva',
+            f"Se cerraron {resultado['liberables']} revisión(es).\n"
+            f"Se conservaron {resultado['protegidas']} por seguridad.\n\n"
+            'No se alteraron facturas, registros de Polaris ni correos.',
+            parent=self)
 
     def cancel(self):
         if not self._can_dialog():return
