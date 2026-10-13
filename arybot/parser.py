@@ -149,6 +149,7 @@ def ticket_date_display(value: str) -> str:
 class Solicitud:
     estacion: str = ""
     razon_social: str = ""
+    calle_constancia: str = ""
     # RFC se conserva si viene en correo/constancia, pero NO es obligatorio y
     # NO se captura en Polaris: al elegir el cliente Polaris lo llena solo.
     rfc: str = ""
