@@ -20,9 +20,12 @@ class AltaCliente:
     idcif: str
     telefono: str
     correo: str
+    razon_social: str = ''
+    calle_constancia: str = ''
 
     @classmethod
-    def crear(cls, estacion: str, rfc: str, idcif: str, telefono: str, correo: str) -> 'AltaCliente':
+    def crear(cls, estacion: str, rfc: str, idcif: str, telefono: str, correo: str, *,
+              razon_social: str = '', calle_constancia: str = '') -> 'AltaCliente':
         # No transformar números a int: conserva ceros iniciales del idCIF/teléfono.
         vals=(estacion,rfc,idcif,telefono,correo)
         if any(not isinstance(x,str) for x in vals):
@@ -52,11 +55,15 @@ class AltaCliente:
         local,domain=em.rsplit('@',1)
         if local.startswith('.') or local.endswith('.') or '..' in em or len(local)>64:
             raise AltaClienteError('El correo tiene un formato inválido.')
-        return cls(st,rf,ci,ph,local+'@'+domain.lower())
+        if any(not isinstance(x, str) or any(ord(c) < 32 for c in x) or len(x) > 180
+               for x in (razon_social, calle_constancia)):
+            raise AltaClienteError('Los datos de la constancia fiscal no son válidos.')
+        return cls(st,rf,ci,ph,local+'@'+domain.lower(),razon_social.strip(),calle_constancia.strip())
 
     def validar(self) -> 'AltaCliente':
         """Revalida también instancias creadas sin pasar por crear()."""
-        return self.crear(self.estacion,self.rfc,self.idcif,self.telefono,self.correo)
+        return self.crear(self.estacion,self.rfc,self.idcif,self.telefono,self.correo,
+                          razon_social=self.razon_social, calle_constancia=self.calle_constancia)
 
     def clave_local(self) -> str:
         # Huella del RFC/estación; no conserva los cuatro datos en claro.
@@ -64,4 +71,5 @@ class AltaCliente:
         return hashlib.sha256(s.encode('utf-8')).hexdigest()
 
     def campos_cliente(self) -> dict:
-        return {'rfc':self.rfc,'idcif':self.idcif,'telefono':self.telefono,'correo':self.correo}
+        return {'rfc':self.rfc,'idcif':self.idcif,'telefono':self.telefono,'correo':self.correo,
+                'razon_social':self.razon_social,'calle_constancia':self.calle_constancia}
