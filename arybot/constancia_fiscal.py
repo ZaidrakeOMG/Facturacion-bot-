@@ -13,8 +13,6 @@ import unicodedata
 
 MAX_PDF_BYTES = 2 * 1024 * 1024
 MAX_PDF_PAGES = 3
-# Un PDF del SAT puede separar la etiqueta "RFC" y el valor al extraer texto.
-# No se acepta "la primera coincidencia": siempre ha de existir un único RFC.
 RFC_EN_TEXTO = re.compile(
     r'(?<![A-Z0-9Ñ&])([A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3})(?![A-Z0-9Ñ&])'
 )
@@ -23,10 +21,8 @@ RFC_FRACCIONADO = re.compile(
     r'\s*[:：-]?\s*([A-ZÑ&]{3,4})[\s-]+([0-9]{6})[\s-]+([A-Z0-9]{3})(?![A-Z0-9Ñ&])'
 )
 
-
 class ConstanciaError(ValueError):
     pass
-
 
 @dataclass(frozen=True)
 class IdentidadFiscal:
@@ -42,7 +38,6 @@ def _simple(value):
     return re.sub(r'\s+', ' ', value).strip()
 
 
-# Un valor vacío pasa a la siguiente línea SOLO si esa línea no es otro campo.
 ETIQUETAS = (
     'RFC', 'REGISTRO FEDERAL DE CONTRIBUYENTES',
     'DENOMINACION/RAZON SOCIAL', 'DENOMINACION O RAZON SOCIAL',
@@ -59,7 +54,6 @@ def _campo(lineas, *etiquetas):
         item = _simple(linea)
         for etiqueta in etiquetas:
             label = _simple(etiqueta)
-            # Igualdad o separador ':': no confundir "NOMBRE" con "NOMBRE DE VIALIDAD".
             if item == label or item == label + ':':
                 candidato = _simple(lineas[i + 1]) if i + 1 < len(lineas) else ''
                 if candidato and not any(candidato == x or candidato.startswith(x + ':') for x in ETIQUETAS):
@@ -67,7 +61,6 @@ def _campo(lineas, *etiquetas):
             prefix = label + ':'
             if item.startswith(prefix):
                 candidato = item[len(prefix):].strip()
-                # Algunos PDFs extraen varias etiquetas en la misma línea.
                 candidato = re.split(
                     r'\s{2,}(?=(?:RFC|NOMBRE|PRIMER APELLIDO|SEGUNDO APELLIDO|'
                     r'CODIGO POSTAL|ENTIDAD FEDERATIVA|NUMERO EXTERIOR|IDCIF)\s*:)',
@@ -79,8 +72,8 @@ def _campo(lineas, *etiquetas):
 
 
 def _leer_rfc_sin_adivinar(texto):
-    """Acepta variantes de extracción PDF, pero nunca un RFC ambiguo."""
-    normalizado = _simple(texto)
+    """Acepta variantes de extracción PDF, sin confundir Ñ con N en el RFC."""
+    normalizado = re.sub(r'\s+', ' ', unicodedata.normalize('NFC', str(texto or '')).upper()).strip()
     encontrados = set(RFC_EN_TEXTO.findall(normalizado))
     for letras, fecha, homoclave in RFC_FRACCIONADO.findall(normalizado):
         encontrados.add(letras + fecha + homoclave)
@@ -119,8 +112,12 @@ def _validar_identidad(texto, *, alta=False):
     calle = _simple(nombre_vialidad)
     if tipo_vialidad and calle and not calle.startswith(_simple(tipo_vialidad) + ' '):
         calle = _simple(tipo_vialidad + ' ' + calle)
-    if not 3 <= len(calle) <= 180:
+    # Facturación identifica al cliente exclusivamente por RFC y razón social.
+    # El alta conserva su validación del domicilio; no se modifica esa operación.
+    if alta and not 3 <= len(calle) <= 180:
         raise ConstanciaError('No se pudo leer con certeza la calle del domicilio fiscal en la constancia.')
+    if not alta and not 3 <= len(calle) <= 180:
+        calle = ''
     idcif = re.sub(r'\s+', '', _campo(lineas, 'idCIF', 'id CIF'))
     if alta and not re.fullmatch(r'\d{11}', idcif):
         raise ConstanciaError('La constancia PDF debe mostrar un idCIF legible de 11 dígitos para registrar el alta.')
@@ -128,7 +125,7 @@ def _validar_identidad(texto, *, alta=False):
 
 
 def leer_constancia_pdf_base64(valor, *, alta=False):
-    """Verifica PDF y retorna únicamente RFC, razón social, calle e idCIF (alta)."""
+    """Verifica el PDF en memoria; el domicilio es opcional para facturar."""
     if not isinstance(valor, str) or len(valor) > (MAX_PDF_BYTES * 4 // 3 + 16):
         raise ConstanciaError('Adjunta una constancia fiscal PDF de máximo 2 MB.')
     try:
