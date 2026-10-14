@@ -1,7 +1,4 @@
-"""Validación del portal. Reutiliza los modelos del ZIP ARY v3.1.9.
-
-No conecta a Polaris ni a servicios fiscales. No captura datos de tarjeta.
-"""
+"""Validación y respuestas del portal. No conecta a Polaris ni captura tarjetas."""
 from __future__ import annotations
 from .cliente_model import AltaCliente
 from .coincidencia_fiscal import CODIGO_VERIFICACION_FISCAL, MENSAJE_VERIFICACION_FISCAL
@@ -10,6 +7,7 @@ from .cliente_facturacion import (CODIGO_SIN_REGIMEN, MENSAJE_SIN_REGIMEN,
                                  CODIGO_NO_REGISTRADO, MENSAJE_NO_REGISTRADO)
 from .parser import STATIONS, USO_CFDI, Solicitud
 from .cola_modelo import datos_alta, factura_datos, tracking
+from .asistencia_whatsapp import datos_asistencia
 
 PAGOS = {
     'EFECTIVO': 'Efectivo',
@@ -44,8 +42,8 @@ def validar_entrada(body):
     station = texto(body, 'estacion', max_len=50)
     if station not in STATIONS:
         raise EntradaPortalError('Selecciona la estación que corresponde a tu ticket.')
-    # El RFC y la identidad fiscal SOLO proceden del PDF en el portal web.
-    # Los datos del PDF nunca se almacenan en la cola; solo campos mínimos.
+    # El RFC y la razón social SOLO proceden del PDF, nunca de campos inyectados.
+    # La calle no es requisito de facturación; el alta conserva su validación.
     try:
         identidad = leer_constancia_pdf_base64(body.get('constancia_pdf'), alta=kind == 'ALTA')
     except ConstanciaError as exc:
@@ -83,7 +81,6 @@ def validar_entrada(body):
     except EntradaPortalError:
         raise
     except Exception as exc:
-        # Estos modelos locales solo emiten errores de validación, no errores de Polaris.
         raise EntradaPortalError(str(exc)) from exc
     return kind, sol, data
 
@@ -98,7 +95,11 @@ def catalogos():
 
 
 def estado_publico(job):
-    """No devuelve RFC, correo, idCIF, pantallas ni mensajes internos de Polaris."""
+    """Estado para rutas autenticadas con sesión/seguimiento firmado.
+
+    En errores de FACTURA web incluye una lista mínima de la captura original
+    para que el usuario continúe por WhatsApp. Nunca PDF, idCIF ni errores internos.
+    """
     state = job['estado']
     codigo = (job.get('resultado') or {}).get('codigo_cliente', '')
     es_revision_cliente = (job['tipo'] == 'FACTURA' and state in ('REVISION_REQUERIDA', 'REVISION_CERRADA'))
@@ -114,13 +115,13 @@ def estado_publico(job):
         'ALTA_CONFIRMADA': 'Alta confirmada en el sistema. Este trámite no genera una factura.',
         'ENVIO_SOLICITADO': 'Se solicitó el envío de XML y PDF al correo indicado. No se ha verificado su recepción.',
         'YA_FACTURADO': 'El folio ya aparece procesado/facturado. No se volvió a timbrar; se envió un aviso al correo indicado.',
-        'REVISION_REQUERIDA': 'La solicitud terminó en revisión. Puedes iniciar una nueva consulta del ticket cuando no haya otra solicitud activa.',
-        'REVISION_CERRADA': 'La revisión anterior quedó cerrada. Si necesitas comprobar de nuevo el ticket, puedes iniciar una nueva solicitud.',
+        'REVISION_REQUERIDA': 'La solicitud requiere revisión. Continúa por WhatsApp con los datos capturados; antes de emitir otra factura se debe comprobar si este ticket ya fue timbrado.',
+        'REVISION_CERRADA': 'La revisión quedó cerrada. Continúa por WhatsApp para aclaraciones; no repitas el timbrado sin comprobar el resultado anterior.',
         'CANCELADA': 'Solicitud retirada de la cola por el personal.',
         'PRUEBA_CERRADA': 'Prueba cerrada. No se emitió una factura por este trámite.',
-        'ESPERANDO_DATOS': 'El personal necesita revisar o completar los datos.',
+        'ESPERANDO_DATOS': 'El personal necesita revisar o completar los datos. Continúa por WhatsApp con tu solicitud.',
     }
-    return {
+    respuesta = {
         'referencia': tracking(job['id']), 'tipo': job['tipo'], 'estado': state,
         'modo_seguro': bool(job['seguro']),
         'mensaje': (MENSAJE_SIN_REGIMEN if sin_regimen else
@@ -131,3 +132,7 @@ def estado_publico(job):
                            CODIGO_NO_REGISTRADO if no_registrado else
                            CODIGO_VERIFICACION_FISCAL if verificacion else ''),
     }
+    asistencia = datos_asistencia(job)
+    if asistencia:
+        respuesta['asistencia'] = asistencia
+    return respuesta

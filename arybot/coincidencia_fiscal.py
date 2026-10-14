@@ -1,18 +1,13 @@
-"""Comparación estricta para no seleccionar la primera coincidencia por RFC.
-
-La coincidencia sólo es válida si RFC, razón social y calle concuerdan y hay
-exactamente UN registro. Los identificadores de cliente jamás son adivinados.
-"""
+"""Identifica un único cliente por RFC y razón social, nunca por domicilio."""
 from __future__ import annotations
 import re
 import unicodedata
 
-
 CODIGO_VERIFICACION_FISCAL = 'VERIFICACION_FISCAL_PENDIENTE'
 MENSAJE_VERIFICACION_FISCAL = (
-    'No fue posible confirmar una coincidencia única entre el RFC, la razón social '
-    'y la calle de su constancia fiscal y los clientes registrados. '
-    'No se generó una factura. El área de facturación revisará su solicitud.'
+    'No fue posible confirmar una coincidencia única entre el RFC y la razón social '
+    'de su constancia fiscal y los clientes registrados. '
+    'La solicitud se detuvo antes de timbrar. Continúe por WhatsApp con los datos de su solicitud.'
 )
 
 class CoincidenciaFiscalError(RuntimeError):
@@ -22,62 +17,36 @@ class CoincidenciaFiscalError(RuntimeError):
 def _normalizar(value):
     s = unicodedata.normalize('NFKD', str(value or ''))
     s = ''.join(c for c in s if not unicodedata.combining(c)).upper()
-    s = re.sub(r'[^A-Z0-9Ñ&]+', ' ', s).strip()
-    return re.sub(r'\s+', ' ', s)
+    return re.sub(r'\s+', ' ', re.sub(r'[^A-Z0-9Ñ&]+', ' ', s)).strip()
 
 
 def _razon(value):
-    tokens = _normalizar(value).split()
-    # La columna VCL puede separar las abreviaturas letra a letra.
-    s = ' '.join(tokens)
-    s = re.sub(r'\bS A DE C V\b', 'SA DE CV', s)
-    s = re.sub(r'\bS A DE CV\b', 'SA DE CV', s)
-    s = re.sub(r'\bSA DE C V\b', 'SA DE CV', s)
-    return s
-
-
-def _calle(value):
     s = _normalizar(value)
-    patrones = (
-        (r'^CALZ(?:ADA)?\b', 'CALZADA'),
-        (r'^AV(?:ENIDA)?\b', 'AVENIDA'),
-        (r'^BLVD\b', 'BOULEVARD'),
-        (r'^C\b', 'CALLE'),
-    )
-    for pattern, reemplazo in patrones:
-        s = re.sub(pattern, reemplazo, s)
+    for pattern in (r'\bS A DE C V\b', r'\bS A DE CV\b', r'\bSA DE C V\b'):
+        s = re.sub(pattern, 'SA DE CV', s)
     return s
 
 
-def _misma_calle(esperada, observada):
-    e, o = _calle(esperada), _calle(observada)
-    if not e or not o:
-        return False
-    if e == o:
-        return True
-    # El catálogo puede mostrar torre, piso o número después de la MISMA calle.
-    if not o.startswith(e + ' '):
-        return False
-    extras = o[len(e):].strip().split()
-    return bool(extras and (extras[0].isdigit() or extras[0] in {
-        'NUMERO', 'NUM', 'NO', 'N', 'TORRE', 'PISO', 'LOCAL',
-        'INTERIOR', 'EXT', 'EXTERIOR', 'EDIFICIO', 'DEPTO', 'DEPARTAMENTO',
-        'LOTE', 'MANZANA', 'MZ',
-    }))
+def _rfc(value):
+    # Ñ y N son RFC distintos. No se quitan acentos ni caracteres del identificador.
+    return str(value or '').strip().upper()
 
 
-def verificar_unico(filas, *, rfc, razon_social, calle):
-    """Devuelve UNA fila íntegra. Nunca aceptar una coincidencia solo por RFC."""
-    if not all(isinstance(v, str) and v.strip() for v in (rfc, razon_social, calle)):
-        raise CoincidenciaFiscalError('Falta RFC, razón social o calle verificada de la constancia PDF.')
-    exactas = [
-        fila for fila in filas
-        if (_normalizar(fila.get('rfc')) == _normalizar(rfc)
-            and _razon(fila.get('razon_social')) == _razon(razon_social)
-            and _misma_calle(calle, fila.get('calle')))
-    ]
+def verificar_unico(filas, *, rfc, razon_social, calle=None):
+    """Devuelve una sola fila por RFC + razón social. `calle` se ignora.
+
+    Se conserva el argumento únicamente para solicitudes y adaptadores antiguos.
+    Dos registros con igual identidad, incluso con calles diferentes, requieren revisión.
+    """
+    if not all(isinstance(v, str) and v.strip() for v in (rfc, razon_social)):
+        raise CoincidenciaFiscalError('Falta RFC o razón social de la constancia PDF.')
+    if not re.fullmatch(r'[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}', _rfc(rfc)) or not _razon(razon_social):
+        raise CoincidenciaFiscalError('RFC o razón social no válidos para identificar al cliente.')
+    exactas = [fila for fila in filas if isinstance(fila, dict)
+               and _rfc(fila.get('rfc')) == _rfc(rfc)
+               and _razon(fila.get('razon_social')) == _razon(razon_social)]
     if len(exactas) != 1:
         raise CoincidenciaFiscalError(
-            'No se confirmó UNA coincidencia de RFC, razón social y calle en Polaris. '
+            'No se confirmó UNA coincidencia de RFC y razón social en Polaris. '
             'La solicitud queda en revisión; no se eligió cliente ni se timbró.')
     return exactas[0]

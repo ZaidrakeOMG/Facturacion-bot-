@@ -13,6 +13,11 @@ def main():
             raise RuntimeError('Usa Python 3.10 o posterior. Después ejecuta INSTALAR.bat.')
         from .ajustes_iniciales import asegurar_archivos
         asegurar_archivos(Path(__file__).resolve().parent.parent)
+        # Cargar primero la compatibilidad de la GUI; instalar la política antes
+        # de crear App o permitir que la cola atienda la primera solicitud.
+        from . import gui
+        from .seleccion_cliente import instalar_seleccion_cliente
+        instalar_seleccion_cliente()
         from .portal_gui import main as abrir_bot
         result = abrir_bot()
         return result if isinstance(result, int) else 0
