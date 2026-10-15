@@ -25,6 +25,9 @@ from .asistencia_whatsapp import perfil_local_facturacion
 PREFIX = '/api/facturacion'
 COOKIE_NAME = 'ary_portal_session'
 MAX_BODY = 2 * 1024 * 1024 * 4 // 3 + 32768
+SESSION_LIFETIME = 4 * 3600
+TRACKING_LIFETIME = 7 * 86400
+MAX_JSON_KEYS = 16
 DEFAULTS = {
     'puerto': 8765,
     'escuchar_en': '127.0.0.1',
@@ -167,7 +170,7 @@ class PortalWSGI:
                 return None
             cookie.load(raw)
             value = cookie.get(COOKIE_NAME)
-            data = self._read_token('session', value.value if value else '', 86400)
+            data = self._read_token('session', value.value if value else '', SESSION_LIFETIME)
             return data if data and re.fullmatch('[0-9a-f]{32}', data.get('sid', '')) else None
         except (CookieError, TypeError):
             return None
@@ -185,10 +188,15 @@ class PortalWSGI:
         if not 0 < length <= MAX_BODY:
             raise HttpError(413 if length > MAX_BODY else 400, 'Solicitud vacía o demasiado grande.')
         try:
-            body = json.loads(environ['wsgi.input'].read(length).decode('utf-8'))
-        except (ValueError, UnicodeError):
+            raw = environ['wsgi.input'].read(length)
+            if len(raw) != length:
+                raise HttpError(400, 'La solicitud llegó incompleta.')
+            body = json.loads(raw.decode('utf-8'))
+        except HttpError:
+            raise
+        except (ValueError, UnicodeError, RecursionError):
             raise HttpError(400, 'No se pudo leer la solicitud.')
-        if not isinstance(body, dict):
+        if not isinstance(body, dict) or len(body) > MAX_JSON_KEYS or any(not isinstance(k, str) for k in body):
             raise HttpError(400, 'Formato de solicitud inválido.')
         return body
 
@@ -196,11 +204,18 @@ class PortalWSGI:
         origin = environ.get('HTTP_ORIGIN', '')
         if origin and origin not in self.origins:
             raise HttpError(403, 'Este origen no está autorizado para el portal.')
-        if environ.get('HTTP_SEC_FETCH_SITE') == 'cross-site':
+        fetch_site = environ.get('HTTP_SEC_FETCH_SITE', '')
+        if fetch_site and fetch_site not in ('same-origin', 'same-site', 'none'):
             raise HttpError(403, 'Abre el formulario desde el sitio autorizado de ARY.')
-        if post and origin not in self.origins:
-            raise HttpError(403, 'Abre el formulario desde el sitio autorizado de ARY.')
+        fetch_dest = environ.get('HTTP_SEC_FETCH_DEST', '')
+        if fetch_dest and fetch_dest != 'empty':
+            raise HttpError(403, 'La API no se abre como una página independiente.')
         if post:
+            if origin not in self.origins:
+                raise HttpError(403, 'Abre el formulario desde el sitio autorizado de ARY.')
+            fetch_mode = environ.get('HTTP_SEC_FETCH_MODE', '')
+            if fetch_mode and fetch_mode not in ('cors', 'same-origin'):
+                raise HttpError(403, 'La solicitud del navegador no está permitida.')
             session = self._session(environ)
             supplied = environ.get('HTTP_X_ARY_CSRF', '')
             if not session or not hmac.compare_digest(supplied.encode('utf-8'), self._csrf(session).encode('ascii')):
@@ -228,7 +243,7 @@ class PortalWSGI:
             return 200, page.read_bytes(), 'text/html; charset=utf-8', headers
         if not path.startswith(PREFIX + '/'):
             raise HttpError(404, 'Ruta no disponible.')
-        self._guard(environ, post=(method == 'POST'))
+        guarded_session = self._guard(environ, post=(method == 'POST'))
         ip = environ.get('REMOTE_ADDR', 'local')
         if not self.limits.aceptar(('general', ip), 180, 60):
             raise HttpError(429, 'Hay demasiadas consultas. Inténtalo nuevamente más tarde.')
@@ -236,7 +251,7 @@ class PortalWSGI:
             session = self._session(environ)
             if not session:
                 session = {'sid': secrets.token_hex(16), 'iat': int(self.clock())}
-                cookie = COOKIE_NAME + '=' + self._sign('session', session) + '; Path=/api/facturacion; HttpOnly; SameSite=Strict; Max-Age=86400'
+                cookie = COOKIE_NAME + '=' + self._sign('session', session) + '; Path=/api/facturacion; HttpOnly; SameSite=Strict; Max-Age=' + str(SESSION_LIFETIME)
                 if self.settings['https_publico']:
                     cookie += '; Secure'
                 headers.append(('Set-Cookie', cookie))
@@ -245,7 +260,11 @@ class PortalWSGI:
             return 200, data, 'application/json; charset=utf-8', headers
         if method != 'POST':
             raise HttpError(405, 'Método no permitido.')
-        session = self._session(environ)
+        session = guarded_session or self._session(environ)
+        if not session:
+            raise HttpError(403, 'La sesión venció. Recarga la página antes de continuar.')
+        if not self.limits.aceptar(('sesion', session['sid']), 60, 60):
+            raise HttpError(429, 'Hay demasiadas consultas de esta sesión. Espera un momento y vuelve a intentar.')
         body = self._body(environ)
         if path == PREFIX + '/recepcion':
             request_id = body.get('request_id', '')
@@ -258,7 +277,7 @@ class PortalWSGI:
                 raise HttpError(404, 'No se encontró una solicitud registrada para este envío.')
             return 200, self._response_job(job, incluir_perfil_local=True), 'application/json; charset=utf-8', headers
         if path == PREFIX + '/estado':
-            token = self._read_token('tracking', body.get('seguimiento', ''), 7 * 86400)
+            token = self._read_token('tracking', body.get('seguimiento', ''), TRACKING_LIFETIME)
             if not token or not re.fullmatch('[0-9a-f]{32}', str(token.get('id', ''))):
                 raise HttpError(404, 'El seguimiento no es válido o venció.')
             job = self.cola.store.get(token['id'])
@@ -318,8 +337,14 @@ class PortalWSGI:
                 pass
         payload = data if isinstance(data, bytes) else json.dumps(data, ensure_ascii=False).encode('utf-8')
         headers += [('Content-Type', content_type), ('Content-Length', str(len(payload))),
-                    ('Cache-Control', 'no-store'), ('X-Content-Type-Options', 'nosniff'),
+                    ('Cache-Control', 'no-store, max-age=0'), ('Pragma', 'no-cache'),
+                    ('X-Content-Type-Options', 'nosniff'), ('X-XSS-Protection', '0'),
                     ('Referrer-Policy', 'no-referrer'), ('X-Frame-Options', 'DENY'),
-                    ('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')]
+                    ('Cross-Origin-Resource-Policy', 'same-origin'),
+                    ('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()')]
+        if content_type.startswith('application/json'):
+            headers.append(('Content-Security-Policy', "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'"))
+        if code == 429:
+            headers.append(('Retry-After', '60'))
         start_response(str(code) + ' ' + HTTPStatus(code).phrase, headers)
         return [payload]
