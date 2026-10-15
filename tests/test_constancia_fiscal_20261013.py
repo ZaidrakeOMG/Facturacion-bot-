@@ -375,6 +375,22 @@ def test_asistencia_no_expone_captura_en_estados_normales(state):
     assert 'asistencia' not in estado_publico(job_portal(state))
 
 
+def test_perfil_local_facturacion_solo_incluye_identidad_minima():
+    from arybot.asistencia_whatsapp import perfil_local_facturacion
+    perfil=perfil_local_facturacion(job_portal('EN_COLA'))
+    assert perfil=={'rfc':'SEP1312171X9','razon_social':'EMPRESA SA DE CV',
+                    'correo_destino':'cliente@example.com'}
+    assert 'PRIVADO' not in str(perfil)
+    assert perfil_local_facturacion(dict(job_portal(),origen='Gmail')) is None
+    assert perfil_local_facturacion(dict(job_portal(),tipo='ALTA')) is None
+
+
+def test_estado_publico_no_expone_perfil_local():
+    public=estado_publico(job_portal('EN_COLA'))
+    assert 'perfil_local' not in public
+    assert 'asistencia' not in public
+
+
 def test_asistencia_no_se_expone_para_correo_o_alta():
     from arybot.asistencia_whatsapp import datos_asistencia
     assert datos_asistencia(dict(job_portal(),origen='Gmail')) is None
