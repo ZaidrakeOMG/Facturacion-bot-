@@ -32,6 +32,15 @@ def texto(body, key, *, max_len=254, opcional=False):
 def validar_entrada(body):
     if not isinstance(body, dict):
         raise EntradaPortalError('La solicitud debe contener un formulario válido.')
+    campos_portal = {
+        'tipo', 'estacion', 'constancia_pdf', 'correo', 'correo_confirmacion',
+        'confirmado', 'sitio_web', 'telefono', 'ticket', 'fecha_ticket',
+        'forma_pago', 'uso_cfdi'
+    }
+    if len(body) > len(campos_portal) or any(not isinstance(k, str) for k in body):
+        raise EntradaPortalError('El formulario contiene una estructura no admitida.')
+    if set(body) - campos_portal:
+        raise EntradaPortalError('El formulario contiene campos no admitidos.')
     if body.get('confirmado') is not True:
         raise EntradaPortalError('Confirma que revisaste los datos antes de enviar.')
     if body.get('sitio_web', '') != '':
