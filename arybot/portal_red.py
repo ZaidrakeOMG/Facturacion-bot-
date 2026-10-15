@@ -53,9 +53,12 @@ class PortalRedWSGI:
         body = json.dumps(data, ensure_ascii=False).encode('utf-8')
         start_response(f'{code} {HTTPStatus(code).phrase}', [
             ('Content-Type', 'application/json; charset=utf-8'),
-            ('Content-Length', str(len(body))), ('Cache-Control', 'no-store'),
-            ('X-Content-Type-Options', 'nosniff'), ('Referrer-Policy', 'no-referrer'),
-            ('X-Frame-Options', 'DENY')])
+            ('Content-Length', str(len(body))), ('Cache-Control', 'no-store, max-age=0'),
+            ('Pragma', 'no-cache'), ('X-Content-Type-Options', 'nosniff'),
+            ('X-XSS-Protection', '0'), ('Referrer-Policy', 'no-referrer'),
+            ('X-Frame-Options', 'DENY'), ('Cross-Origin-Resource-Policy', 'same-origin'),
+            ('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()'),
+            ('Content-Security-Policy', "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'")])
         return [body]
 
     def __call__(self, environ, start_response):
