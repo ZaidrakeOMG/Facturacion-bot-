@@ -278,7 +278,7 @@ class PortalWSGI:
             if old:
                 if old['tipo'] != kind or old['datos'] != data:
                     raise HttpError(409, 'Esta solicitud ya se envió con otros datos. Revisa su seguimiento antes de iniciar otra.')
-                return 200, self._response_job(old), 'application/json; charset=utf-8', headers
+                return 200, self._response_job(old, incluir_perfil_local=True), 'application/json; charset=utf-8', headers
             expected_mode = environ.get('HTTP_X_ARY_MODE', '')
             actual_mode = 'seguro' if self.modo_seguro() else 'real'
             if expected_mode != actual_mode:
