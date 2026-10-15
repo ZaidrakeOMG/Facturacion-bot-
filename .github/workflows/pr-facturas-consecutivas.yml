@@ -21,6 +21,8 @@ jobs:
         with:
           python-version: '3.12'
       - name: Instalar pytest
-        run: python -m pip install pytest pypdf reportlab
-      - name: Probar facturas consecutivas, altas y avisos de RFC
-        run: python -m pytest -q tests/test_facturas_consecutivas_20261009.py tests/test_compat_vm_20261003.py tests/test_alta_aviso_20261013.py tests/test_constancia_fiscal_20261013.py
+        run: python -m pip install pytest pypdf reportlab bandit
+      - name: Analisis estatico de alta severidad en el portal
+        run: python -m bandit -q -lll arybot/portal_http.py arybot/portal_red.py arybot/portal_modelo.py arybot/constancia_fiscal.py
+      - name: Probar facturas consecutivas, altas, RFC y seguridad del portal
+        run: python -m pytest -q tests/test_facturas_consecutivas_20261009.py tests/test_compat_vm_20261003.py tests/test_alta_aviso_20261013.py tests/test_constancia_fiscal_20261013.py tests/test_portal_security_20261015.py
