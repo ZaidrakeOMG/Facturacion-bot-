@@ -20,6 +20,7 @@ import time
 from urllib.parse import urlsplit
 from .cola_modelo import SolicitudDuplicada
 from .portal_modelo import validar_entrada, catalogos, estado_publico, EntradaPortalError
+from .asistencia_whatsapp import perfil_local_facturacion
 
 PREFIX = '/api/facturacion'
 COOKIE_NAME = 'ary_portal_session'
@@ -207,9 +208,13 @@ class PortalWSGI:
             return session
         return None
 
-    def _response_job(self, job):
+    def _response_job(self, job, *, incluir_perfil_local=False):
         result = estado_publico(job)
         result['seguimiento'] = self._sign('tracking', {'id': job['id'], 'iat': int(self.clock())})
+        if incluir_perfil_local:
+            perfil = perfil_local_facturacion(job)
+            if perfil:
+                result['perfil_local'] = perfil
         return result
 
     def _dispatch(self, environ):
@@ -251,7 +256,7 @@ class PortalWSGI:
                 job = self.cola.store.source(source_id)
             if not job:
                 raise HttpError(404, 'No se encontró una solicitud registrada para este envío.')
-            return 200, self._response_job(job), 'application/json; charset=utf-8', headers
+            return 200, self._response_job(job, incluir_perfil_local=True), 'application/json; charset=utf-8', headers
         if path == PREFIX + '/estado':
             token = self._read_token('tracking', body.get('seguimiento', ''), 7 * 86400)
             if not token or not re.fullmatch('[0-9a-f]{32}', str(token.get('id', ''))):
@@ -273,7 +278,7 @@ class PortalWSGI:
             if old:
                 if old['tipo'] != kind or old['datos'] != data:
                     raise HttpError(409, 'Esta solicitud ya se envió con otros datos. Revisa su seguimiento antes de iniciar otra.')
-                return 200, self._response_job(old), 'application/json; charset=utf-8', headers
+                return 200, self._response_job(old, incluir_perfil_local=True), 'application/json; charset=utf-8', headers
             expected_mode = environ.get('HTTP_X_ARY_MODE', '')
             actual_mode = 'seguro' if self.modo_seguro() else 'real'
             if expected_mode != actual_mode:
@@ -292,7 +297,7 @@ class PortalWSGI:
                 job, _ = self.cola.encolar_alta(sol, source='Portal web', source_id=source_id, safe=safe)
             else:
                 job, _ = self.cola.encolar_factura(sol, source='Portal web', source_id=source_id, safe=safe)
-        return 201, self._response_job(job), 'application/json; charset=utf-8', headers
+        return 201, self._response_job(job, incluir_perfil_local=True), 'application/json; charset=utf-8', headers
 
     def __call__(self, environ, start_response):
         headers = []
