@@ -13,6 +13,8 @@ import unicodedata
 
 MAX_PDF_BYTES = 2 * 1024 * 1024
 MAX_PDF_PAGES = 3
+MAX_PDF_OBJECTS = 5000
+ACCIONES_PDF_BLOQUEADAS = frozenset(('/JavaScript', '/Launch', '/SubmitForm', '/ImportData', '/GoToR'))
 RFC_EN_TEXTO = re.compile(
     r'(?<![A-Z0-9Ñ&])([A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3})(?![A-Z0-9Ñ&])'
 )
@@ -124,6 +126,54 @@ def _validar_identidad(texto, *, alta=False):
     return IdentidadFiscal(rfc, razon, calle, idcif if re.fullmatch(r'\d{11}', idcif) else '')
 
 
+def _pdf_obj(value):
+    return value.get_object() if hasattr(value, 'get_object') else value
+
+
+def _accion_pdf_peligrosa(value):
+    value = _pdf_obj(value)
+    if isinstance(value, (list, tuple)):
+        return any(_accion_pdf_peligrosa(item) for item in value)
+    if not isinstance(value, dict):
+        return False
+    if str(value.get('/S', '')) in ACCIONES_PDF_BLOQUEADAS or '/JS' in value:
+        return True
+    return any(_accion_pdf_peligrosa(value.get(key)) for key in ('/Next',) if key in value)
+
+
+def _validar_pdf_pasivo(pdf):
+    """Rechaza estructuras activas o anormalmente complejas antes de extraer texto."""
+    try:
+        objetos = int(pdf.trailer.get('/Size', 0) or 0)
+    except (TypeError, ValueError):
+        objetos = 0
+    if not 1 <= objetos <= MAX_PDF_OBJECTS:
+        raise ConstanciaError('El PDF tiene una estructura demasiado compleja para una constancia fiscal.')
+
+    root = _pdf_obj(pdf.root_object)
+    if not isinstance(root, dict):
+        raise ConstanciaError('La estructura principal del PDF no es válida.')
+
+    names = root.get('/Names')
+    if names is not None:
+        names = _pdf_obj(names)
+        if not isinstance(names, dict):
+            raise ConstanciaError('La estructura de recursos del PDF no es válida.')
+        if '/JavaScript' in names or '/EmbeddedFiles' in names:
+            raise ConstanciaError('La constancia PDF no debe contener JavaScript ni archivos adjuntos.')
+
+    if '/AA' in root:
+        raise ConstanciaError('La constancia PDF no debe contener acciones automáticas.')
+    if '/OpenAction' in root and _accion_pdf_peligrosa(root['/OpenAction']):
+        raise ConstanciaError('La constancia PDF contiene una acción activa no permitida.')
+
+    form = root.get('/AcroForm')
+    if form is not None:
+        form = _pdf_obj(form)
+        if isinstance(form, dict) and ('/XFA' in form or '/AA' in form):
+            raise ConstanciaError('La constancia PDF contiene formularios activos no permitidos.')
+
+
 def leer_constancia_pdf_base64(valor, *, alta=False):
     """Verifica el PDF en memoria; el domicilio es opcional para facturar."""
     if not isinstance(valor, str) or len(valor) > (MAX_PDF_BYTES * 4 // 3 + 16):
@@ -139,6 +189,7 @@ def leer_constancia_pdf_base64(valor, *, alta=False):
         pdf = PdfReader(BytesIO(payload), strict=True)
         if pdf.is_encrypted:
             raise ConstanciaError('La constancia no debe estar protegida con contraseña.')
+        _validar_pdf_pasivo(pdf)
         if not 1 <= len(pdf.pages) <= MAX_PDF_PAGES:
             raise ConstanciaError('La constancia PDF debe contener de 1 a 3 páginas.')
         textos = []
