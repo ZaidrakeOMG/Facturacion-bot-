@@ -3,3 +3,16 @@ token.json
 token*.json
 credentials*.json
 client_secret*.json
+.env
+.env.*
+*.pem
+*.pfx
+*.p12
+*.key
+data/portal_secret.key
+__pycache__/
+*.pyc
+.pytest_cache/
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
