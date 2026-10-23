@@ -198,7 +198,9 @@ def _seleccionar_por_copia_o_imagen(bot, dialogo, *, rfc, razon_social):
         if 'no permite leer una fila completa' not in str(exc):
             raise
         from .lectura_catalogo_visual import seleccionar_cliente_visual
-        bot.log('Polaris VCL no copia filas; comprobando visualmente RFC único.')
+        log = getattr(bot, 'log', None)
+        if callable(log):
+            log('Polaris VCL no copia filas; comprobando visualmente RFC único.')
         return seleccionar_cliente_visual(bot, dialogo, rfc=rfc)
 
 
