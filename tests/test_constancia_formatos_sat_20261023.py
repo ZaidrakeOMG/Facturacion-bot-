@@ -36,9 +36,12 @@ def test_nombre_completo_explicito():
            "ANA MARIA GARCIA LOPEZ"
 
 
-def test_no_adivina_apellido_ausente():
+def test_nombre_incompleto_no_bloquea_factura_ni_se_inventa():
+    cuerpo = texto("Nombre(s): ANA MARIA\nCódigo Postal: 27000")
+    fiscal = _validar_identidad(cuerpo)
+    assert fiscal.rfc == "ABC010101ABC" and fiscal.razon_social == ""
     with pytest.raises(ConstanciaError, match="nombre o razón social"):
-        _validar_identidad(texto("Nombre(s): ANA MARIA\nCódigo Postal: 27000"))
+        _validar_identidad(cuerpo, alta=True)
 
 
 def test_multiple_rfc_distintos_se_detienen():
