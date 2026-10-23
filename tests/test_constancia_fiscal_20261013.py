@@ -303,13 +303,51 @@ def test_polaris_vcl_dos_clientes_con_misma_identidad_no_se_eligen(monkeypatch):
     assert len(bot.clicks)==1 and clip.texto=='Texto anterior de otro programa'
 
 
-def test_polaris_vcl_no_copia_filas_no_elige_primera(monkeypatch):
+def test_polaris_vcl_no_copia_usa_respaldo_visual_sin_aceptar(monkeypatch):
     from arybot.lectura_catalogo_fiscal import seleccionar_cliente_exacto
     fila={'numero':'70','razon_social':'EMPRESA DE PRUEBA SA DE CV','rfc':'SEP1312171X9'}
     bot,teclado,clip=simular_catalogo_vcl_clipboard(monkeypatch,[fila],copy_enabled=False)
-    with pytest.raises(CoincidenciaFiscalError,match='leer una fila'):
+    visual=Mock(side_effect=CoincidenciaFiscalError('OCR no concluyente; no se timbró.'))
+    monkeypatch.setattr('arybot.lectura_catalogo_visual.seleccionar_cliente_visual',visual)
+    with pytest.raises(CoincidenciaFiscalError,match='no se timbró'):
         seleccionar_cliente_exacto(733,rfc=fila['rfc'],razon_social=fila['razon_social'],bot=bot)
+    visual.assert_called_once_with(bot,733,rfc=fila['rfc'])
     assert len(bot.clicks)==1 and clip.texto=='Texto anterior de otro programa'
+
+
+def test_polaris_vcl_visual_confirma_fila_unica_por_rfc(monkeypatch):
+    from arybot.lectura_catalogo_fiscal import seleccionar_cliente_exacto
+    fila={'numero':'70','razon_social':'EMPRESA SA DE CV','rfc':'SEP1312171X9'}
+    bot,teclado,clip=simular_catalogo_vcl_clipboard(monkeypatch,[fila],copy_enabled=False)
+    visual=Mock(return_value=fila)
+    monkeypatch.setattr('arybot.lectura_catalogo_visual.seleccionar_cliente_visual',visual)
+    elegida=seleccionar_cliente_exacto(733,rfc=fila['rfc'],razon_social='',bot=bot)
+    assert elegida==fila
+    visual.assert_called_once_with(bot,733,rfc=fila['rfc'])
+    assert len(bot.clicks)==1 and clip.texto=='Texto anterior de otro programa'
+
+
+def test_lector_visual_rechaza_dos_filas_y_rfc_distinto():
+    from arybot.lectura_catalogo_visual import _parsear_cuadricula
+    texto='Numero Nombre R.F.C. Calle\\n70 CLIENTE DE PRUEBA SEP1312171X9 LEGARIA'
+    fila=_parsear_cuadricula(texto,'SEP1312171X9')
+    assert fila['numero']=='70'
+    with pytest.raises(CoincidenciaFiscalError):
+        _parsear_cuadricula(texto,'AAA010101AAA')
+    with pytest.raises(CoincidenciaFiscalError):
+        _parsear_cuadricula(texto+'\\n71 SEGUNDO CLIENTE SEP1312171X9 CALLE','SEP1312171X9')
+
+
+def test_lector_visual_rechaza_fila_adicional_aun_si_ocr_no_la_lee():
+    from PIL import Image, ImageDraw
+    from arybot.lectura_catalogo_visual import _una_sola_fila_dibujada
+    foto=Image.new('RGB',(710,300),'white')
+    d=ImageDraw.Draw(foto)
+    d.rectangle((0,20,708,35),fill=(10,125,209))
+    _una_sola_fila_dibujada(foto)
+    d.text((20,50),'71 OTRO CLIENTE',fill=(0,0,0))
+    with pytest.raises(CoincidenciaFiscalError,match='otras filas'):
+        _una_sola_fila_dibujada(foto)
 
 
 @pytest.mark.parametrize('texto',['1\tEMPRESA SA DE CV\tSEP1312171X9','1\tEMPRESA SA DE CV\tSEP1312171X9\t'])
