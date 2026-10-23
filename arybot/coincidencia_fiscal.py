@@ -1,12 +1,12 @@
-"""Identifica un único cliente por RFC y razón social, nunca por domicilio."""
+"""Identifica un único cliente por RFC de SAT, sin fiarse del nombre o la calle."""
 from __future__ import annotations
 import re
 import unicodedata
 
 CODIGO_VERIFICACION_FISCAL = 'VERIFICACION_FISCAL_PENDIENTE'
 MENSAJE_VERIFICACION_FISCAL = (
-    'No fue posible confirmar una coincidencia única entre el RFC y la razón social '
-    'de su constancia fiscal y los clientes registrados. '
+    'No fue posible confirmar un único cliente registrado con el RFC '
+    'de su constancia fiscal. '
     'La solicitud se detuvo antes de timbrar. Continúe por WhatsApp con los datos de su solicitud.'
 )
 
@@ -33,20 +33,21 @@ def _rfc(value):
 
 
 def verificar_unico(filas, *, rfc, razon_social, calle=None):
-    """Devuelve una sola fila por RFC + razón social. `calle` se ignora.
+    """Devuelve una fila SOLO si hay exactamente un registro con el RFC.
 
-    Se conserva el argumento únicamente para solicitudes y adaptadores antiguos.
-    Dos registros con igual identidad, incluso con calles diferentes, requieren revisión.
+    `razon_social` y `calle` son parámetros históricos que NO filtran candidatos.
+    Un RFC duplicado (aun con nombres distintos) requiere revisión manual.
+    La lista de filas debe haber sido leída *completa* por el adaptador Polaris.
     """
-    if not all(isinstance(v, str) and v.strip() for v in (rfc, razon_social)):
-        raise CoincidenciaFiscalError('Falta RFC o razón social de la constancia PDF.')
-    if not re.fullmatch(r'[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}', _rfc(rfc)) or not _razon(razon_social):
-        raise CoincidenciaFiscalError('RFC o razón social no válidos para identificar al cliente.')
+    if not isinstance(rfc, str) or not re.fullmatch(r'[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}', _rfc(rfc)):
+        raise CoincidenciaFiscalError('Falta un RFC válido de la constancia PDF.')
+    if not isinstance(filas, (list, tuple)):
+        raise CoincidenciaFiscalError('No se pudo verificar el catálogo completo de clientes.')
     exactas = [fila for fila in filas if isinstance(fila, dict)
-               and _rfc(fila.get('rfc')) == _rfc(rfc)
-               and _razon(fila.get('razon_social')) == _razon(razon_social)]
+               and _rfc(fila.get('rfc')) == _rfc(rfc)]
     if len(exactas) != 1:
         raise CoincidenciaFiscalError(
-            'No se confirmó UNA coincidencia de RFC y razón social en Polaris. '
-            'La solicitud queda en revisión; no se eligió cliente ni se timbró.')
+            'No se confirmó UNA coincidencia única por RFC en Polaris. '
+            'Si hay cero o varios clientes con el mismo RFC, se requiere revisión. '
+            'No se eligió cliente ni se timbró.')
     return exactas[0]
