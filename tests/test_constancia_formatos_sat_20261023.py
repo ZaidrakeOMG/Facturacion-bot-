@@ -47,3 +47,10 @@ def test_nombre_incompleto_no_bloquea_factura_ni_se_inventa():
 def test_multiple_rfc_distintos_se_detienen():
     with pytest.raises(ConstanciaError, match="más de un RFC"):
         _validar_identidad(texto("Razón Social: EMPRESA DEMO SA DE CV\nRFC: XYZ010101XYZ"))
+
+
+def test_encabezado_datos_del_domicilio_no_es_nombre_fiscal():
+    cuerpo = texto("Denominación/Razón Social:\nDatos del domicilio registrado")
+    assert _validar_identidad(cuerpo).razon_social == ""
+    with pytest.raises(ConstanciaError, match="nombre o razón social"):
+        _validar_identidad(cuerpo, alta=True)
