@@ -1,4 +1,4 @@
-"""Selector de facturación por RFC + razón social para el arranque integrado.
+"""Selector de facturación por RFC único para el arranque integrado.
 
 Adaptador explícito para el núcleo Polaris legado: se instala antes de crear App.
 No altera login, estación, captura del ticket, timbrado ni modo seguro.
@@ -13,9 +13,9 @@ def seleccionar_cliente(self, inv, rfc, razon_social='', calle=''):
     from .coincidencia_fiscal import CoincidenciaFiscalError
     from .lectura_catalogo_fiscal import seleccionar_cliente_exacto
     rfc = (rfc or '').strip().upper().replace(' ', '')
-    if not rfc or not str(razon_social or '').strip():
-        raise CoincidenciaFiscalError('Debe existir RFC y razón social de la constancia PDF. No se timbró.')
-    self.log('Buscando cliente por RFC y verificando razón social; la calle no interviene.')
+    if not rfc:
+        raise CoincidenciaFiscalError('Debe existir RFC de la constancia PDF. No se timbró.')
+    self.log('Buscando por RFC único; no se compara nombre ni domicilio. RFC duplicado queda en revisión.')
     self._click_rel(inv, self.FACTURA['buscar_cliente'])
     dlg = self._wait_text_dialog('Seleccione el cliente deseado', 10)
     if not dlg:
@@ -44,9 +44,9 @@ def seleccionar_cliente(self, inv, rfc, razon_social='', calle=''):
         self._screenshot_error('factura_post_cliente')
         raise p.PolarisError('No recuperé la ventana de Facturación después de seleccionar cliente.')
     self._activate(inv)
-    self.log('Cliente único confirmado por RFC y razón social. Polaris conserva sus datos fiscales.')
+    self.log('Cliente único confirmado por RFC. Polaris conserva los datos fiscales del cliente registrado.')
     self._pasos_factura['cliente'] = True
-    self.diag.evento('FACTURACION: cliente', 'OK', 'Cliente seleccionado por RFC y razón social',
+    self.diag.evento('FACTURACION: cliente', 'OK', 'Cliente seleccionado por RFC único',
                      {'rfc_capturado': True})
     return inv
 
