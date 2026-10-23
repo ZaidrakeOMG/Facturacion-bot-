@@ -137,8 +137,13 @@ def _validar_identidad(texto, *, alta=False):
         else:
             razon = _campo(lineas, 'Nombre completo')
     razon = _simple(razon)
-    if not 5 <= len(razon) <= 180:
+    # Para FACTURA solo se necesita un RFC único y legible. El nombre se mantiene
+    # como dato opcional de asistencia; nunca bloquea ni selecciona al cliente.
+    # ALTA sí sigue exigiendo datos completos para no registrar perfiles erróneos.
+    if alta and not 5 <= len(razon) <= 180:
         raise ConstanciaError('No se pudo leer con certeza el nombre o razón social de la constancia.')
+    if not alta and not 5 <= len(razon) <= 180:
+        razon = ''
     nombre_vialidad = _campo(lineas, 'Nombre de Vialidad', 'Calle')
     tipo_vialidad = _campo(lineas, 'Tipo de Vialidad')
     calle = _simple(nombre_vialidad)
