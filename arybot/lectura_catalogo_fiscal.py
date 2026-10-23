@@ -1,7 +1,7 @@
-"""Lectura completa del catálogo VCL. Selección únicamente por RFC y razón social.
+"""Lectura completa del catálogo VCL. Selección únicamente por RFC único.
 
-La calle puede existir como columna informativa; nunca es obligatoria ni se
-utiliza para decidir el cliente. Ante una tabla parcial o ambigua no se acepta.
+El nombre y la calle son informativos y nunca filtran al cliente.
+Ante una tabla parcial, imposible de copiar o ambigua, no se acepta.
 """
 from __future__ import annotations
 import re
@@ -135,7 +135,7 @@ def _seleccionar_por_copia_compat(bot, dialogo, *, rfc, razon_social, calle=None
         item = _fila_del_portapapeles(value)
         if not item:
             raise CoincidenciaFiscalError(
-                'El catálogo VCL no permite copiar una fila completa con Número, Nombre y RFC; no se eligió cliente.')
+                'Polaris VCL no permite leer una fila completa con Número, Nombre y RFC. Se detuvo sin elegir cliente: se necesita acceso verificable al catálogo.')
         return item
 
     def token(fila):
