@@ -43,35 +43,63 @@ def _simple(value):
 ETIQUETAS = (
     'RFC', 'REGISTRO FEDERAL DE CONTRIBUYENTES',
     'DENOMINACION/RAZON SOCIAL', 'DENOMINACION O RAZON SOCIAL',
-    'NOMBRE, DENOMINACION O RAZON SOCIAL', 'NOMBRE (S)', 'NOMBRES',
+    'NOMBRE, DENOMINACION O RAZON SOCIAL', 'RAZON SOCIAL',
+    'NOMBRE (S)', 'NOMBRE(S)', 'NOMBRES', 'NOMBRE COMPLETO',
     'PRIMER APELLIDO', 'SEGUNDO APELLIDO',
+    'APELLIDO PATERNO', 'APELLIDO MATERNO',
     'NOMBRE DE VIALIDAD', 'TIPO DE VIALIDAD', 'CALLE',
     'ID CIF', 'IDCIF', 'CIF', 'CODIGO POSTAL', 'NUMERO EXTERIOR',
     'NUMERO INTERIOR', 'ENTIDAD FEDERATIVA', 'MUNICIPIO', 'COLONIA',
 )
 
 
-def _campo(lineas, *etiquetas):
-    for i, linea in enumerate(lineas):
-        item = _simple(linea)
-        for etiqueta in etiquetas:
-            label = _simple(etiqueta)
-            if item == label or item == label + ':':
-                candidato = _simple(lineas[i + 1]) if i + 1 < len(lineas) else ''
-                if candidato and not any(candidato == x or candidato.startswith(x + ':') for x in ETIQUETAS):
-                    return candidato
-            prefix = label + ':'
-            if item.startswith(prefix):
-                candidato = item[len(prefix):].strip()
-                candidato = re.split(
-                    r'\s{2,}(?=(?:RFC|NOMBRE|PRIMER APELLIDO|SEGUNDO APELLIDO|'
-                    r'CODIGO POSTAL|ENTIDAD FEDERATIVA|NUMERO EXTERIOR|IDCIF)\s*:)',
-                    candidato, maxsplit=1
-                )[0].strip()
-                if candidato:
-                    return candidato
-    return ''
+def _etiqueta_normalizada(valor):
+    """Unifica espacios junto a / y la variante Nombre (s) del SAT."""
+    valor = _simple(valor)
+    valor = re.sub(r'\s*/\s*', '/', valor)
+    valor = re.sub(r'\bNOMBRE\s*\(\s*S\s*\)', 'NOMBRES', valor)
+    return valor
 
+
+def _es_etiqueta(valor):
+    item = _etiqueta_normalizada(valor)
+    if not item or item.startswith(('DATOS DE ', 'CEDULA DE ', 'CONSTANCIA DE ')):
+        return True
+    for etiqueta in ETIQUETAS:
+        label = _etiqueta_normalizada(etiqueta)
+        if item == label or item.startswith(label + ':') or item.startswith(label + ' :'):
+            return True
+    return False
+
+
+def _campo(lineas, *etiquetas):
+    """Admite campo/valor en una línea o en líneas separadas y alias del SAT."""
+    for i, linea in enumerate(lineas):
+        item = _etiqueta_normalizada(linea)
+        for etiqueta in etiquetas:
+            label = _etiqueta_normalizada(etiqueta)
+            if item == label or item in (label + ':', label + ' -'):
+                candidato = _etiqueta_normalizada(lineas[i + 1]) if i + 1 < len(lineas) else ''
+                if candidato and not _es_etiqueta(candidato):
+                    return candidato
+                continue
+            if item.startswith(label + ':'):
+                candidato = item[len(label) + 1:].strip()
+            elif item.startswith(label + ' -'):
+                candidato = item[len(label) + 2:].strip()
+            elif item.startswith(label + ' '):
+                candidato = item[len(label) + 1:].strip()
+            else:
+                continue
+            candidato = re.split(
+                r'\s+(?=(?:RFC|NOMBRES|PRIMER APELLIDO|SEGUNDO APELLIDO|'
+                r'APELLIDO PATERNO|APELLIDO MATERNO|CODIGO POSTAL|'
+                r'ENTIDAD FEDERATIVA|NUMERO EXTERIOR|IDCIF)\s*:)',
+                candidato, maxsplit=1,
+            )[0].strip(' :;-')
+            if candidato and not _es_etiqueta(candidato):
+                return candidato
+    return ''
 
 def _leer_rfc_sin_adivinar(texto):
     """Acepta variantes de extracción PDF, sin confundir Ñ con N en el RFC."""
@@ -99,13 +127,15 @@ def _validar_identidad(texto, *, alta=False):
     rfc = _leer_rfc_sin_adivinar(texto)
     razon = _campo(lineas, 'Denominación/Razón Social',
                     'Denominación o Razón Social',
-                    'Nombre, denominación o razón social')
+                    'Nombre, denominación o razón social', 'Razón Social')
     if not razon:
-        nombres = _campo(lineas, 'Nombre(s)', 'Nombres')
-        paterno = _campo(lineas, 'Primer Apellido')
-        materno = _campo(lineas, 'Segundo Apellido')
+        nombres = _campo(lineas, 'Nombre(s)', 'Nombre (s)', 'Nombres')
+        paterno = _campo(lineas, 'Primer Apellido', 'Apellido Paterno')
+        materno = _campo(lineas, 'Segundo Apellido', 'Apellido Materno')
         if nombres and paterno:
             razon = ' '.join(filter(None, (nombres, paterno, materno)))
+        else:
+            razon = _campo(lineas, 'Nombre completo')
     razon = _simple(razon)
     if not 5 <= len(razon) <= 180:
         raise ConstanciaError('No se pudo leer con certeza el nombre o razón social de la constancia.')
@@ -174,8 +204,45 @@ def _validar_pdf_pasivo(pdf):
             raise ConstanciaError('La constancia PDF contiene formularios activos no permitidos.')
 
 
+def _texto_ocr_pdf(pdf):
+    """OCR local opcional para constancias escaneadas, sin enviar datos externos."""
+    try:
+        from .ocr_ticket import find_tesseract
+        tesseract = find_tesseract()
+        if not tesseract:
+            return ''
+        import pytesseract
+        from PIL import Image, ImageOps
+        pytesseract.pytesseract.tesseract_cmd = tesseract
+    except (ImportError, OSError):
+        return ''
+
+    textos = []
+    for pagina in pdf.pages:
+        imagenes = 0
+        try:
+            for imagen_pdf in pagina.images:
+                if imagenes >= 2:
+                    break
+                imagenes += 1
+                if len(imagen_pdf.data) > 8 * 1024 * 1024:
+                    continue
+                with Image.open(BytesIO(imagen_pdf.data)) as original:
+                    ancho, alto = original.size
+                    if ancho * alto < 150_000 or ancho * alto > 15_000_000:
+                        continue
+                    imagen = ImageOps.autocontrast(ImageOps.grayscale(original))
+                    texto = pytesseract.image_to_string(
+                        imagen, lang='spa+eng', config='--psm 3', timeout=8)
+                    textos.append(texto[:30000])
+        except Exception:
+            # OCR es un respaldo; un fallo no elimina las validaciones del PDF.
+            continue
+    return '\n'.join(textos)
+
+
 def leer_constancia_pdf_base64(valor, *, alta=False):
-    """Verifica el PDF en memoria; el domicilio es opcional para facturar."""
+    """Verifica en memoria PDFs digitales y, si hay OCR local, escaneados."""
     if not isinstance(valor, str) or len(valor) > (MAX_PDF_BYTES * 4 // 3 + 16):
         raise ConstanciaError('Adjunta una constancia fiscal PDF de máximo 2 MB.')
     try:
@@ -183,7 +250,8 @@ def leer_constancia_pdf_base64(valor, *, alta=False):
     except (ValueError, binascii.Error) as exc:
         raise ConstanciaError('El archivo de constancia no es válido. Descarga el PDF original del SAT.') from exc
     if not 200 <= len(payload) <= MAX_PDF_BYTES or not payload.startswith(b'%PDF-'):
-        raise ConstanciaError('Solo se admite la constancia original en formato PDF, máximo 2 MB.')
+        raise ConstanciaError('Solo se admite la constancia en formato PDF, máximo 2 MB.')
+
     try:
         from pypdf import PdfReader
         pdf = PdfReader(BytesIO(payload), strict=True)
@@ -192,17 +260,52 @@ def leer_constancia_pdf_base64(valor, *, alta=False):
         _validar_pdf_pasivo(pdf)
         if not 1 <= len(pdf.pages) <= MAX_PDF_PAGES:
             raise ConstanciaError('La constancia PDF debe contener de 1 a 3 páginas.')
-        textos = []
-        for page in pdf.pages:
-            text = page.extract_text() or ''
-            if len(text) > 30000:
-                raise ConstanciaError('El archivo PDF contiene demasiado texto para una constancia.')
-            textos.append(text)
+        variantes = []
+        for modo in ('plain', 'layout'):
+            textos = []
+            try:
+                for pagina in pdf.pages:
+                    if modo == 'layout':
+                        texto = pagina.extract_text(extraction_mode='layout') or ''
+                    else:
+                        texto = pagina.extract_text() or ''
+                    if len(texto) > 30000:
+                        raise ConstanciaError('El archivo PDF contiene demasiado texto para una constancia.')
+                    textos.append(texto)
+            except ConstanciaError:
+                raise
+            except Exception:
+                if modo == 'layout':
+                    continue
+                raise
+            variantes.append('\n'.join(textos))
     except ConstanciaError:
         raise
     except Exception as exc:
         raise ConstanciaError('No se pudo leer el PDF. Descarga una constancia digital nueva desde el SAT.') from exc
-    texto = '\n'.join(textos)
-    if len(texto.strip()) < 80:
-        raise ConstanciaError('Este PDF parece una imagen/escaneo. Sube el PDF digital descargado del SAT.')
-    return _validar_identidad(texto, alta=alta)
+
+    ultimo_error = None
+    for texto in variantes:
+        if len(texto.strip()) < 80:
+            continue
+        try:
+            return _validar_identidad(texto, alta=alta)
+        except ConstanciaError as exc:
+            if 'más de un RFC' in str(exc):
+                raise
+            ultimo_error = exc
+
+    texto_ocr = _texto_ocr_pdf(pdf)
+    if len(texto_ocr.strip()) >= 80:
+        try:
+            return _validar_identidad(texto_ocr, alta=alta)
+        except ConstanciaError as exc:
+            if 'más de un RFC' in str(exc):
+                raise
+            ultimo_error = exc
+
+    if ultimo_error is not None:
+        raise ultimo_error
+    raise ConstanciaError(
+        'No se pudo extraer texto legible del PDF. Sube la constancia digital '
+        'del SAT o un escaneo nítido; para escaneos, el servidor requiere OCR instalado.')
