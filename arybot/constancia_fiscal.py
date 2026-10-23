@@ -63,7 +63,7 @@ def _etiqueta_normalizada(valor):
 
 def _es_etiqueta(valor):
     item = _etiqueta_normalizada(valor)
-    if not item or item.startswith(('DATOS DE ', 'CEDULA DE ', 'CONSTANCIA DE ')):
+    if not item or item.startswith(('DATOS DE ', 'DATOS DEL ', 'DATOS GENERALES', 'DOMICILIO FISCAL', 'CEDULA DE ', 'CONSTANCIA DE ')):
         return True
     for etiqueta in ETIQUETAS:
         label = _etiqueta_normalizada(etiqueta)
