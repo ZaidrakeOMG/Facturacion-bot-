@@ -186,13 +186,29 @@ def _seleccionar_por_copia_compat(bot, dialogo, *, rfc, razon_social, calle=None
             pass
 
 
+def _seleccionar_por_copia_o_imagen(bot, dialogo, *, rfc, razon_social):
+    """Prueba el portapapeles y, si VCL no copia filas, verifica la imagen.
+
+    Ante OCR dudoso o una segunda fila, NO usa el clic de Aceptar.
+    """
+    try:
+        return _seleccionar_por_copia_compat(
+            bot, dialogo, rfc=rfc, razon_social=razon_social)
+    except CoincidenciaFiscalError as exc:
+        if 'no permite leer una fila completa' not in str(exc):
+            raise
+        from .lectura_catalogo_visual import seleccionar_cliente_visual
+        bot.log('Polaris VCL no copia filas; comprobando visualmente RFC único.')
+        return seleccionar_cliente_visual(bot, dialogo, rfc=rfc)
+
+
 def seleccionar_cliente_exacto(dialogo, *, rfc, razon_social, calle=None, bot=None):
     try:
         filas = _leer_filas_completas(dialogo)
     except CoincidenciaFiscalError as exc:
         if bot is not None and any(text in str(exc) for text in
                                   ('total verificable', 'accesibilidad de Windows', 'leer TODAS las filas')):
-            return _seleccionar_por_copia_compat(bot, dialogo, rfc=rfc, razon_social=razon_social)
+            return _seleccionar_por_copia_o_imagen(bot, dialogo, rfc=rfc, razon_social=razon_social)
         raise
     elegida = verificar_unico(filas, rfc=rfc, razon_social=razon_social)
     try:
@@ -200,7 +216,7 @@ def seleccionar_cliente_exacto(dialogo, *, rfc, razon_social, calle=None, bot=No
         seleccionado = bool(elegida['control'].iface_selection_item.CurrentIsSelected)
     except Exception as exc:
         if bot is not None:
-            return _seleccionar_por_copia_compat(bot, dialogo, rfc=rfc, razon_social=razon_social)
+            return _seleccionar_por_copia_o_imagen(bot, dialogo, rfc=rfc, razon_social=razon_social)
         raise CoincidenciaFiscalError('Polaris no confirmó la selección de la fila correcta; no se pulsó Aceptar.') from exc
     if not seleccionado:
         raise CoincidenciaFiscalError('La selección no quedó confirmada en Polaris. No se pulsó Aceptar.')
