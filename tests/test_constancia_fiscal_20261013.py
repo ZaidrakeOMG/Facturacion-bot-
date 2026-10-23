@@ -101,17 +101,17 @@ def test_camino_web_exige_constancia_pdf():
     with pytest.raises(EntradaPortalError,match='constancia'): validar_entrada(form)
 
 
-def test_coincidencia_estricta_no_elige_primera_fila():
+def test_rfc_duplicado_con_nombres_diferentes_no_se_elige():
     registros=[{'numero':'1071','razon_social':'SERVICIOS ESPECIALIZADOS PENOLES','rfc':'SEP1312171X9','calle':'LEGARIA'},
                {'numero':'9281','razon_social':'SERVICIOS ESPECIALIZADOS PEÑOLES S A DE C V','rfc':'SEP1312171X9','calle':'OTRA'}]
-    match=verificar_unico(registros,rfc='SEP1312171X9',razon_social='SERVICIOS ESPECIALIZADOS PEÑOLES SA DE CV',calle='CALZADA LEGARIA')
-    assert match['numero']=='9281'
+    with pytest.raises(CoincidenciaFiscalError,match='UNA coincidencia'):
+        verificar_unico(registros,rfc='SEP1312171X9',razon_social='SERVICIOS ESPECIALIZADOS PEÑOLES SA DE CV',calle='CALZADA LEGARIA')
 
 
-def test_rfc_solo_no_se_acepta_pero_calle_es_opcional():
+def test_rfc_solo_se_acepta_si_registro_es_unico():
     fila={'numero':'70','razon_social':'EMPRESA SA DE CV','rfc':'SEP1312171X9'}
-    with pytest.raises(CoincidenciaFiscalError): verificar_unico([fila],rfc=fila['rfc'],razon_social='')
-    assert verificar_unico([fila],rfc=fila['rfc'],razon_social=fila['razon_social'],calle='') is fila
+    assert verificar_unico([fila],rfc=fila['rfc'],razon_social='') is fila
+    assert verificar_unico([fila],rfc=fila['rfc'],razon_social='NOMBRE DISTINTO',calle='') is fila
 
 
 @pytest.mark.parametrize('calle',['CALZADA LEGARIA','OTRO DOMICILIO','',None])
@@ -121,10 +121,9 @@ def test_dos_coincidencias_exactas_detenidas_aunque_calle_difiera(calle):
         verificar_unico([fila,dict(fila,numero='9282',calle=calle)],rfc=fila['rfc'],razon_social=fila['razon_social'],calle=fila['calle'])
 
 
-def test_calle_distinta_se_ignora_pero_sufijo_legal_no():
+def test_unico_rfc_ignora_nombre_sufijo_y_calle():
     fila={'numero':'9281','razon_social':'EMPRESA SA DE CV','rfc':'SEP1312171X9','calle':'CALZADA LEGARIA'}
-    with pytest.raises(CoincidenciaFiscalError): verificar_unico([fila],rfc=fila['rfc'],razon_social='EMPRESA')
-    assert verificar_unico([fila],rfc=fila['rfc'],razon_social=fila['razon_social'],calle='OTRA CALLE') is fila
+    assert verificar_unico([fila],rfc=fila['rfc'],razon_social='EMPRESA',calle='OTRA CALLE') is fila
 
 
 def test_rfc_no_confunde_enie_con_ene():
@@ -275,9 +274,9 @@ def simular_catalogo_vcl_clipboard(monkeypatch,filas,*,copy_enabled=True):
 
 def test_polaris_vcl_sin_gridpattern_selecciona_cliente_exacto_con_teclado(monkeypatch):
     from arybot.lectura_catalogo_fiscal import seleccionar_cliente_exacto
-    filas=[{'numero':'1071','razon_social':'SERVICIOS ESPECIALIZADOS PENOLES','rfc':'SEP1312171X9','calle':'LEGARIA'},
+    filas=[{'numero':'1071','razon_social':'SERVICIOS ESPECIALIZADOS PENOLES','rfc':'AAA010101AAA','calle':'LEGARIA'},
            {'numero':'9281','razon_social':'SERVICIOS ESPECIALIZADOS PEÑOLES SA DE CV','rfc':'SEP1312171X9'},
-           {'numero':'10099','razon_social':'EMPRESA AJENA SA DE CV','rfc':'SEP1312171X9','calle':'OTRO DOMICILIO'}]
+           {'numero':'10099','razon_social':'EMPRESA AJENA SA DE CV','rfc':'BBB010101BBB','calle':'OTRO DOMICILIO'}]
     bot,teclado,clip=simular_catalogo_vcl_clipboard(monkeypatch,filas)
     seleccion=seleccionar_cliente_exacto(733,rfc='SEP1312171X9',razon_social='SERVICIOS ESPECIALIZADOS PENOLES SA DE CV',bot=bot)
     assert seleccion['numero']=='9281' and teclado.indice==1 and len(bot.clicks)==2
@@ -308,7 +307,7 @@ def test_polaris_vcl_no_copia_filas_no_elige_primera(monkeypatch):
     from arybot.lectura_catalogo_fiscal import seleccionar_cliente_exacto
     fila={'numero':'70','razon_social':'EMPRESA DE PRUEBA SA DE CV','rfc':'SEP1312171X9'}
     bot,teclado,clip=simular_catalogo_vcl_clipboard(monkeypatch,[fila],copy_enabled=False)
-    with pytest.raises(CoincidenciaFiscalError,match='copiar una fila'):
+    with pytest.raises(CoincidenciaFiscalError,match='leer una fila'):
         seleccionar_cliente_exacto(733,rfc=fila['rfc'],razon_social=fila['razon_social'],bot=bot)
     assert len(bot.clicks)==1 and clip.texto=='Texto anterior de otro programa'
 
@@ -395,3 +394,22 @@ def test_asistencia_no_se_expone_para_correo_o_alta():
     from arybot.asistencia_whatsapp import datos_asistencia
     assert datos_asistencia(dict(job_portal(),origen='Gmail')) is None
     assert datos_asistencia(dict(job_portal(),tipo='ALTA')) is None
+
+
+def test_factura_solo_rfc_pdf_sin_nombre_acepta_alta_no(tmp_path):
+    doc = documento_pdf(nombre='')
+    kind, solicitud_web, datos = validar_entrada(cuerpo(pdf=doc))
+    assert kind == 'FACTURA' and solicitud_web.rfc == 'SEP1312171X9'
+    assert solicitud_web.razon_social == '' and datos['rfc'] == solicitud_web.rfc
+    with pytest.raises(EntradaPortalError, match='nombre o razón social'):
+        validar_entrada(cuerpo(tipo='ALTA', pdf=doc))
+
+
+def test_portal_rechaza_fecha_mas_antigua_que_tres_dias():
+    from datetime import timedelta
+    formulario = cuerpo()
+    formulario['fecha_ticket'] = (date.today() - timedelta(days=4)).isoformat()
+    with pytest.raises(EntradaPortalError, match='72 horas'):
+        validar_entrada(formulario)
+    formulario['fecha_ticket'] = (date.today() - timedelta(days=3)).isoformat()
+    assert validar_entrada(formulario)[0] == 'FACTURA'
