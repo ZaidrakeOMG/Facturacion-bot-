@@ -329,13 +329,13 @@ def test_polaris_vcl_visual_confirma_fila_unica_por_rfc(monkeypatch):
 
 def test_lector_visual_rechaza_dos_filas_y_rfc_distinto():
     from arybot.lectura_catalogo_visual import _parsear_cuadricula
-    texto='Numero Nombre R.F.C. Calle\\n70 CLIENTE DE PRUEBA SEP1312171X9 LEGARIA'
+    texto='Numero Nombre R.F.C. Calle\n70 CLIENTE DE PRUEBA SEP1312171X9 LEGARIA'
     fila=_parsear_cuadricula(texto,'SEP1312171X9')
     assert fila['numero']=='70'
     with pytest.raises(CoincidenciaFiscalError):
         _parsear_cuadricula(texto,'AAA010101AAA')
     with pytest.raises(CoincidenciaFiscalError):
-        _parsear_cuadricula(texto+'\\n71 SEGUNDO CLIENTE SEP1312171X9 CALLE','SEP1312171X9')
+        _parsear_cuadricula(texto+'\n71 SEGUNDO CLIENTE SEP1312171X9 CALLE','SEP1312171X9')
 
 
 def test_lector_visual_rechaza_fila_adicional_aun_si_ocr_no_la_lee():
