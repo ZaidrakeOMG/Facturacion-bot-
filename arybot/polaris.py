@@ -2379,7 +2379,7 @@ class PolarisBot:
                 "No se confirmó un correo ya capturado en Polaris. "
                 "No se tocó el campo ni se pulsó Aceptar de envío. "
                 "Revisa el CFDI sin volver a timbrar la factura.")
-        if any(char in current for char in ("\\r", "\\n", "\\x00")):
+        if any(char in current for char in ("\r", "\n", "\x00")):
             raise PolarisError(
                 "El correo precargado contiene caracteres de control. "
                 "No se modificó ni se pulsó Aceptar de envío.")
