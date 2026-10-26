@@ -10,6 +10,11 @@ from .diagnostico import Diagnostico, diagnosticar_operacion
 class PolarisError(RuntimeError): pass
 
 
+class ReceptorNoVerificadoError(PolarisError):
+    """Captura preparada, sin timbrado: conservar pantalla para revisión humana."""
+    pass
+
+
 @dataclass
 class Rect:
     left: int; top: int; right: int; bottom: int
@@ -2470,7 +2475,13 @@ class PolarisBot:
         self.diag.evento('TIMBRADO: guardia final','OK' if not faltan else 'ERROR',
                           'Checklist antes de Aceptar',{'faltan':faltan})
         if faltan:
-            raise PolarisError('Guardia final: faltan pasos confirmados ('+', '.join(faltan)+'). No se pulsó Aceptar.')
+            mensaje = 'Guardia final: faltan pasos confirmados ('+', '.join(faltan)+'). No se pulsó Aceptar.'
+            if faltan == ['RFC del receptor no verificado']:
+                # La captura ya está completa, pero la lectura de VCL no es
+                # concluyente. Conservar Polaris sin timbrar para que el
+                # operador compruebe el RFC en pantalla y decida manualmente.
+                raise ReceptorNoVerificadoError(mensaje)
+            raise PolarisError(mensaje)
 
     @diagnosticar_operacion('FACTURACION')
     def invoice(self, sol, test_mode=True):
