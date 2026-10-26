@@ -483,3 +483,36 @@ def test_portal_rechaza_fecha_mas_antigua_que_tres_dias():
         validar_entrada(formulario)
     formulario['fecha_ticket'] = (date.today() - timedelta(days=3)).isoformat()
     assert validar_entrada(formulario)[0] == 'FACTURA'
+
+
+def test_receptor_rfc_enmascarado_valida_y_otro_rfc_bloquea():
+    from arybot.seleccion_cliente import _rfc_legible
+    captura=Mock()
+    captura.texto.leer.side_effect=lambda h: {
+        1:'SEP1312171X9___', 2:'SEP1312171X9'}[h]
+    assert _rfc_legible(captura,[1,2],'SEP1312171X9')
+    captura.texto.leer.side_effect=lambda h: {
+        1:'SEP1312171X9', 2:'AAA010101AAA'}[h]
+    with pytest.raises(CoincidenciaFiscalError,match='difiere'):
+        _rfc_legible(captura,[1,2],'SEP1312171X9')
+
+
+def test_error_rfc_receptor_conserva_polaris_y_bloquea_cola(tmp_path):
+    from arybot.cola_operaciones import ColaOperaciones
+    from arybot.cola_modelo import DEFAULTS
+    from arybot.polaris import ReceptorNoVerificadoError
+    config={'app':{'modo_prueba':False},'gmail':{},'ocr':{},'polaris':{},'cola':dict(DEFAULTS)}
+    bot=Mock()
+    bot.diag=None
+    bot.invoice.side_effect=ReceptorNoVerificadoError(
+        'Guardia final: RFC del receptor no verificado; no se pulsó Aceptar.')
+    bot.etapa_alerta='FACTURACION: agregar folio'
+    q=ColaOperaciones(tmp_path,config,bot,Mock(),avisos=Mock())
+    job=q.encolar_factura(solicitud('123456'),safe=False)[0]
+    q.iniciar_cola()
+    assert q.ejecutar_una()
+    record=q.store.get(job['id'])
+    assert record['estado']=='REVISION_REQUERIDA'
+    assert q.store.status()['bloqueo']==job['id']
+    assert 'No se pulsó Aceptar' in record['motivo']
+    bot.cerrar_polaris_tras_solicitud.assert_not_called()
