@@ -2456,6 +2456,13 @@ class PolarisBot:
     def _guardia_antes_aceptar(self, sol):
         faltan=[]
         if not self._pasos_factura.get('cliente'):faltan.append('cliente/RFC')
+        # El flujo v3.1 no puede contar filas del catálogo VCL.
+        # Sin RFC del receptor comprobado después de seleccionar el cliente,
+        # jamás se permite emitir en producción. En modo seguro sí se puede
+        # terminar la prueba de captura y revisar las pantallas.
+        if (not getattr(self, '_factura_test_mode', True)
+                and not self._pasos_factura.get('cliente_rfc_confirmado')):
+            faltan.append('RFC del receptor no verificado')
         if not self._pasos_factura.get('pago'):faltan.append('forma de pago')
         if not self._pasos_factura.get('cfdi'):faltan.append('Uso CFDI')
         if not self._pasos_factura.get('fecha'):faltan.append('fecha del ticket')
@@ -2469,6 +2476,7 @@ class PolarisBot:
     def invoice(self, sol, test_mode=True):
         self.etapa_alerta="FACTURACION: comprobaciones previas"
         self._pasos_factura={}
+        self._factura_test_mode=test_mode
         self._guardia_campos_solicitud(sol,test_mode)
         from .factura_final import validar_correo
         if not isinstance(test_mode, bool):
