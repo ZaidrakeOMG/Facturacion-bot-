@@ -13,22 +13,58 @@ import re
 import time
 
 
-def _rfc_legible(captura, controles, esperado):
-    """Lee RFC solamente desde editores cercanos al campo del receptor.
+def _otras_lecturas_rfc(hwnd):
+    """Fuentes pasivas del mismo control VCL; nunca interactúa con el formulario.
 
-    Tolera el relleno final _ del editor VCL; no quita caracteres interiores.
-    Ningún RFC diferente puede considerarse coincidencia.
+    UI Automation y GetWindowText complementan WM_GETTEXT cuando DevExpress
+    deja el editor interno en modo sólo lectura. Valores ilegibles se omiten.
+    """
+    candidatos = []
+    try:
+        from . import polaris
+        value = polaris.win32gui.GetWindowText(hwnd)
+        if isinstance(value, str) and value:
+            candidatos.append(value)
+    except Exception:
+        pass
+    try:
+        from pywinauto import Desktop
+        elem = Desktop(backend='uia').window(handle=hwnd)
+        for nombre in ('iface_value', 'iface_legacy_iaccessible'):
+            try:
+                pattern = getattr(elem, nombre, None)
+                value = getattr(pattern, 'CurrentValue', None) if pattern is not None else None
+                if isinstance(value, str) and value:
+                    candidatos.append(value)
+            except Exception:
+                continue
+    except Exception:
+        pass
+    return candidatos
+
+
+def _rfc_legible(captura, controles, esperado):
+    """Compara exclusivamente RFCs del editor del receptor con el del PDF.
+
+    Tolera máscara final de guiones bajos. Cualquier RFC distinto detectado
+    se trata como discrepancia: no se pulsa Aceptar del timbrado.
     """
     from .coincidencia_fiscal import CoincidenciaFiscalError
     from .alta_texto import normalizar_campo
     resultados = set()
     for hwnd in dict.fromkeys(controles):
+        candidatos = []
         try:
-            valor = normalizar_campo('rfc', captura.texto.leer(hwnd))
+            candidatos.append(captura.texto.leer(hwnd))
         except Exception:
-            continue
-        if re.fullmatch(r'[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}', valor):
-            resultados.add(valor)
+            pass
+        # El valor de VCL puede leerse con otro proveedor aunque WM_GETTEXT
+        # devuelva vacío. El HWND ya fue limitado a la zona de RFC receptor.
+        candidatos.extend(_otras_lecturas_rfc(hwnd))
+        for candidato in candidatos:
+            valor = normalizar_campo('rfc', candidato)
+            if re.fullmatch(r'[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}', valor):
+                resultados.add(valor)
     if any(valor != esperado for valor in resultados):
         raise CoincidenciaFiscalError(
             'El RFC observado en el receptor difiere del PDF; no se autorizó timbrado.')
