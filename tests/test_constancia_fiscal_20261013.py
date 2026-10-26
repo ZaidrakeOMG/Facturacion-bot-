@@ -364,19 +364,51 @@ def test_clipboard_rechaza_lecturas_incompletas_o_multiples(texto):
     assert _fila_del_portapapeles(texto) is None
 
 
-def test_selector_integrado_ignora_calle_y_no_timbra(monkeypatch):
-    from arybot import polaris,seleccion_cliente
-    monkeypatch.setattr(polaris,'pyautogui',Mock(),raising=False)
+def test_selector_restaurado_v31_da_aceptar_sin_ocr_ni_portapapeles(monkeypatch):
+    from arybot import polaris, seleccion_cliente
+    mouse=Mock(); monkeypatch.setattr(polaris,'pyautogui',mouse,raising=False)
     monkeypatch.setattr(seleccion_cliente.time,'sleep',lambda _:None)
     monkeypatch.setattr('arybot.cliente_facturacion.exigir_cliente_facturable',Mock())
-    selector=Mock(); monkeypatch.setattr('arybot.lectura_catalogo_fiscal.seleccionar_cliente_exacto',selector)
-    bot=Mock(); bot.FACTURA=polaris.PolarisBot.FACTURA; bot.BUSCAR=polaris.PolarisBot.BUSCAR
-    bot._pasos_factura={}; bot._wait_text_dialog.return_value=733; bot._same_polaris_process.return_value=True
-    bot._rect.return_value=SimpleNamespace(left=0,top=0,width=800,height=600); bot._invoice_window.return_value=55
-    assert seleccion_cliente.seleccionar_cliente(bot,55,'SEP1312171X9','EMPRESA SA DE CV','')==55
-    selector.assert_called_once_with(733,rfc='SEP1312171X9',razon_social='EMPRESA SA DE CV',bot=bot)
+    comprobar=Mock(return_value=True)
+    monkeypatch.setattr(seleccion_cliente,'_comprobar_rfc_cargado',comprobar)
+    bot=Mock();bot.FACTURA=polaris.PolarisBot.FACTURA;bot.BUSCAR=polaris.PolarisBot.BUSCAR
+    bot._pasos_factura={}; bot._wait_text_dialog.return_value=733;bot._same_polaris_process.return_value=True
+    bot._rect.return_value=SimpleNamespace(left=0,top=0,width=800,height=600)
+    bot._invoice_window.return_value=55
+    assert seleccion_cliente.seleccionar_cliente(bot,55,'SEP1312171X9','', '')==55
+    ordered=[v.args[1] for v in bot._click_rel.call_args_list]
+    assert ordered == [
+        bot.FACTURA['buscar_cliente'],bot.BUSCAR['buscar'],
+        bot.BUSCAR['primera_fila'],bot.BUSCAR['aceptar']]
+    comprobar.assert_called_once_with(bot,55,'SEP1312171X9')
     assert bot._pasos_factura['cliente'] is True
+    assert bot._pasos_factura['cliente_rfc_confirmado'] is True
     bot.invoice.assert_not_called()
+
+
+def test_receptor_diferente_se_detiene(monkeypatch):
+    from arybot import seleccion_cliente
+    captura=Mock()
+    captura.control.return_value=2
+    captura.texto.leer.return_value='XYZ010101ABC'
+    bot=Mock()
+    bot._captura_factura.return_value=captura
+    monkeypatch.setattr(seleccion_cliente.time,'sleep',lambda _:None)
+    with pytest.raises(CoincidenciaFiscalError,match='no coincide'):
+        seleccion_cliente._comprobar_rfc_cargado(bot,55,'SEP1312171X9')
+
+
+def test_no_timbrar_si_rfc_receptor_no_verificado():
+    from arybot.polaris import PolarisBot, PolarisError
+    datos={k:True for k in ('cliente','pago','cfdi','fecha','folio')}
+    bot=SimpleNamespace(_pasos_factura=datos,_factura_test_mode=False,diag=Mock())
+    with pytest.raises(PolarisError,match='RFC del receptor no verificado'):
+        PolarisBot._guardia_antes_aceptar(bot,None)
+    bot._factura_test_mode=True
+    assert PolarisBot._guardia_antes_aceptar(bot,None) is None
+    datos['cliente_rfc_confirmado']=True
+    bot._factura_test_mode=False
+    assert PolarisBot._guardia_antes_aceptar(bot,None) is None
 
 
 def test_instalacion_selector_idempotente(monkeypatch):
