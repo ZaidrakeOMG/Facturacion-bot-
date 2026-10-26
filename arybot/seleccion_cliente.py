@@ -13,43 +13,88 @@ import re
 import time
 
 
-def _comprobar_rfc_cargado(bot, formulario, rfc):
-    """Lectura pasiva del RFC en Facturacion DESPUES de Aceptar el cliente.
+def _rfc_legible(captura, controles, esperado):
+    """Lee RFC solamente desde editores cercanos al campo del receptor.
 
-    No escribe ni enfoca el RFC. Los editores VCL son anidados y pueden no
-    exponer texto; devolver False deja la solicitud en modo de prueba.
-    Un RFC efectivamente diferente es un error y cancela siempre.
+    Tolera el relleno final _ del editor VCL; no quita caracteres interiores.
+    Ningún RFC diferente puede considerarse coincidencia.
     """
     from .coincidencia_fiscal import CoincidenciaFiscalError
-    from .factura_captura import CapturaFactura, coincide
+    from .alta_texto import normalizar_campo
+    resultados = set()
+    for hwnd in dict.fromkeys(controles):
+        try:
+            valor = normalizar_campo('rfc', captura.texto.leer(hwnd))
+        except Exception:
+            continue
+        if re.fullmatch(r'[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}', valor):
+            resultados.add(valor)
+    if any(valor != esperado for valor in resultados):
+        raise CoincidenciaFiscalError(
+            'El RFC observado en el receptor difiere del PDF; no se autorizó timbrado.')
+    return esperado in resultados
+
+
+def _controles_rfc_visibles(bot, formulario):
+    """Descendientes Edit en las coordenadas del campo RFC, sin enfocar ni escribir."""
+    from .factura_captura import CapturaFactura
     from . import polaris
+    w = polaris.win32gui
+    region = bot._rect(formulario)
+    x = region.left + int(region.width * CapturaFactura.RECEPTOR['rfc'][0])
+    y = region.top + int(region.height * CapturaFactura.RECEPTOR['rfc'][1])
+    encontrados = []
+
+    def visitar(h, _):
+        if len(encontrados) >= 24:
+            return
+        try:
+            if (not w.IsWindowVisible(h) or not bot._same_polaris_process(formulario, h)
+                    or 'EDIT' not in bot._class_name(h).upper()):
+                return
+            r = bot._rect(h)
+            if r.left <= x < r.right and r.top <= y < r.bottom:
+                encontrados.append(h)
+        except Exception:
+            return
+
+    w.EnumChildWindows(formulario, visitar, None)
+    return encontrados
+
+
+def _comprobar_rfc_cargado(bot, formulario, rfc):
+    """Lectura pasiva del RFC del receptor tras Aceptar el cliente.
+
+    Verifica el campo dos veces sin editarlo. Si Polaris VCL no permite lectura,
+    retorna False y la cola conserva el formulario abierto para revisión manual.
+    """
+    from .coincidencia_fiscal import CoincidenciaFiscalError
+    from .factura_captura import CapturaFactura
     captura = bot._captura_factura()
     bot._activate(formulario)
+    directos = []
     try:
-        h = captura.control(formulario, CapturaFactura.RECEPTOR['rfc'],
-                            'rfc_receptor', lectura=True)
+        directos.append(captura.control(
+            formulario, CapturaFactura.RECEPTOR['rfc'],
+            'rfc_receptor', lectura=True))
     except Exception:
-        bot.log('RFC receptor: Polaris no expone el editor para lectura independiente.')
-        return False
+        bot.log('RFC receptor: lectura del editor principal no disponible; revisando editores anidados.')
 
     confirmado = 0
     for _ in range(3):
+        controles = list(directos)
         try:
-            observado = str(captura.texto.leer(h) or '').strip()
+            controles.extend(_controles_rfc_visibles(bot, formulario))
         except Exception:
-            observado = ''
-        if observado and re.fullmatch(r'[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}', observado.upper()):
-            if not coincide('rfc', observado, rfc):
-                raise CoincidenciaFiscalError(
-                    'El RFC del receptor cargado por Polaris no coincide con el PDF. '
-                    'No se facturó; se requiere revisión del cliente.')
+            pass
+        if _rfc_legible(captura, controles, rfc):
             confirmado += 1
         time.sleep(.12)
     if confirmado >= 2:
-        bot.log('RFC del receptor verificado después de Aceptar el cliente.')
+        bot.log('RFC del receptor leído y comprobado por coincidencia exacta.')
         return True
-    bot.log('RFC del receptor sin lectura independiente concluyente; '
-            'se admite únicamente la prueba, no el timbrado automático.')
+    bot.log('RFC del receptor visible pero no verificable desde controles VCL; '
+            'se conservará el formulario para revisión en lugar de cerrarlo.')
     return False
 
 
