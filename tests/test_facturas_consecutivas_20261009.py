@@ -148,9 +148,13 @@ def final_bot(monkeypatch, current, progress=None):
     class FakeFinal:
         def __init__(self, bot):
             instances.append(self)
+            self.bot = bot
 
         def _esperar_envio(self, main, inv):
             return 300
+
+        def leer_correo_precargado_sin_tocar(self, dlg):
+            return self.bot._correo_pasivo_mock()
 
         def _dialogos(self, main, allowed):
             return progress(clock.now())
@@ -163,7 +167,8 @@ def final_bot(monkeypatch, current, progress=None):
     b._activate = Mock()
     b._assert_point_inside_window = Mock()
     b._click_rel = Mock()
-    b._copy_current_fresh = Mock(side_effect=current)
+    b._copy_current_fresh = Mock()
+    b._correo_pasivo_mock = Mock(side_effect=current)
     b._window_exists_visible = Mock(return_value=False)
     b._captura_factura = Mock()
     b._screenshot_error = Mock()
@@ -175,20 +180,23 @@ def test_correo_precargado_con_acento_no_se_reemplaza(monkeypatch):
     b, clock = final_bot(monkeypatch, ['aux.administración@ejemplo.com'])
     assert b._send_dialog_estable(1, 2, 'portal@example.com') == 'ENVIO_SOLICITADO'
     b._captura_factura.assert_not_called()
-    b._copy_current_fresh.assert_called_once()
-    assert b._click_rel.call_count == 3  # radio, foco correo, Aceptar envío
+    b._copy_current_fresh.assert_not_called()
+    b._correo_pasivo_mock.assert_called_once_with()
+    assert [c.args[1] for c in b._click_rel.call_args_list] == [
+        b.ENVIO['correo_radio'], b.ENVIO['aceptar']]  # jamás clic en correo
     assert clock.now() >= 15
     assert b.etapa_alerta == 'ENVIO_CORREO: comprobar cierre y actividad'
 
 
-def test_correo_vacio_usa_el_del_portal_una_sola_vez(monkeypatch):
+def test_correo_vacio_detiene_envio_sin_tocar_campo_tras_timbrado(monkeypatch):
     email = 'portal@example.com'
-    b, clock = final_bot(monkeypatch, ['', email])
-    writer = Mock()
-    b._captura_factura.return_value = writer
-    assert b._send_dialog_estable(1, 2, email) == 'ENVIO_SOLICITADO'
-    writer.escribir_rel.assert_called_once()
-    assert b._click_rel.call_count == 3
+    b, clock = final_bot(monkeypatch, [''])
+    with pytest.raises(polaris.PolarisError, match='No se confirmó un correo'):
+        b._send_dialog_estable(1, 2, email)
+    b._captura_factura.assert_not_called()
+    b._copy_current_fresh.assert_not_called()
+    assert [c.args[1] for c in b._click_rel.call_args_list] == [
+        b.ENVIO['correo_radio']]  # no Aceptar ni escritura ciega
 
 
 def test_progreso_de_correo_reinicia_espera_de_seguridad(monkeypatch):
@@ -197,7 +205,7 @@ def test_progreso_de_correo_reinicia_espera_de_seguridad(monkeypatch):
     b, clock = final_bot(monkeypatch, ['cliente@example.com'], progress)
     assert b._send_dialog_estable(1, 2, 'portal@example.com') == 'ENVIO_SOLICITADO'
     assert clock.now() >= 27  # progreso hasta el segundo 12, luego 15 silenciosos
-    assert b._click_rel.call_count == 3
+    assert b._click_rel.call_count == 2
 
 
 def test_aviso_despues_del_timbrado_no_es_exito(monkeypatch):
@@ -205,7 +213,37 @@ def test_aviso_despues_del_timbrado_no_es_exito(monkeypatch):
         monkeypatch, ['cliente@example.com'], lambda _: [(901, 'AVISO')])
     with pytest.raises(polaris.PolarisError, match='aviso'):
         b._send_dialog_estable(1, 2, 'portal@example.com')
-    assert b._click_rel.call_count == 3  # no hay segundo Aceptar
+    assert b._click_rel.call_count == 2  # un radio y un único Aceptar
+
+
+
+def test_lector_pasivo_de_correo_no_usa_clic_teclado_ni_portapapeles(monkeypatch):
+    from arybot.factura_final import PantallaFinalFactura
+    b = Mock()
+    pantalla = PantallaFinalFactura(b)
+    pantalla._email_control = Mock(return_value=555)
+    pantalla.texto = Mock()
+    pantalla.texto.leer.return_value = 'cliente@example.com'
+    pantalla._children = Mock(side_effect=AssertionError('No debe buscar otras ventanas'))
+    monkeypatch.setattr(polaris, 'win32gui',
+                        SimpleNamespace(GetWindowText=lambda h: 'cliente@example.com'), raising=False)
+    assert pantalla.leer_correo_precargado_sin_tocar(99) == 'cliente@example.com'
+    b._click_rel.assert_not_called()
+    b._captura_factura.assert_not_called()
+
+
+def test_lector_pasivo_rechaza_destinatario_contradictorio(monkeypatch):
+    from arybot.factura_final import PantallaFinalFactura, FinalFacturaError
+    b = Mock()
+    pantalla = PantallaFinalFactura(b)
+    pantalla._email_control = Mock(return_value=555)
+    pantalla.texto = Mock()
+    pantalla.texto.leer.return_value = 'uno@example.com'
+    monkeypatch.setattr(polaris, 'win32gui',
+                        SimpleNamespace(GetWindowText=lambda h: 'otro@example.com'), raising=False)
+    with pytest.raises(FinalFacturaError, match='lecturas distintas'):
+        pantalla.leer_correo_precargado_sin_tocar(99)
+    b._click_rel.assert_not_called()
 
 
 def test_bloqueo_persiste_si_el_envio_quedo_incierto(tmp_path):
