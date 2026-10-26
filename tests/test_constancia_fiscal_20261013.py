@@ -510,6 +510,29 @@ def test_rfc_receptor_lectura_win32_uia_respaldo_sin_editar(monkeypatch):
         seleccion_cliente._rfc_legible(captura, [17], 'SEP1312171X9')
 
 
+def test_copia_dirigida_del_rfc_no_escribe_ni_usa_ocr(monkeypatch):
+    from arybot import polaris, seleccion_cliente
+    captura=Mock()
+    captura.texto.copiar.return_value='SEP1312171X9___'
+    bot=Mock()
+    bot._window_exists_visible.return_value=True
+    bot._same_polaris_process.return_value=True
+    bot._is_descendant_or_same.return_value=True
+    monkeypatch.setattr(
+        polaris, 'win32gui',
+        SimpleNamespace(
+            IsWindowEnabled=lambda _:True,
+            GetForegroundWindow=lambda:55), raising=False)
+    assert seleccion_cliente._leer_por_copia_dirigida(
+        bot, 55, captura, [18], 'SEP1312171X9')
+    captura.texto.copiar.assert_called_once()
+    captura.escribir_rel.assert_not_called()
+    captura.texto.copiar.return_value='ABC010101ABC'
+    with pytest.raises(CoincidenciaFiscalError,match='no coincide'):
+        seleccion_cliente._leer_por_copia_dirigida(
+            bot, 55, captura, [18], 'SEP1312171X9')
+
+
 def test_error_rfc_receptor_conserva_polaris_y_bloquea_cola(tmp_path):
     from arybot.cola_operaciones import ColaOperaciones
     from arybot.cola_modelo import DEFAULTS
