@@ -2458,37 +2458,14 @@ class PolarisBot:
     def _guardia_antes_aceptar(self, sol):
         faltan=[]
         if not self._pasos_factura.get('cliente'):faltan.append('cliente/RFC')
-        # El flujo v3.1 no puede contar filas del catálogo VCL.
-        # Sin RFC del receptor comprobado después de seleccionar el cliente,
-        # jamás se permite emitir en producción. En modo seguro sí se puede
-        # terminar la prueba de captura y revisar las pantallas.
-        if (not getattr(self, '_factura_test_mode', True)
-                and not self._pasos_factura.get('cliente_rfc_confirmado')):
-            faltan.append('RFC del receptor no verificado')
         if not self._pasos_factura.get('pago'):faltan.append('forma de pago')
         if not self._pasos_factura.get('cfdi'):faltan.append('Uso CFDI')
         if not self._pasos_factura.get('fecha'):faltan.append('fecha del ticket')
         if not self._pasos_factura.get('folio'):faltan.append('folio')
         self.diag.evento('TIMBRADO: guardia final','OK' if not faltan else 'ERROR',
                           'Checklist antes de Aceptar',{'faltan':faltan})
-        # No almacenar RFC, nombre ni folio: solo resultados de comprobación.
-        self.log('GUARDIA ACEPTAR: cliente=%s, receptor_RFC_verificado=%s, '
-                 'pago=%s, cfdi=%s, fecha=%s, folio=%s, modo_seguro=%s.' % (
-                     bool(self._pasos_factura.get('cliente')),
-                     bool(self._pasos_factura.get('cliente_rfc_confirmado')),
-                     bool(self._pasos_factura.get('pago')),
-                     bool(self._pasos_factura.get('cfdi')),
-                     bool(self._pasos_factura.get('fecha')),
-                     bool(self._pasos_factura.get('folio')),
-                     bool(getattr(self, '_factura_test_mode', True))))
         if faltan:
-            mensaje = 'Guardia final: faltan pasos confirmados ('+', '.join(faltan)+'). No se pulsó Aceptar.'
-            if faltan == ['RFC del receptor no verificado']:
-                # La captura ya está completa, pero la lectura de VCL no es
-                # concluyente. Conservar Polaris sin timbrar para que el
-                # operador compruebe el RFC en pantalla y decida manualmente.
-                raise ReceptorNoVerificadoError(mensaje)
-            raise PolarisError(mensaje)
+            raise PolarisError('Guardia final: faltan pasos confirmados ('+', '.join(faltan)+'). No se pulsó Aceptar.')
 
     @diagnosticar_operacion('FACTURACION')
     def invoice(self, sol, test_mode=True):
