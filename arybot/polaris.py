@@ -2347,7 +2347,7 @@ class PolarisBot:
 
         El Aceptar de timbrado ya se pulsó antes de entrar; no se vuelve a intentar.
         """
-        from .factura_final import PantallaFinalFactura, FinalFacturaError, validar_correo
+        from .factura_final import PantallaFinalFactura, FinalFacturaError
         from .dialogos_cfdi import PROGRESOS
         final = PantallaFinalFactura(self)
         try:
@@ -2363,39 +2363,36 @@ class PolarisBot:
         self._assert_point_inside_window(dlg, self.ENVIO["correo_radio"], "enviar_por_correo")
         self._click_rel(dlg, self.ENVIO["correo_radio"], wait=.35)
 
-        self.etapa_alerta = "ENVIO_CORREO: revisar destinatario"
-        self._assert_point_inside_window(dlg, self.ENVIO["correo"], "correo_destino")
-        self._click_rel(dlg, self.ENVIO["correo"], wait=.25)
-        current = self._copy_current_fresh()
-        if current:
-            # El correo registrado en Polaris tiene prioridad sobre el del portal.
-            # No reemplazarlo ni someterlo al validador ASCII del formulario;
-            # Polaris determina si acepta el destinatario cuando se pulsa Aceptar.
-            if any(char in current for char in ("\r", "\n", "\x00")):
-                raise PolarisError("El correo precargado contiene caracteres de control. "
-                                   "No se sustituyó ni se envió automáticamente.")
-            self.diag.evento('ENVIO_CORREO: destinatario', 'OK',
-                             'Correo precargado conservado sin cambios',
-                             {'vacio': False, 'longitud': len(current)})
-            self.log("FINAL 3/4: Polaris ya tiene correo; se conserva SIN sobrescribir.")
-        else:
-            # Solamente si Polaris está vacío, escribir el de la solicitud.
-            email = validar_correo(email)
-            self.log("FINAL 3/4: correo vacío en Polaris; escribiendo correo de solicitud.")
-            self._captura_factura().escribir_rel(
-                dlg, self.ENVIO["correo"], "correo", email
-            )
-            time.sleep(.25)
-            confirmed = self._copy_current_fresh()
-            if confirmed != email:
-                self.diag.evento('ENVIO_CORREO: destinatario', 'ERROR',
-                                 'El correo nuevo no quedó confirmado',
-                                 {'vacio': not bool(confirmed)})
-                raise PolarisError("El correo nuevo no quedó confirmado en Polaris. "
-                                   "No se pulsó Aceptar de envío.")
-            self.diag.evento('ENVIO_CORREO: destinatario', 'OK',
-                             'Correo nuevo escrito y confirmado',
-                             {'vacio': False, 'longitud': len(confirmed)})
+        self.etapa_alerta = "ENVIO_CORREO: conservar destinatario de Polaris"
+        # Polaris ya trae el correo registrado al abrir esta pantalla. NO
+        # enfocar, hacer clic, Ctrl+A, Ctrl+C, pegar ni cambiar el campo.
+        # Los métodos de consulta leen el editor directamente, sin interacción.
+        try:
+            current = final.leer_correo_precargado_sin_tocar(dlg)
+        except FinalFacturaError as exc:
+            raise PolarisError(str(exc)) from exc
+
+        if not current:
+            # La factura ya puede estar timbrada. Es preferible que el operador
+            # revise un correo vacío a sobrescribir uno que VCL no pudo exponer.
+            raise PolarisError(
+                "No se confirmó un correo ya capturado en Polaris. "
+                "No se tocó el campo ni se pulsó Aceptar de envío. "
+                "Revisa el CFDI sin volver a timbrar la factura.")
+        if any(char in current for char in ("\\r", "\\n", "\\x00")):
+            raise PolarisError(
+                "El correo precargado contiene caracteres de control. "
+                "No se modificó ni se pulsó Aceptar de envío.")
+        if "@" not in current or len(current) > 254:
+            raise PolarisError(
+                "El correo registrado en Polaris no parece válido. "
+                "No se modificó ni se pulsó Aceptar de envío.")
+
+        self.diag.evento('ENVIO_CORREO: destinatario', 'OK',
+                         'Correo precargado conservado sin interacción',
+                         {'vacio': False, 'longitud': len(current)})
+        self.log("FINAL 3/4: correo precargado en Polaris; NO se toca. "
+                 "Solo se seleccionó Enviar por Correo.")
 
         # Conservar selección actual de XML y PDF; el flujo de timbrado no se repite.
         self.etapa_alerta = "ENVIO_CORREO: Aceptar envío"
