@@ -398,16 +398,27 @@ def test_receptor_diferente_se_detiene(monkeypatch):
         seleccion_cliente._comprobar_rfc_cargado(bot,55,'SEP1312171X9')
 
 
-def test_no_timbrar_si_rfc_receptor_no_verificado():
+def test_guardia_v31_restaurada_exige_captura_completa_sin_rfc_extra():
+    """Recupera la guardia comprobada en el commit 61b581e2aa (10/oct).
+
+    La búsqueda por RFC y los errores de discrepancia del receptor siguen
+    activos, pero VCL no necesita exponer una lectura extra del mismo campo.
+    """
     from arybot.polaris import PolarisBot, PolarisError
     datos={k:True for k in ('cliente','pago','cfdi','fecha','folio')}
     bot=SimpleNamespace(_pasos_factura=datos,_factura_test_mode=False,diag=Mock())
-    with pytest.raises(PolarisError,match='RFC del receptor no verificado'):
-        PolarisBot._guardia_antes_aceptar(bot,None)
-    bot._factura_test_mode=True
+    # El RFC fue utilizado al BUSCAR y Polaris cargó el cliente. DevExpress
+    # no respondió a WM_GETTEXT, por lo que no hay segunda lectura.
     assert PolarisBot._guardia_antes_aceptar(bot,None) is None
+    datos['folio']=False
+    with pytest.raises(PolarisError,match='folio'):
+        PolarisBot._guardia_antes_aceptar(bot,None)
+    datos['folio']=True
+    datos['cliente']=False
+    with pytest.raises(PolarisError,match='cliente/RFC'):
+        PolarisBot._guardia_antes_aceptar(bot,None)
+    datos['cliente']=True
     datos['cliente_rfc_confirmado']=True
-    bot._factura_test_mode=False
     assert PolarisBot._guardia_antes_aceptar(bot,None) is None
 
 
