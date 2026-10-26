@@ -329,6 +329,58 @@ class PantallaFinalFactura:
         except Exception as e:
             raise FinalFacturaError('No pude leer el correo actual del diálogo de envío.') from e
 
+    def leer_correo_precargado_sin_tocar(self, dlg):
+        """Lee el correo existente sin foco, clics, Ctrl+A, Ctrl+C ni escritura.
+
+        Fuentes: WM_GETTEXT del editor VCL, GetWindowText y, si existe, el
+        patrón Value de UI Automation. Una lectura vacía o contradictoria NO
+        autoriza sobrescribir el correo ni enviar a ciegas.
+        """
+        h = self._email_control(dlg)
+        encontrados = []
+        lecturas = 0
+
+        try:
+            value = self.texto.leer(h)
+            lecturas += 1
+            if isinstance(value, str) and value.strip():
+                encontrados.append(value.strip())
+        except Exception:
+            pass
+
+        try:
+            value = self.win.GetWindowText(h)
+            lecturas += 1
+            if isinstance(value, str) and value.strip():
+                encontrados.append(value.strip())
+        except Exception:
+            pass
+
+        try:
+            from pywinauto import Desktop
+            item = Desktop(backend='uia').window(handle=h)
+            pattern = getattr(item, 'iface_value', None)
+            value = getattr(pattern, 'CurrentValue', None) if pattern is not None else None
+            if isinstance(value, str):
+                lecturas += 1
+                if value.strip():
+                    encontrados.append(value.strip())
+        except Exception:
+            pass
+
+        valores = set(encontrados)
+        if len(valores) > 1:
+            raise FinalFacturaError(
+                'Polaris mostró lecturas distintas del correo; revisa manualmente. '
+                'No se modificó el destinatario ni se pulsó Aceptar de envío.')
+        if valores:
+            return valores.pop()
+        if not lecturas:
+            raise FinalFacturaError(
+                'No se pudo leer el correo precargado sin tocar el campo. '
+                'La factura puede estar timbrada: revisa el envío sin repetirlo.')
+        return ''
+
     def _correo(self, main, dlg, h, email):
         """Conserva el correo existente; sólo captura el del formulario si está vacío."""
         current = self._leer_correo_actual(main, dlg, h)
