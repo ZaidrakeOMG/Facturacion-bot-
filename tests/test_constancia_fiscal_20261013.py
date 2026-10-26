@@ -497,6 +497,19 @@ def test_receptor_rfc_enmascarado_valida_y_otro_rfc_bloquea():
         _rfc_legible(captura,[1,2],'SEP1312171X9')
 
 
+def test_rfc_receptor_lectura_win32_uia_respaldo_sin_editar(monkeypatch):
+    from arybot import seleccion_cliente
+    captura=Mock()
+    captura.texto.leer.side_effect=RuntimeError('WM_GETTEXT vacío en VCL')
+    fuente=Mock(return_value=['SEP1312171X9___'])
+    monkeypatch.setattr(seleccion_cliente, '_otras_lecturas_rfc', fuente)
+    assert seleccion_cliente._rfc_legible(captura, [17], 'SEP1312171X9')
+    fuente.assert_called_once_with(17)
+    fuente.return_value=['AAA010101AAA']
+    with pytest.raises(CoincidenciaFiscalError, match='difiere'):
+        seleccion_cliente._rfc_legible(captura, [17], 'SEP1312171X9')
+
+
 def test_error_rfc_receptor_conserva_polaris_y_bloquea_cola(tmp_path):
     from arybot.cola_operaciones import ColaOperaciones
     from arybot.cola_modelo import DEFAULTS
