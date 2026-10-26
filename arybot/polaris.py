@@ -2471,6 +2471,16 @@ class PolarisBot:
         if not self._pasos_factura.get('folio'):faltan.append('folio')
         self.diag.evento('TIMBRADO: guardia final','OK' if not faltan else 'ERROR',
                           'Checklist antes de Aceptar',{'faltan':faltan})
+        # No almacenar RFC, nombre ni folio: solo resultados de comprobación.
+        self.log('GUARDIA ACEPTAR: cliente=%s, receptor_RFC_verificado=%s, '
+                 'pago=%s, cfdi=%s, fecha=%s, folio=%s, modo_seguro=%s.' % (
+                     bool(self._pasos_factura.get('cliente')),
+                     bool(self._pasos_factura.get('cliente_rfc_confirmado')),
+                     bool(self._pasos_factura.get('pago')),
+                     bool(self._pasos_factura.get('cfdi')),
+                     bool(self._pasos_factura.get('fecha')),
+                     bool(self._pasos_factura.get('folio')),
+                     bool(getattr(self, '_factura_test_mode', True))))
         if faltan:
             mensaje = 'Guardia final: faltan pasos confirmados ('+', '.join(faltan)+'). No se pulsó Aceptar.'
             if faltan == ['RFC del receptor no verificado']:
