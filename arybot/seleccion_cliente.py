@@ -98,6 +98,43 @@ def _controles_rfc_visibles(bot, formulario):
     return encontrados
 
 
+def _leer_por_copia_dirigida(bot, formulario, captura, controles, esperado):
+    """Último respaldo de solo lectura para los editores VCL del RFC.
+
+    WM_COPY se envía al HWND del RFC SIN hacer clic, Ctrl+A, ni teclear.
+    La implementación TextoWindows rechaza copias viejas o de otro proceso.
+    Nunca altera los datos del receptor ni usa el clipboard del buscador.
+    """
+    from .coincidencia_fiscal import CoincidenciaFiscalError
+    from .alta_texto import normalizar_campo
+    from . import polaris
+    win = polaris.win32gui
+
+    def guard():
+        if not bot._window_exists_visible(formulario) or not win.IsWindowEnabled(formulario):
+            raise CoincidenciaFiscalError('El formulario de Facturación dejó de estar activo.')
+        if not bot._same_polaris_process(formulario, win.GetForegroundWindow()):
+            raise CoincidenciaFiscalError('Otra aplicación tomó el foco; se detuvo la verificación.')
+
+    encontrados = set()
+    for hwnd in dict.fromkeys(controles):
+        try:
+            if not bot._is_descendant_or_same(formulario, hwnd):
+                continue
+            valor = normalizar_campo(
+                'rfc', captura.texto.copiar(hwnd, guard))
+            if re.fullmatch(r'[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}', valor):
+                encontrados.add(valor)
+        except CoincidenciaFiscalError:
+            raise
+        except Exception:
+            continue
+    if any(x != esperado for x in encontrados):
+        raise CoincidenciaFiscalError(
+            'El RFC leído del receptor no coincide con el PDF; no se timbró.')
+    return esperado in encontrados
+
+
 def _comprobar_rfc_cargado(bot, formulario, rfc):
     """Lectura pasiva del RFC del receptor tras Aceptar el cliente.
 
@@ -123,7 +160,13 @@ def _comprobar_rfc_cargado(bot, formulario, rfc):
             controles.extend(_controles_rfc_visibles(bot, formulario))
         except Exception:
             pass
-        if _rfc_legible(captura, controles, rfc):
+        legible = _rfc_legible(captura, controles, rfc)
+        if not legible and controles:
+            # DevExpress a veces devuelve vacío con WM_GETTEXT y UIA, aunque
+            # permite copiar el valor del editor preciso con WM_COPY dirigido.
+            legible = _leer_por_copia_dirigida(
+                bot, formulario, captura, controles, rfc)
+        if legible:
             confirmado += 1
         time.sleep(.12)
     if confirmado >= 2:
