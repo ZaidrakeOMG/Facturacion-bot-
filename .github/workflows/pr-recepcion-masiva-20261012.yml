@@ -1,0 +1,24 @@
+name: Simulacion recepcion de 20 a 100 clientes
+
+on:
+  push:
+    branches: [test/recepcion-100-clientes-20261012]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  recibir-sin-facturar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Instalar pytest
+        run: python -m pip install pytest
+      - name: Simular solicitudes via proxy IIS sin red
+        run: python -m pytest -q tests/test_recepcion_masiva_segura_20261012.py
