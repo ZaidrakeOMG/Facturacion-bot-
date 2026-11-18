@@ -270,7 +270,7 @@ class PortalWSGI:
         if path == PREFIX + '/validar-ticket':
             if set(body) != {'foto_ticket'}:
                 raise HttpError(400, 'Envía solamente la fotografía del ticket.')
-            if not self.limits.aceptar(('ocr', ip), 12, 600):
+            if not self.limits.aceptar(('ocr', session['sid']), 12, 600):
                 raise HttpError(429, 'Se alcanzó el límite de lectura de fotos. Intenta más tarde.')
             try:
                 resultado = analizar_ticket_foto(body['foto_ticket'])
