@@ -61,3 +61,35 @@ def test_no_inventa_folio_con_numeros_de_telefono():
 def test_formato_invalido_rechazado():
     with pytest.raises(FotoTicketError):
         analizar_ticket_foto('un_folio_inventado')
+
+
+def _cuerpo_final(foto='foto-ejemplo', folio='0008430573'):
+    from datetime import date
+    return dict(
+        tipo='FACTURA', estacion='ARY V', constancia_pdf='PDF-FICTICIO',
+        correo='cliente@example.com', correo_confirmacion='cliente@example.com',
+        sitio_web='', confirmado=True, ticket=folio, foto_ticket=foto,
+        fecha_ticket=date.today().isoformat(), forma_pago='EFECTIVO', uso_cfdi='G03',
+    )
+
+
+def test_no_permite_enviar_folio_manual_sin_foto():
+    from arybot.portal_modelo import validar_entrada, EntradaPortalError
+    from types import SimpleNamespace
+    identidad = SimpleNamespace(rfc='SEP1312171X9', razon_social='EMPRESA', calle='', idcif='')
+    with patch('arybot.portal_modelo.leer_constancia_pdf_base64', return_value=identidad):
+        with pytest.raises(EntradaPortalError, match='foto'):
+            validar_entrada(_cuerpo_final(foto=''))
+
+
+def test_el_servidor_rechaza_folio_alterado_aunque_haya_foto():
+    from arybot.portal_modelo import validar_entrada, EntradaPortalError
+    from types import SimpleNamespace
+    identidad = SimpleNamespace(rfc='SEP1312171X9', razon_social='EMPRESA', calle='', idcif='')
+    with patch('arybot.portal_modelo.leer_constancia_pdf_base64', return_value=identidad), \
+         patch('arybot.portal_modelo.analizar_ticket_foto', return_value={'folio': '0008430573'}):
+        with pytest.raises(EntradaPortalError, match='no coincide'):
+            validar_entrada(_cuerpo_final(folio='0008430574'))
+        kind,sol,datos=validar_entrada(_cuerpo_final())
+    assert kind == 'FACTURA' and sol.ticket == '0008430573'
+    assert 'foto_ticket' not in datos
