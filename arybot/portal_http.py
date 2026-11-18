@@ -20,11 +20,12 @@ import time
 from urllib.parse import urlsplit
 from .cola_modelo import SolicitudDuplicada
 from .portal_modelo import validar_entrada, catalogos, estado_publico, EntradaPortalError
+from .ticket_foto import analizar_ticket_foto, FotoTicketError
 from .asistencia_whatsapp import perfil_local_facturacion
 
 PREFIX = '/api/facturacion'
 COOKIE_NAME = 'ary_portal_session'
-MAX_BODY = 2 * 1024 * 1024 * 4 // 3 + 32768
+MAX_BODY = 8 * 1024 * 1024  # PDF 2 MB + fotografía 3 MB, ambos base64
 SESSION_LIFETIME = 4 * 3600
 TRACKING_LIFETIME = 7 * 86400
 MAX_JSON_KEYS = 16
@@ -266,6 +267,16 @@ class PortalWSGI:
         if not self.limits.aceptar(('sesion', session['sid']), 60, 60):
             raise HttpError(429, 'Hay demasiadas consultas de esta sesión. Espera un momento y vuelve a intentar.')
         body = self._body(environ)
+        if path == PREFIX + '/validar-ticket':
+            if set(body) != {'foto_ticket'}:
+                raise HttpError(400, 'Envía solamente la fotografía del ticket.')
+            if not self.limits.aceptar(('ocr', ip), 12, 600):
+                raise HttpError(429, 'Se alcanzó el límite de lectura de fotos. Intenta más tarde.')
+            try:
+                resultado = analizar_ticket_foto(body['foto_ticket'])
+            except FotoTicketError as exc:
+                raise HttpError(400, str(exc)) from exc
+            return 200, resultado, 'application/json; charset=utf-8', headers
         if path == PREFIX + '/recepcion':
             request_id = body.get('request_id', '')
             if not isinstance(request_id, str) or not re.fullmatch('[0-9a-f]{32}', request_id):
