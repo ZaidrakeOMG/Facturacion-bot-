@@ -141,7 +141,7 @@ def test_rescate_zonas_acepta_folio_y_total_sin_lectura_completa():
     }
     api.image_to_string.side_effect = [
         'FOLIO 0008430573', 'FOLIO 0008430573',
-        'OPERACION DE CONTADO\\nTOTAL $500.00',
+        'OPERACION DE CONTADO\nTOTAL $500.00',
     ]
     imagen = Image.new('RGB', (740, 1600), 'white')
     assert _rescate_compra_y_folio(imagen, api) == (['0008430573'], True)
@@ -197,8 +197,8 @@ def test_rescate_integracion_acepta_folio_y_total_solo_zonas():
             'width': [98], 'height': [24],
         },
     ]
-    with patch('arybot.ocr_ticket.find_tesseract', return_value='tesseract'), \\
-         patch('pytesseract.image_to_data', side_effect=api.image_to_data.side_effect), \\
+    with patch('arybot.ocr_ticket.find_tesseract', return_value='tesseract'), \
+         patch('pytesseract.image_to_data', side_effect=api.image_to_data.side_effect), \
          patch('pytesseract.image_to_string', side_effect=[
              'FOLIO 0008430573',
              'sin palabras de compra reconocibles',
