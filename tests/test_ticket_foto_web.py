@@ -62,8 +62,8 @@ def test_no_inventa_folio_con_numeros_de_telefono():
 def test_barcode_corrige_digitos_ocr_y_conserva_ceros_iniciales():
     with patch('arybot.ticket_foto._folios_codigo_barras', return_value=['0008430573']):
         resultado = leer_con_respuestas([
-            'FOLIO 0098430573\\nTOTAL $500.00',
-            'FOLIO 0003430573\\nDISPENSARIO 7',
+            'FOLIO 0098430573\nTOTAL $500.00',
+            'FOLIO 0003430573\nDISPENSARIO 7',
         ])
     assert resultado['folio'] == '0008430573'
 
@@ -72,8 +72,8 @@ def test_barcode_no_inventa_folio_distinto_del_impreso():
     with patch('arybot.ticket_foto._folios_codigo_barras', return_value=['1234567890']):
         with pytest.raises(FotoTicketError, match='más legible'):
             leer_con_respuestas([
-                'FOLIO 0008430573\\nTOTAL $500.00',
-                'FOLIO 0008430578\\nDISPENSARIO 7',
+                'FOLIO 0008430573\nTOTAL $500.00',
+                'FOLIO 0008430578\nDISPENSARIO 7',
             ])
 
 
@@ -81,8 +81,8 @@ def test_reimpresion_gana_incluso_con_codigo_de_barras():
     with patch('arybot.ticket_foto._folios_codigo_barras', return_value=['0008430573']):
         with pytest.raises(FotoTicketError, match='REIMPRESIÓN'):
             leer_con_respuestas([
-                'REIMPRESIÓN\\nFOLIO 0008430573\\nTOTAL $500.00',
-                'FOLIO 0008430573\\nDISPENSARIO 7',
+                'REIMPRESIÓN\nFOLIO 0008430573\nTOTAL $500.00',
+                'FOLIO 0008430573\nDISPENSARIO 7',
             ])
 
 
