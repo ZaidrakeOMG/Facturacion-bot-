@@ -222,8 +222,8 @@ def _rescate_compra_y_folio(im, pytesseract) -> tuple[list[str], bool]:
                 # En la zona localizada exigir al menos un concepto de
                 # compra Y un importe legible, no solo la palabra FOLIO.
                 compra_valida = bool(
-                    re.search(r'\\b(?:TOTAL|DISPENSARIO|PRODUCTO|LITROS|OPERACION)\\b', texto_compra)
-                    and re.search(r'\\$?\\s*\\d{1,6}[.,]\\d{2}\\b', texto_compra)
+                    re.search(r'\b(?:TOTAL|DISPENSARIO|PRODUCTO|LITROS|OPERACION)\b', texto_compra)
+                    and re.search(r'\$?\s*\d{1,6}[.,]\d{2}\b', texto_compra)
                 )
             except Exception:
                 pass
