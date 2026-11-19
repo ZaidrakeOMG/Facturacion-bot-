@@ -184,9 +184,9 @@ def _rescate_compra_y_folio(im, pytesseract) -> tuple[list[str], bool]:
         # impresa hace que Tesseract lea mal los ceros iniciales.
         folio_box = (
             max(0, x - round(w * 0.15)),
-            max(0, y - h),
-            min(im.width, x + round(w * 3.75)),
-            min(im.height, y + round(h * 2.4)),
+            max(0, y - h + 1),
+            min(im.width, x + round(w * 3.72)),
+            min(im.height, y + round(h * 2.375)),
         )
         if folio_box[2] <= folio_box[0] or folio_box[3] <= folio_box[1]:
             continue
