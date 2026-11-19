@@ -20,6 +20,7 @@ def foto():
 
 def leer_con_respuestas(respuestas):
     with patch('arybot.ocr_ticket.find_tesseract', return_value='tesseract'), \
+         patch('pytesseract.image_to_data', return_value={'text': []}), \
          patch('pytesseract.image_to_string', side_effect=respuestas):
         return analizar_ticket_foto(foto())
 
@@ -84,6 +85,46 @@ def test_reimpresion_gana_incluso_con_codigo_de_barras():
                 'REIMPRESIÓN\nFOLIO 0008430573\nTOTAL $500.00',
                 'FOLIO 0008430573\nDISPENSARIO 7',
             ])
+
+
+
+def test_folio_en_zona_recupera_ceros_mal_leidos_en_texto_completo():
+    from unittest.mock import Mock
+    from arybot.ticket_foto import _folios_en_zona_folio
+
+    datos = {
+        'text': ['FOLIO', '0098430573'],
+        'left': [265, 391], 'top': [255, 257],
+        'width': [101, 207], 'height': [40, 46],
+    }
+    api = Mock()
+    api.Output.DICT = 'DICT'
+    api.image_to_data.return_value = datos
+    api.image_to_string.side_effect = [
+        'FOLIO 0008430573', 'FOLIO 0008430573',
+    ]
+    imagen = Image.new('RGB', (872, 711), 'white')
+    assert _folios_en_zona_folio(imagen, api) == ['0008430573']
+    assert api.image_to_string.call_count == 2
+
+
+def test_una_sola_lectura_de_zona_no_es_suficiente():
+    from unittest.mock import Mock
+    from arybot.ticket_foto import _folios_en_zona_folio
+
+    datos = {
+        'text': ['FOLIO'], 'left': [200], 'top': [210],
+        'width': [90], 'height': [30],
+    }
+    api = Mock()
+    api.Output.DICT = 'DICT'
+    api.image_to_data.return_value = datos
+    api.image_to_string.side_effect = [
+        'FOLIO 0008430573', 'FOLIO 0008430578',
+    ]
+    imagen = Image.new('RGB', (800, 900), 'white')
+    assert _folios_en_zona_folio(imagen, api) == []
+
 
 
 def test_formato_invalido_rechazado():
