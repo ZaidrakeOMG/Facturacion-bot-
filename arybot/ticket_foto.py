@@ -55,6 +55,36 @@ def _numeros_independientes(texto: str) -> list[str]:
     return encontrados
 
 
+
+def _folios_codigo_barras(imagen) -> list[str]:
+    """Lee CODE39/CODE128 con pyzbar si esta instalado; no sustituye el OCR."""
+    try:
+        from pyzbar.pyzbar import decode
+    except (ImportError, OSError):
+        return []
+    try:
+        valores = []
+        for codigo in decode(imagen):
+            if codigo.type not in ('CODE39', 'CODE128'):
+                continue
+            try:
+                valor = codigo.data.decode('ascii')
+            except (UnicodeDecodeError, AttributeError):
+                continue
+            if re.fullmatch(r'[0-9]{6,20}', valor) and valor not in valores:
+                valores.append(valor)
+        return valores
+    except (OSError, ValueError, RuntimeError):
+        # Si falla la libreria externa, la validacion OCR tradicional continua.
+        return []
+
+
+def _coincide_codigo_y_ocr(codigo: str, lectura: str) -> bool:
+    """Permite hasta dos errores de OCR, nunca elimina los ceros iniciales."""
+    return (len(codigo) == len(lectura)
+            and sum(a != b for a, b in zip(codigo, lectura)) <= 2)
+
+
 def analizar_ticket_foto(foto_base64: str) -> dict[str, str]:
     """Extrae el folio como cadena y rechaza tickets ilegibles/reimpresiones."""
     if (not isinstance(foto_base64, str) or not foto_base64
@@ -103,16 +133,24 @@ def analizar_ticket_foto(foto_base64: str) -> dict[str, str]:
     etiquetados = _folios_etiquetados(original) + _folios_etiquetados(alternativa)
     independientes = _numeros_independientes(original) + _numeros_independientes(alternativa)
     votos = Counter(etiquetados)
-    # Dos lecturas OCR concordantes, o una línea FOLIO respaldada
-    # por el número impreso por separado bajo el código de barras.
-    candidatos = [n for n in votos if votos[n] >= 2 or n in independientes]
-    if len(candidatos) != 1:
-        raise FotoTicketError(
-            'No pudimos leer el folio con seguridad. '
-            'Sube otra foto más legible, completa y bien iluminada.')
+    # Leer el codigo de barras puede recuperar ceros o digitos confundidos
+    # por Tesseract. No se acepta un codigo sin evidencia de FOLIO impreso.
+    codigos = _folios_codigo_barras(im)
+    folio_barras = codigos[0] if len(codigos) == 1 else None
     comprobante = _normalizar(original + '\n' + alternativa)
     if not re.search(r'\b(?:TOTAL|DISPENSARIO|PRODUCTO|LITROS|OPERACION)\b', comprobante):
         raise FotoTicketError(
             'No se reconoce el ticket completo. Toma una foto donde aparezcan '
             'folio y datos de la compra.')
+    if folio_barras and any(_coincide_codigo_y_ocr(folio_barras, n) for n in etiquetados):
+        # El codigo decodificado prevalece sobre lecturas OCR con 1-2
+        # digitos distintos; su formato y sus ceros se preservan literalmente.
+        return {'folio': folio_barras}
+    # Sin barras validas, conservar el criterio estricto anterior:
+    # dos lecturas OCR iguales o FOLIO cotejado con otro numero impreso.
+    candidatos = [n for n in votos if votos[n] >= 2 or n in independientes]
+    if len(candidatos) != 1:
+        raise FotoTicketError(
+            'No pudimos leer el folio con seguridad. '
+            'Sube otra foto más legible, completa y bien iluminada.')
     return {'folio': candidatos[0]}
