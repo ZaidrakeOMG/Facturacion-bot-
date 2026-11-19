@@ -16,6 +16,14 @@ from arybot.coincidencia_fiscal import CoincidenciaFiscalError, verificar_unico
 from arybot.portal_modelo import validar_entrada, EntradaPortalError, estado_publico
 
 
+@pytest.fixture(autouse=True)
+def _ocr_foto_simulado_en_regresiones_fiscales(monkeypatch):
+    # Estos tests cubren RFC y cola; las lecturas reales de tickets se prueban
+    # en test_ticket_foto_web.py, sin cámara, Polaris ni timbrado.
+    monkeypatch.setattr('arybot.portal_modelo.analizar_ticket_foto',
+                        lambda _foto: {'folio': '123'})
+
+
 def documento_pdf(*, nombre='SERVICIOS ESPECIALIZADOS PENOLES SA DE CV',
                   calle='LEGARIA', rfc='SEP1312171X9', idcif='00123456789', incluir_idcif=True):
     from reportlab.pdfgen import canvas
@@ -35,7 +43,7 @@ def cuerpo(*, tipo='FACTURA', pdf=None):
     values={'tipo':tipo,'estacion':'ARY V','constancia_pdf':b64encode(pdf or documento_pdf()).decode('ascii'),
             'correo':'cliente@example.com','correo_confirmacion':'cliente@example.com','sitio_web':'','confirmado':True}
     if tipo=='FACTURA':
-        values.update(ticket='123',fecha_ticket=date.today().isoformat(),forma_pago='EFECTIVO',uso_cfdi='G03')
+        values.update(ticket='123',foto_ticket='JPEG-simulado',fecha_ticket=date.today().isoformat(),forma_pago='EFECTIVO',uso_cfdi='G03')
     return values
 
 
@@ -394,7 +402,7 @@ def test_receptor_diferente_se_detiene(monkeypatch):
     bot=Mock()
     bot._captura_factura.return_value=captura
     monkeypatch.setattr(seleccion_cliente.time,'sleep',lambda _:None)
-    with pytest.raises(CoincidenciaFiscalError,match='no coincide'):
+    with pytest.raises(CoincidenciaFiscalError,match='difiere'):
         seleccion_cliente._comprobar_rfc_cargado(bot,55,'SEP1312171X9')
 
 
@@ -561,5 +569,5 @@ def test_error_rfc_receptor_conserva_polaris_y_bloquea_cola(tmp_path):
     record=q.store.get(job['id'])
     assert record['estado']=='REVISION_REQUERIDA'
     assert q.store.status()['bloqueo']==job['id']
-    assert 'No se pulsó Aceptar' in record['motivo']
+    assert 'no se pulsó Aceptar' in record['motivo']
     bot.cerrar_polaris_tras_solicitud.assert_not_called()

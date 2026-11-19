@@ -7,6 +7,7 @@ from .constancia_fiscal import leer_constancia_pdf_base64, ConstanciaError
 from .cliente_facturacion import (CODIGO_SIN_REGIMEN, MENSAJE_SIN_REGIMEN,
                                  CODIGO_NO_REGISTRADO, MENSAJE_NO_REGISTRADO)
 from .parser import STATIONS, USO_CFDI, Solicitud, normalize_ticket_date
+from .ticket_foto import analizar_ticket_foto, FotoTicketError
 from .cola_modelo import datos_alta, factura_datos, tracking
 from .asistencia_whatsapp import datos_asistencia
 
@@ -36,7 +37,7 @@ def validar_entrada(body):
     campos_portal = {
         'tipo', 'estacion', 'constancia_pdf', 'correo', 'correo_confirmacion',
         'confirmado', 'sitio_web', 'telefono', 'ticket', 'fecha_ticket',
-        'forma_pago', 'uso_cfdi'
+        'forma_pago', 'uso_cfdi', 'foto_ticket'
     }
     if len(body) > len(campos_portal) or any(not isinstance(k, str) for k in body):
         raise EntradaPortalError('El formulario contiene una estructura no admitida.')
@@ -72,7 +73,7 @@ def validar_entrada(body):
                                     razon_social=identidad.razon_social, calle_constancia=identidad.calle)
             data = datos_alta(sol)
         else:
-            allowed |= {'ticket', 'fecha_ticket', 'forma_pago', 'uso_cfdi'}
+            allowed |= {'ticket', 'fecha_ticket', 'forma_pago', 'uso_cfdi', 'foto_ticket'}
             payment = texto(body, 'forma_pago', max_len=50)
             if payment not in PAGOS:
                 raise EntradaPortalError('Selecciona cómo pagaste: efectivo, crédito, débito o transferencia.')
@@ -88,7 +89,13 @@ def validar_entrada(body):
                 raise EntradaPortalError(
                     'El plazo para solicitar factura es de 72 horas desde la compra. '
                     'La fecha del ticket debe ser de hoy o de los tres días anteriores.')
-            sol = Solicitud(estacion=station, rfc=rfc, ticket=texto(body, 'ticket', max_len=20),
+            try:
+                ticket_verificado = analizar_ticket_foto(body.get('foto_ticket'))['folio']
+            except FotoTicketError as exc:
+                raise EntradaPortalError(str(exc)) from exc
+            if ticket_verificado != texto(body, 'ticket', max_len=20):
+                raise EntradaPortalError('El folio no coincide con la foto. Sube nuevamente el ticket.')
+            sol = Solicitud(estacion=station, rfc=rfc, ticket=ticket_verificado,
                             fecha_ticket=fecha_ticket,
                             forma_pago=payment, uso_cfdi=USO_CFDI[usage],
                             correo_destino=email, remitente=email,
