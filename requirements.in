@@ -12,3 +12,4 @@ pytesseract>=0.3.13
 pypdf>=5.0.0
 beautifulsoup4>=4.12.3
 waitress>=3.0.2,<4
+pyzbar>=0.1.9,<0.2
