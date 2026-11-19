@@ -85,6 +85,67 @@ def _coincide_codigo_y_ocr(codigo: str, lectura: str) -> bool:
             and sum(a != b for a, b in zip(codigo, lectura)) <= 2)
 
 
+
+def _folios_en_zona_folio(im, pytesseract) -> list[str]:
+    """Lee SOLO la linea FOLIO, incluso cuando falla el OCR de toda la foto.
+
+    Localiza el rotulo en la imagen original, recorta a su derecha,
+    agranda y analiza con dos modos de Tesseract. Un unico resultado
+    dudoso nunca autoriza un folio.
+    """
+    from PIL import Image, ImageOps
+
+    try:
+        datos = pytesseract.image_to_data(
+            im, lang='spa+eng', config='--psm 6',
+            output_type=pytesseract.Output.DICT, timeout=7,
+        )
+    except Exception:
+        return []
+    lecturas: list[str] = []
+    for i, palabra in enumerate(datos.get('text', [])):
+        if not re.fullmatch(r'F[O0]L[I1]O', str(palabra).strip().upper()):
+            continue
+        try:
+            x = int(datos['left'][i])
+            y = int(datos['top'][i])
+            w = int(datos['width'][i])
+            h = int(datos['height'][i])
+        except (KeyError, ValueError, TypeError, IndexError):
+            continue
+        if w < 15 or h < 8:
+            continue
+        # El numero impreso tiene aproximadamente el doble de anchura
+        # que FOLIO; el margen adicional evita cortar ceros del borde.
+        zona = (
+            max(0, x - round(w * 0.17)),
+            max(0, y - round(h * 0.125)),
+            min(im.width, x + round(w * 3.6)),
+            min(im.height, y + round(h * 1.5)),
+        )
+        if zona[2] <= zona[0] or zona[3] <= zona[1]:
+            continue
+        recorte = ImageOps.autocontrast(ImageOps.grayscale(im.crop(zona)))
+        recorte = recorte.resize(
+            (recorte.width * 2, recorte.height * 2),
+            Image.Resampling.LANCZOS,
+        )
+        for psm in (6, 7):
+            try:
+                lectura = pytesseract.image_to_string(
+                    recorte, lang='spa+eng',
+                    config=f'--psm {psm}', timeout=6,
+                )
+                lecturas.extend(_folios_etiquetados(lectura))
+            except Exception:
+                continue
+        if len(lecturas) >= 2:
+            break  # una sola linea FOLIO por ticket
+    votos = Counter(lecturas)
+    return [n for n, veces in votos.items() if veces >= 2]
+
+
+
 def analizar_ticket_foto(foto_base64: str) -> dict[str, str]:
     """Extrae el folio como cadena y rechaza tickets ilegibles/reimpresiones."""
     if (not isinstance(foto_base64, str) or not foto_base64
@@ -137,11 +198,21 @@ def analizar_ticket_foto(foto_base64: str) -> dict[str, str]:
     # por Tesseract. No se acepta un codigo sin evidencia de FOLIO impreso.
     codigos = _folios_codigo_barras(im)
     folio_barras = codigos[0] if len(codigos) == 1 else None
+    folios_zona = _folios_en_zona_folio(im, pytesseract)
     comprobante = _normalizar(original + '\n' + alternativa)
     if not re.search(r'\b(?:TOTAL|DISPENSARIO|PRODUCTO|LITROS|OPERACION)\b', comprobante):
         raise FotoTicketError(
             'No se reconoce el ticket completo. Toma una foto donde aparezcan '
             'folio y datos de la compra.')
+    if len(folios_zona) == 1:
+        folio_zona = folios_zona[0]
+        if codigos and folio_zona not in codigos:
+            raise FotoTicketError(
+                'El codigo de barras y el folio impreso no coinciden. '
+                'Toma una fotografia completa y mas nitida.')
+        # Dos reconocimientos de la misma linea aislada son mejores
+        # que interpretar el documento completo en una foto inclinada.
+        return {'folio': folio_zona}
     if folio_barras and any(_coincide_codigo_y_ocr(folio_barras, n) for n in etiquetados):
         # El codigo decodificado prevalece sobre lecturas OCR con 1-2
         # digitos distintos; su formato y sus ceros se preservan literalmente.
