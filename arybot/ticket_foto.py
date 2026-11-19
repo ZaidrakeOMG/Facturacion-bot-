@@ -146,6 +146,92 @@ def _folios_en_zona_folio(im, pytesseract) -> list[str]:
 
 
 
+
+def _rescate_compra_y_folio(im, pytesseract) -> tuple[list[str], bool]:
+    """OCR localizado para fotos tomadas con el celular.
+
+    En una foto con fondo oscuro, el OCR de la foto completa suele leer
+    solamente FOLIO y omitir TOTAL, LITROS y DISPENSARIO. A partir del
+    rotulo FOLIO se recortan la linea numerica y los datos de compra.
+    Nunca se acepta el numero con una sola lectura, ni se salta la
+    prohibicion de reimpresiones.
+    """
+    from PIL import Image, ImageOps, ImageFilter
+
+    contraste = ImageOps.autocontrast(ImageOps.grayscale(im)).filter(ImageFilter.SHARPEN)
+    try:
+        datos = pytesseract.image_to_data(
+            contraste, lang='spa+eng', config='--psm 6',
+            output_type=pytesseract.Output.DICT, timeout=9,
+        )
+    except Exception:
+        return [], False
+
+    for i, palabra in enumerate(datos.get('text', [])):
+        if not re.fullmatch(r'F[O0]L[I1]O', str(palabra).strip().upper()):
+            continue
+        try:
+            x = int(datos['left'][i])
+            y = int(datos['top'][i])
+            w = int(datos['width'][i])
+            h = int(datos['height'][i])
+        except (KeyError, ValueError, TypeError, IndexError):
+            continue
+        if w < 15 or h < 8:
+            continue
+
+        # Margen vertical generoso: recortar demasiado pegado a la linea
+        # impresa hace que Tesseract lea mal los ceros iniciales.
+        folio_box = (
+            max(0, x - round(w * 0.15)),
+            max(0, y - h + 1),
+            min(im.width, x + round(w * 3.72)),
+            min(im.height, y + round(h * 2.375)),
+        )
+        if folio_box[2] <= folio_box[0] or folio_box[3] <= folio_box[1]:
+            continue
+        recorte = im.crop(folio_box)
+        folios = []
+        for zona in (recorte, recorte.resize(
+                (recorte.width * 2, recorte.height * 2), Image.Resampling.LANCZOS)):
+            try:
+                texto = pytesseract.image_to_string(
+                    zona, lang='spa+eng', config='--psm 6', timeout=8)
+                folios.extend(_folios_etiquetados(texto))
+            except Exception:
+                continue
+        votos = Counter(folios)
+        confirmados = [numero for numero, cuenta in votos.items() if cuenta >= 2]
+
+        # La zona inferior conserva datos de compra que se pierden cuando
+        # se reconoce todo el fondo, la interfaz de la camara y el ticket.
+        compra_box = (
+            max(0, x - round(w * 0.8)),
+            min(im.height, y + 3 * h),
+            min(im.width, x + round(w * 5.1)),
+            min(im.height, y + 23 * h),
+        )
+        compra_valida = False
+        if compra_box[2] > compra_box[0] and compra_box[3] > compra_box[1]:
+            compra = ImageOps.autocontrast(ImageOps.grayscale(im.crop(compra_box)))
+            compra = compra.filter(ImageFilter.UnsharpMask(
+                radius=1.5, percent=180, threshold=1))
+            try:
+                texto_compra = _normalizar(pytesseract.image_to_string(
+                    compra, lang='spa+eng', config='--psm 6', timeout=9))
+                # En la zona localizada exigir al menos un concepto de
+                # compra Y un importe legible, no solo la palabra FOLIO.
+                compra_valida = bool(
+                    re.search(r'\b(?:TOTAL|DISPENSARIO|PRODUCTO|LITROS|OPERACION)\b', texto_compra)
+                    and re.search(r'\$?\s*\d{1,6}[.,]\d{2}\b', texto_compra)
+                )
+            except Exception:
+                pass
+        return confirmados, compra_valida
+    return [], False
+
+
+
 def analizar_ticket_foto(foto_base64: str) -> dict[str, str]:
     """Extrae el folio como cadena y rechaza tickets ilegibles/reimpresiones."""
     if (not isinstance(foto_base64, str) or not foto_base64
@@ -200,7 +286,17 @@ def analizar_ticket_foto(foto_base64: str) -> dict[str, str]:
     folio_barras = codigos[0] if len(codigos) == 1 else None
     folios_zona = _folios_en_zona_folio(im, pytesseract)
     comprobante = _normalizar(original + '\n' + alternativa)
-    if not re.search(r'\b(?:TOTAL|DISPENSARIO|PRODUCTO|LITROS|OPERACION)\b', comprobante):
+    tiene_compra = bool(re.search(
+        r'\b(?:TOTAL|DISPENSARIO|PRODUCTO|LITROS|OPERACION)\b', comprobante))
+    if not tiene_compra or not folios_zona:
+        recuperados, compra_local = _rescate_compra_y_folio(im, pytesseract)
+        if recuperados and folios_zona and set(recuperados) != set(folios_zona):
+            raise FotoTicketError(
+                'Las lecturas del folio no coinciden. Toma otra foto mas nitida.')
+        if recuperados:
+            folios_zona = recuperados
+        tiene_compra = tiene_compra or compra_local
+    if not tiene_compra:
         raise FotoTicketError(
             'No se reconoce el ticket completo. Toma una foto donde aparezcan '
             'folio y datos de la compra.')

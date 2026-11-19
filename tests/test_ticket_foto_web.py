@@ -127,6 +127,90 @@ def test_una_sola_lectura_de_zona_no_es_suficiente():
 
 
 
+
+def test_rescate_zonas_acepta_folio_y_total_sin_lectura_completa():
+    from unittest.mock import Mock
+    from arybot.ticket_foto import _rescate_compra_y_folio
+
+    api = Mock()
+    api.Output.DICT = 'DICT'
+    api.image_to_data.return_value = {
+        'text': ['FOLIO', '0008430573'],
+        'left': [205, 328], 'top': [478, 481],
+        'width': [98, 209], 'height': [24, 30],
+    }
+    api.image_to_string.side_effect = [
+        'FOLIO 0008430573', 'FOLIO 0008430573',
+        'OPERACION DE CONTADO\nTOTAL $500.00',
+    ]
+    imagen = Image.new('RGB', (740, 1600), 'white')
+    assert _rescate_compra_y_folio(imagen, api) == (['0008430573'], True)
+
+
+def test_rescate_zonas_no_confirma_folio_con_lecturas_distintas():
+    from unittest.mock import Mock
+    from arybot.ticket_foto import _rescate_compra_y_folio
+
+    api = Mock()
+    api.Output.DICT = 'DICT'
+    api.image_to_data.return_value = {
+        'text': ['FOLIO'],
+        'left': [205], 'top': [478],
+        'width': [98], 'height': [24],
+    }
+    api.image_to_string.side_effect = [
+        'FOLIO 0008430573', 'FOLIO 0008430578',
+        'TOTAL $500.00',
+    ]
+    imagen = Image.new('RGB', (740, 1600), 'white')
+    assert _rescate_compra_y_folio(imagen, api) == ([], True)
+
+
+def test_rescate_zonas_no_acepta_ticket_sin_importe_visible():
+    from unittest.mock import Mock
+    from arybot.ticket_foto import _rescate_compra_y_folio
+
+    api = Mock()
+    api.Output.DICT = 'DICT'
+    api.image_to_data.return_value = {
+        'text': ['FOLIO'],
+        'left': [205], 'top': [478],
+        'width': [98], 'height': [24],
+    }
+    api.image_to_string.side_effect = [
+        'FOLIO 0008430573', 'FOLIO 0008430573',
+        'TOTAL sin importe',
+    ]
+    imagen = Image.new('RGB', (740, 1600), 'white')
+    assert _rescate_compra_y_folio(imagen, api) == (['0008430573'], False)
+
+
+def test_rescate_integracion_acepta_folio_y_total_solo_zonas():
+    from unittest.mock import Mock
+    api = Mock()
+    api.Output.DICT = 'DICT'
+    api.image_to_data.side_effect = [
+        {'text': []},
+        {
+            'text': ['FOLIO'],
+            'left': [205], 'top': [478],
+            'width': [98], 'height': [24],
+        },
+    ]
+    with patch('arybot.ocr_ticket.find_tesseract', return_value='tesseract'), \
+         patch('pytesseract.image_to_data', side_effect=api.image_to_data.side_effect), \
+         patch('pytesseract.image_to_string', side_effect=[
+             'FOLIO 0008430573',
+             'sin palabras de compra reconocibles',
+             'FOLIO 0008430573',
+             'FOLIO 0008430573',
+             'TOTAL $500.00',
+         ]):
+        resultado = analizar_ticket_foto(foto())
+    assert resultado['folio'] == '0008430573'
+
+
+
 def test_formato_invalido_rechazado():
     with pytest.raises(FotoTicketError):
         analizar_ticket_foto('un_folio_inventado')
