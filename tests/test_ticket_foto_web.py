@@ -23,7 +23,7 @@ def leer_con_respuestas(respuestas):
     # foto contiene, no permitir que falte una etiqueta FOLIO en las pruebas.
     import re
     todas = '\n'.join(respuestas).upper()
-    rotulo = bool(re.search(r'\bFOLIO\b', todas))
+    rotulo = bool(re.search(r'\bF[O0U]L[I1T]O\b', todas))
     compra = bool(
         re.search(r'\bTOTAL\b', todas) and
         re.search(r'\b(?:OPERACION|DISPENSARIO|LITROS|PRODUCTO|PRECIO)\b', todas)
