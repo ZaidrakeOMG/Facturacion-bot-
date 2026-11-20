@@ -232,6 +232,150 @@ def _rescate_compra_y_folio(im, pytesseract) -> tuple[list[str], bool]:
 
 
 
+
+def _detectar_papel_por_luz(im):
+    """Detecta la tira blanca dentro de fotos con fondo oscuro o interfaz de cámara.
+
+    Todo es Pillow (sin NumPy, OpenCV ni conexiones externas). Si el contraste
+    no permite localizar el papel, las otras vías de OCR siguen funcionando.
+    """
+    import statistics
+    from PIL import Image, ImageOps, ImageFilter
+
+    mini = ImageOps.grayscale(im)
+    mini.thumbnail((420, 800), Image.Resampling.LANCZOS)
+    mini = mini.filter(ImageFilter.GaussianBlur(3))
+    w, h = mini.size
+    if w < 40 or h < 40:
+        return None
+    pixels = mini.load()
+    muestras = sorted(pixels[w // 2, yy] for yy in range(h))
+    umbral = max(95, min(179, round(muestras[int((h - 1) * 0.72)] * 0.76)))
+
+    def racha_mayor(banderas, hueco):
+        mejor = (0, 0)
+        inicio = None
+        perdidos = 0
+        for pos, activo in enumerate(banderas + [False] * (hueco + 1)):
+            if activo:
+                if inicio is None:
+                    inicio = pos
+                perdidos = 0
+            elif inicio is not None:
+                perdidos += 1
+                if perdidos > hueco:
+                    fin = pos - perdidos + 1
+                    if fin - inicio > mejor[1] - mejor[0]:
+                        mejor = (inicio, fin)
+                    inicio = None
+                    perdidos = 0
+        return mejor
+
+    candidatos = []
+    for fraccion in (0.4, 0.5, 0.6):
+        x = int(w * fraccion)
+        izq, der = max(0, x - 3), min(w, x + 4)
+        franja = [
+            sum(pixels[col, yy] for col in range(izq, der)) / (der - izq) > umbral
+            for yy in range(h)
+        ]
+        inicio, fin = racha_mayor(franja, max(4, h // 120))
+        candidatos.append((fin - inicio, inicio, fin, x))
+    largo, arriba, abajo, centro = max(candidatos)
+    if largo < 0.27 * h:
+        return None
+
+    limites = []
+    for altura in (0.24, 0.43, 0.62):
+        yy = min(h - 1, arriba + int((abajo - arriba) * altura))
+        izq = der = centro
+        while izq > 3 and pixels[izq, yy] > umbral:
+            izq -= 1
+        while der < w - 4 and pixels[der, yy] > umbral:
+            der += 1
+        limites.append((izq, der))
+    izq = int(statistics.median(a for a, _ in limites))
+    der = int(statistics.median(b for _, b in limites))
+    if der - izq < 0.27 * w:
+        return None
+
+    return (
+        max(0, round(izq * im.width / w)),
+        max(0, round(arriba * im.height / h)),
+        min(im.width, round(der * im.width / w)),
+        min(im.height, round(abajo * im.height / h)),
+    )
+
+
+def _ocr_tira_mejorado(im, pytesseract):
+    """Lee folio DOS veces en recortes independientes y valida datos de compra.
+
+    No inventa ceros ni depende de encontrar el rótulo FOLIO con image_to_data.
+    El ticket puede ocupar una fracción de la foto original.
+    """
+    from PIL import ImageOps
+
+    bounds = _detectar_papel_por_luz(im)
+    if bounds is None:
+        bounds = (0, 0, im.width, im.height)
+    x0, y0, x1, y1 = bounds
+    w, h = x1 - x0, y1 - y0
+    if w < 150 or h < 300:
+        return [], False, False
+
+    regiones = [
+        (
+            max(0, x0 - round(w * 0.07)),
+            max(0, y0 + round(h * 0.06)),
+            min(im.width, x1 + round(w * 0.05)),
+            min(im.height, y0 + round(h * 0.63)),
+        ),
+        (
+            max(0, x0 - round(w * 0.055)),
+            max(0, y0 + round(h * 0.11)),
+            min(im.width, x1 + round(w * 0.035)),
+            min(im.height, y0 + round(h * 0.57)),
+        ),
+        (
+            max(0, x0 + round(w * 0.025)),
+            max(0, y0 + round(h * 0.30)),
+            min(im.width, x1 - round(w * 0.065)),
+            min(im.height, y0 + round(h * 0.88)),
+        ),
+    ]
+    textos = []
+    for indice, caja in enumerate(regiones):
+        if caja[2] <= caja[0] or caja[3] <= caja[1]:
+            return [], False, False
+        recorte = im.crop(caja)
+        if indice == 2:
+            recorte = ImageOps.autocontrast(ImageOps.grayscale(recorte))
+        try:
+            textos.append(pytesseract.image_to_string(
+                recorte, lang='spa+eng', config='--psm 6', timeout=10,
+            ))
+        except Exception:
+            return [], False, False
+
+    # Una etiqueta FOLIO legible en dos recortes diferentes es obligatoria.
+    primero = set(_folios_etiquetados(textos[0]))
+    segundo = set(_folios_etiquetados(textos[1]))
+    repetidos = sorted(primero & segundo)
+    compra = _normalizar(textos[2])
+    tiene_concepto = bool(re.search(
+        r'\b(?:TOTAL|SUBTOTAL|DISPENSARIO|LITROS|PRODUCTO|PRECIO|OPERACION|IMPORTE)\b',
+        compra,
+    ))
+    tiene_importe = bool(re.search(
+        r'(?:[$S]\s*)?\d{1,7}[.,]\s*\d{2}\b',
+        compra,
+    ))
+    # Si detecta REIMPRESION en cualquier recorte, debe bloquearse.
+    reimpresion = any(_es_reimpresion(t) for t in textos)
+    return repetidos, tiene_concepto and tiene_importe, reimpresion
+
+
+
 def analizar_ticket_foto(foto_base64: str) -> dict[str, str]:
     """Extrae el folio como cadena y rechaza tickets ilegibles/reimpresiones."""
     if (not isinstance(foto_base64, str) or not foto_base64
@@ -280,6 +424,19 @@ def analizar_ticket_foto(foto_base64: str) -> dict[str, str]:
     etiquetados = _folios_etiquetados(original) + _folios_etiquetados(alternativa)
     independientes = _numeros_independientes(original) + _numeros_independientes(alternativa)
     votos = Counter(etiquetados)
+    # El OCR global puede fallar por el fondo oscuro de la camara. El lector
+    # localizado usa solo la tira blanca y compara dos lecturas independientes.
+    zona_candidatos, zona_compra, zona_reimp = _ocr_tira_mejorado(im, pytesseract)
+    if zona_reimp:
+        raise FotoTicketError('Este ticket indica REIMPRESIÓN. No se puede facturar desde el portal.')
+    if len(zona_candidatos) == 1 and zona_compra:
+        zona_num = zona_candidatos[0]
+        codigos_locales = _folios_codigo_barras(im)
+        if codigos_locales and zona_num not in codigos_locales:
+            raise FotoTicketError(
+                'El codigo de barras y el folio impreso no coinciden. '
+                'Toma otra fotografia completa.')
+        return {'folio': zona_num}
     # Leer el codigo de barras puede recuperar ceros o digitos confundidos
     # por Tesseract. No se acepta un codigo sin evidencia de FOLIO impreso.
     codigos = _folios_codigo_barras(im)
