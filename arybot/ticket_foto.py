@@ -457,6 +457,47 @@ def _leer_numeros_por_rotulo(im, pytesseract) -> list[str]:
 
 
 
+
+def _validar_compra_en_papel(im, pytesseract) -> tuple[bool, bool]:
+    """Verifica la compra en el papel, no en la captura completa del celular.
+
+    El OCR de toda la fotografia (con fondo oscuro y controles de la camara)
+    puede omitir TOTAL, LITROS y DISPENSARIO aunque sean claramente visibles.
+    Detectar y recortar el papel permite leer esas palabras y el importe.
+    El primer booleano indica que hay datos de compra, el segundo si el
+    recibo indica REIMPRESION. No guarda fotos ni altera importes.
+    """
+    from PIL import ImageOps
+
+    caja = _detectar_papel_por_luz(im)
+    if caja is None:
+        return False, False
+    x0, y0, x1, y1 = caja
+    if x1 - x0 < 200 or y1 - y0 < 300:
+        return False, False
+
+    papel = ImageOps.autocontrast(ImageOps.grayscale(im.crop(caja)))
+    for modo in (6, 11):
+        try:
+            texto = pytesseract.image_to_string(
+                papel, lang='spa+eng', config=f'--psm {modo}', timeout=12)
+        except Exception:
+            continue
+        if _es_reimpresion(texto):
+            return False, True
+        lectura = _normalizar(texto)
+        tiene_total = bool(re.search(r'\bTOTAL\b', lectura))
+        otro_dato = bool(re.search(
+            r'\b(?:DISPENSARIO|LITROS|PRODUCTO|PRECIO|OPERACION|'
+            r'SUBTOTAL|MAGNA|DIESEL|PREMIUM)\b', lectura))
+        tiene_importe = bool(re.search(
+            r'(?:[$S]\s*)?\d{1,7}[.,]\s*\d{2}\b', lectura))
+        if tiene_total and otro_dato and tiene_importe:
+            return True, False
+    return False, False
+
+
+
 def analizar_ticket_foto(foto_base64: str) -> dict[str, str]:
     """Extrae el folio como cadena y rechaza tickets ilegibles/reimpresiones."""
     if (not isinstance(foto_base64, str) or not foto_base64
@@ -522,6 +563,12 @@ def analizar_ticket_foto(foto_base64: str) -> dict[str, str]:
         compra_en_texto = bool(re.search(
             r'\b(?:TOTAL|DISPENSARIO|PRODUCTO|LITROS|OPERACION)\b',
             _normalizar(original + '\n' + alternativa)))
+        if not (zona_compra or compra_en_texto):
+            compra_papel, reimp_papel = _validar_compra_en_papel(im, pytesseract)
+            if reimp_papel:
+                raise FotoTicketError(
+                    'Este ticket indica REIMPRESIÓN. No se puede facturar desde el portal.')
+            compra_en_texto = compra_en_texto or compra_papel
         if zona_compra or compra_en_texto:
             barras = _folios_codigo_barras(im)
             if barras and confirmado not in barras:
@@ -554,9 +601,15 @@ def analizar_ticket_foto(foto_base64: str) -> dict[str, str]:
             folios_zona = recuperados
         tiene_compra = tiene_compra or compra_local
     if not tiene_compra:
+        compra_papel, reimp_papel = _validar_compra_en_papel(im, pytesseract)
+        if reimp_papel:
+            raise FotoTicketError(
+                'Este ticket indica REIMPRESIÓN. No se puede facturar desde el portal.')
+        tiene_compra = compra_papel
+    if not tiene_compra:
         raise FotoTicketError(
-            'No se reconoce el ticket completo. Toma una foto donde aparezcan '
-            'folio y datos de la compra.')
+            'No se pudieron confirmar los datos de la compra con el OCR. '
+            'Acerca el ticket a la camara y vuelve a intentarlo.')
     if len(folios_zona) == 1:
         folio_zona = folios_zona[0]
         if codigos and folio_zona not in codigos:
