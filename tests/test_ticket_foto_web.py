@@ -429,7 +429,7 @@ def test_integracion_compra_en_papel_sigue_rechazando_reimpresiones():
 def test_folios_diferentes_en_codigos_barras_se_rechazan():
     with patch('arybot.ticket_foto._folios_codigo_barras',
                return_value=['0008430573', '0008430578']):
-        with pytest.raises(FotoTicketError, match='codigos de barras diferentes'):
+        with pytest.raises(FotoTicketError, match='codigos de barras contradictorios'):
             leer_con_respuestas([
                 'FOLIO 0008430573\nTOTAL $500.00\nLITROS 20.842',
                 'FOLIO 0008430573\nTOTAL $500.00',
@@ -439,7 +439,7 @@ def test_folios_diferentes_en_codigos_barras_se_rechazan():
 def test_codigo_barras_sin_rotulo_folio_no_se_acepta():
     with patch('arybot.ticket_foto._folios_codigo_barras',
                return_value=['0008430573']):
-        with pytest.raises(FotoTicketError, match='no se identifica FOLIO'):
+        with pytest.raises(FotoTicketError, match='no detecto la palabra FOLIO'):
             leer_con_respuestas([
                 'SERVICIO APACHE\nTOTAL $500.00\nLITROS 20.842',
                 'TOTAL $500.00',
