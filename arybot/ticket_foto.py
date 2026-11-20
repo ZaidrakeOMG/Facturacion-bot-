@@ -649,7 +649,7 @@ def analizar_ticket_foto(foto_base64: str) -> dict[str, str]:
             for impreso in impresos
         ):
             raise FotoTicketError(
-                'El folio impreso contradice al codigo de barras. '
+                'El folio impreso no coincide con el codigo de barras. '
                 'No se acepto ningun numero.')
 
         # No exigir que Tesseract lea bien TODOS los digitos: el
@@ -675,7 +675,7 @@ def analizar_ticket_foto(foto_base64: str) -> dict[str, str]:
     coincidentes = etiquetados & independientes
     if len(coincidentes) != 1:
         raise FotoTicketError(
-            'No se pudo decodificar el codigo de barras ni confirmar '
+            'No se pudo confirmar el folio exacto: no se decodifica el codigo de barras ni se obtienen '
             'dos impresiones identicas del folio. No se acepto ningun numero.')
 
     if not (compra_papel or compra_global):
