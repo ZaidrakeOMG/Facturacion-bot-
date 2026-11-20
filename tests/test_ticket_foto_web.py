@@ -519,6 +519,36 @@ def test_barra_code39_coincide_aunque_texto_del_folio_se_deforme():
 
 
 
+
+def test_zxing_reporta_code_39_con_espacio_y_bot_acepta_folio_exacto():
+    """Regresion de imagen iPhone: ZXing 3.1.1 devuelve 'Code 39'."""
+    from types import SimpleNamespace
+    from unittest.mock import patch
+    from arybot.ticket_foto import analizar_codigo_barras_foto
+
+    imagen = Image.new('RGB', (714, 336), 'white')
+    salida = io.BytesIO()
+    imagen.save(salida, format='JPEG')
+    foto_base64 = base64.b64encode(salida.getvalue()).decode('ascii')
+
+    def leer(_imagen):
+        return [SimpleNamespace(format='Code 39', text='0008430573')]
+
+    modulo_falso = SimpleNamespace(read_barcodes=leer)
+    with patch.dict('sys.modules', {'zxingcpp': modulo_falso}):
+        assert analizar_codigo_barras_foto(foto_base64) == {'folio': '0008430573'}
+
+
+def test_zxing_reporta_code_128_con_espacio():
+    from types import SimpleNamespace
+    from unittest.mock import patch
+    from arybot.ticket_foto import _folios_codigo_barras
+    modulo_falso = SimpleNamespace(read_barcodes=lambda _im: [
+        SimpleNamespace(format='Code 128', text='0000123456')])
+    with patch.dict('sys.modules', {'zxingcpp': modulo_falso}):
+        assert _folios_codigo_barras(Image.new('RGB', (714, 336))) == ['0000123456']
+
+
 def test_barcode_solo_acepta_recorte_pequeno_y_ceros():
     from arybot.ticket_foto import analizar_codigo_barras_foto
     imagen = Image.new('RGB', (500, 165), 'white')

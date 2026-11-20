@@ -84,7 +84,7 @@ def _folios_codigo_barras(imagen) -> list[str]:
         import zxingcpp
         for fuente in variantes:
             for codigo in zxingcpp.read_barcodes(fuente):
-                formato = str(codigo.format).replace('_', '').upper()
+                formato = str(codigo.format).upper().replace(' ', '').replace('_', '')
                 if 'CODE39' in formato or 'CODE128' in formato:
                     agregar(str(codigo.text).strip())
     except (ImportError, OSError, RuntimeError, ValueError):
