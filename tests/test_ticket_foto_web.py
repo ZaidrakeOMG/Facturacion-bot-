@@ -186,30 +186,21 @@ def test_rescate_zonas_no_acepta_ticket_sin_importe_visible():
 
 
 def test_rescate_integracion_acepta_folio_y_total_solo_zonas():
-    from unittest.mock import Mock
-    api = Mock()
-    api.Output.DICT = 'DICT'
-    api.image_to_data.side_effect = [
-        {'text': []},
-        {
-            'text': ['FOLIO'],
-            'left': [205], 'top': [478],
-            'width': [98], 'height': [24],
-        },
-    ]
+    # La compra esta validada por el OCR localizado aunque la lectura
+    # global solo vea FOLIO. El codigo de barras confirma el folio exacto.
     with patch('arybot.ocr_ticket.find_tesseract', return_value='tesseract'), \
-         patch('pytesseract.image_to_data', side_effect=api.image_to_data.side_effect), \
          patch('pytesseract.image_to_string', side_effect=[
              'FOLIO 0008430573',
              'sin palabras de compra reconocibles',
-             'FOLIO 0008430573',
-             'FOLIO 0008430573',
-             'TOTAL $500.00',
          ]), \
-         patch('arybot.ticket_foto._folios_codigo_barras', return_value=['0008430573']):
+         patch('arybot.ticket_foto._folios_codigo_barras',
+               return_value=['0008430573']), \
+         patch('arybot.ticket_foto._validar_compra_en_papel',
+               return_value=(False, False)), \
+         patch('arybot.ticket_foto._rescate_compra_y_folio',
+               return_value=([], True)):
         resultado = analizar_ticket_foto(foto())
     assert resultado['folio'] == '0008430573'
-
 
 
 
