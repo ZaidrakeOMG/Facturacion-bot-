@@ -622,6 +622,12 @@ def analizar_ticket_foto(foto_base64: str) -> dict[str, str]:
         raise FotoTicketError(
             'Este ticket indica REIMPRESIÓN. No se puede facturar desde el portal.')
     if not (compra_en_texto or compra_papel):
+        # Respaldo de la validacion de compra: conservar OCR localizado
+        # cuando el detector de papel no ubica la tira. Su lectura del
+        # folio NO modifica el numero validado por codigo de barras.
+        _, compra_en_zona = _rescate_compra_y_folio(im, pytesseract)
+        compra_papel = compra_papel or compra_en_zona
+    if not (compra_en_texto or compra_papel):
         raise FotoTicketError(
             'No se pudieron confirmar los datos de compra. '
             'Fotografia el ticket completo incluyendo TOTAL.')
