@@ -376,6 +376,87 @@ def _ocr_tira_mejorado(im, pytesseract):
 
 
 
+
+def _leer_numeros_por_rotulo(im, pytesseract) -> list[str]:
+    """Busca FOLIO y verifica solo los digitos a su derecha.
+
+    El OCR de la linea completa suele leer 0 como 6/8. Dos recortes, dos
+    escalas y dos PSM con whitelist numerica permiten exigir al menos
+    cinco votos identicos sin inventar ni quitar ceros iniciales.
+    """
+    from PIL import Image, ImageOps
+
+    papel = _detectar_papel_por_luz(im)
+    regiones = []
+    if papel:
+        x0, y0, x1, y1 = papel
+        if x1 > x0 and y1 > y0:
+            tira = im.crop(papel)
+            altura = max(1, round((y1 - y0) * 0.68))
+            superior = im.crop((x0, y0, x1, y0 + altura))
+            regiones.extend([
+                (tira, x0, y0),
+                (ImageOps.autocontrast(ImageOps.grayscale(tira)), x0, y0),
+                (superior, x0, y0),
+                (ImageOps.autocontrast(ImageOps.grayscale(superior)), x0, y0),
+            ])
+    regiones.append((im, 0, 0))
+
+    for region, dx, dy in regiones:
+        for psm in (6, 11):
+            try:
+                datos = pytesseract.image_to_data(
+                    region, lang='spa+eng', config=f'--psm {psm}',
+                    output_type=pytesseract.Output.DICT, timeout=9)
+            except Exception:
+                continue
+            for i, palabra in enumerate(datos.get('text', [])):
+                if not re.fullmatch(r'F[O0]L[I1]O', str(palabra).strip().upper()):
+                    continue
+                try:
+                    x = dx + int(datos['left'][i])
+                    y = dy + int(datos['top'][i])
+                    ancho = int(datos['width'][i])
+                    alto = int(datos['height'][i])
+                except (KeyError, IndexError, TypeError, ValueError):
+                    continue
+                if ancho < 20 or alto < 10:
+                    continue
+                izquierda = max(0, x + ancho + round(ancho * 0.08))
+                arriba = max(0, y + round(alto * 0.08))
+                derecha = min(im.width, x + ancho + round(ancho * 2.50))
+                abajo = min(im.height, y + round(alto * 1.34))
+                if derecha - izquierda < 70 or abajo - arriba < 15:
+                    continue
+                digitos = im.crop((izquierda, arriba, derecha, abajo))
+                lecturas = []
+                for escala in (1, 2):
+                    ampliada = digitos.resize(
+                        (digitos.width * escala, digitos.height * escala),
+                        Image.Resampling.LANCZOS)
+                    for variante in (
+                        ampliada, ImageOps.autocontrast(ImageOps.grayscale(ampliada))
+                    ):
+                        for modo in (7, 8):
+                            try:
+                                valor = pytesseract.image_to_string(
+                                    variante, lang='eng',
+                                    config=f'--psm {modo} -c tessedit_char_whitelist=0123456789',
+                                    timeout=7).strip()
+                            except Exception:
+                                continue
+                            if re.fullmatch(r'[0-9]{6,20}', valor):
+                                lecturas.append(valor)
+                votos = Counter(lecturas).most_common(2)
+                if votos:
+                    mejor, n = votos[0]
+                    segundo = votos[1][1] if len(votos) > 1 else 0
+                    if n >= 5 and n >= segundo + 3:
+                        return [mejor]
+    return []
+
+
+
 def analizar_ticket_foto(foto_base64: str) -> dict[str, str]:
     """Extrae el folio como cadena y rechaza tickets ilegibles/reimpresiones."""
     if (not isinstance(foto_base64, str) or not foto_base64
@@ -429,6 +510,25 @@ def analizar_ticket_foto(foto_base64: str) -> dict[str, str]:
     zona_candidatos, zona_compra, zona_reimp = _ocr_tira_mejorado(im, pytesseract)
     if zona_reimp:
         raise FotoTicketError('Este ticket indica REIMPRESIÓN. No se puede facturar desde el portal.')
+    # Priorizar el numero aislado y confirmado; leer la palabra FOLIO y
+    # sus cifras juntas puede deformar los ceros aunque la foto sea nitida.
+    numericos = _leer_numeros_por_rotulo(im, pytesseract)
+    if len(numericos) == 1:
+        confirmado = numericos[0]
+        if zona_candidatos and confirmado not in zona_candidatos:
+            raise FotoTicketError(
+                'Las lecturas del folio no coinciden. '
+                'Toma otra foto mas nitida y completa.')
+        compra_en_texto = bool(re.search(
+            r'\b(?:TOTAL|DISPENSARIO|PRODUCTO|LITROS|OPERACION)\b',
+            _normalizar(original + '\n' + alternativa)))
+        if zona_compra or compra_en_texto:
+            barras = _folios_codigo_barras(im)
+            if barras and confirmado not in barras:
+                raise FotoTicketError(
+                    'El codigo de barras y el folio impreso no coinciden. '
+                    'Toma otra fotografia completa.')
+            return {'folio': confirmado}
     if len(zona_candidatos) == 1 and zona_compra:
         zona_num = zona_candidatos[0]
         codigos_locales = _folios_codigo_barras(im)
