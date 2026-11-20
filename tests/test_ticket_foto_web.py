@@ -44,7 +44,7 @@ def test_reimpresion_bloquea_aunque_tenga_folio_legible():
 
 
 def test_folio_conflictivo_no_se_acepta():
-    with pytest.raises(FotoTicketError, match='más legible'):
+    with pytest.raises(FotoTicketError, match='folio exacto'):
         leer_con_respuestas([
             'FOLIO 0008430573\nTOTAL 500',
             'FOLIO 0008430578\nTOTAL 500',
@@ -52,7 +52,7 @@ def test_folio_conflictivo_no_se_acepta():
 
 
 def test_no_inventa_folio_con_numeros_de_telefono():
-    with pytest.raises(FotoTicketError, match='más legible'):
+    with pytest.raises(FotoTicketError, match='folio exacto'):
         leer_con_respuestas([
             'SERVICIO APACHE\nTEL 8711651404\nTOTAL 500',
             'SERVICIO APACHE\nTEL 8711651404\nTOTAL 500',
@@ -71,7 +71,7 @@ def test_barcode_corrige_digitos_ocr_y_conserva_ceros_iniciales():
 
 def test_barcode_no_inventa_folio_distinto_del_impreso():
     with patch('arybot.ticket_foto._folios_codigo_barras', return_value=['1234567890']):
-        with pytest.raises(FotoTicketError, match='más legible'):
+        with pytest.raises(FotoTicketError, match='no coincide'):
             leer_con_respuestas([
                 'FOLIO 0008430573\nTOTAL $500.00',
                 'FOLIO 0008430578\nDISPENSARIO 7',
@@ -205,7 +205,8 @@ def test_rescate_integracion_acepta_folio_y_total_solo_zonas():
              'FOLIO 0008430573',
              'FOLIO 0008430573',
              'TOTAL $500.00',
-         ]):
+         ]), \
+         patch('arybot.ticket_foto._folios_codigo_barras', return_value=['0008430573']):
         resultado = analizar_ticket_foto(foto())
     assert resultado['folio'] == '0008430573'
 
@@ -272,7 +273,7 @@ def test_ocr_mejorado_bloquea_reimpresiones():
     assert reimp
 
 
-def test_integracion_preferir_papel_confirmado_a_ocr_global_incompleto():
+def test_integracion_no_acepta_votos_sin_barras_o_doble_impresion():
     from unittest.mock import patch
     with patch('arybot.ocr_ticket.find_tesseract', return_value='tesseract'), \
          patch('pytesseract.image_to_string', side_effect=[
@@ -281,11 +282,11 @@ def test_integracion_preferir_papel_confirmado_a_ocr_global_incompleto():
          ]), \
          patch('arybot.ticket_foto._ocr_tira_mejorado',
                return_value=(['0008430573'], True, False)), \
+         patch('arybot.ticket_foto._leer_numeros_por_rotulo',
+               return_value=['0008430573']), \
          patch('arybot.ticket_foto._folios_codigo_barras', return_value=[]):
-        result = analizar_ticket_foto(foto())
-    assert result == {'folio': '0008430573'}
-
-
+        with pytest.raises(FotoTicketError, match='folio exacto'):
+            analizar_ticket_foto(foto())
 
 
 def test_folio_digitos_acepta_ceros_si_8_lecturas_coinciden():
@@ -331,13 +332,13 @@ def test_folio_digitos_rechaza_empate_o_lecturas_dudosas():
 def test_integracion_prevalece_folio_numerico_con_compra_comprobada():
     with patch('arybot.ocr_ticket.find_tesseract', return_value='tesseract'), \
          patch('pytesseract.image_to_string', side_effect=[
-             'FOLIO 6008430573', 'MAGNA',
+             'FOLIO 6008430573\nTOTAL $500.00\nLITROS 20.842', 'MAGNA',
          ]), \
          patch('arybot.ticket_foto._ocr_tira_mejorado',
                return_value=([], True, False)), \
          patch('arybot.ticket_foto._leer_numeros_por_rotulo',
                return_value=['0008430573']), \
-         patch('arybot.ticket_foto._folios_codigo_barras', return_value=[]):
+         patch('arybot.ticket_foto._folios_codigo_barras', return_value=['0008430573']):
         resultado = analizar_ticket_foto(foto())
     assert resultado == {'folio': '0008430573'}
 
@@ -345,12 +346,9 @@ def test_integracion_prevalece_folio_numerico_con_compra_comprobada():
 def test_integracion_no_acepta_folio_si_papel_es_reimpresion():
     with patch('arybot.ocr_ticket.find_tesseract', return_value='tesseract'), \
          patch('pytesseract.image_to_string', side_effect=[
-             'FOLIO 0008430573', 'MAGNA',
+             'REIMPRESION FOLIO 0008430573', 'MAGNA',
          ]), \
-         patch('arybot.ticket_foto._ocr_tira_mejorado',
-               return_value=([], True, True)), \
-         patch('arybot.ticket_foto._leer_numeros_por_rotulo',
-               return_value=['0008430573']):
+         patch('arybot.ticket_foto._folios_codigo_barras', return_value=['0008430573']):
         with pytest.raises(FotoTicketError, match='REIMPRESIÓN'):
             analizar_ticket_foto(foto())
 
@@ -398,30 +396,71 @@ def test_compra_recortada_rechaza_reimpresion():
 def test_integracion_folio_confirmado_con_compra_visible_solo_en_papel():
     with patch('arybot.ocr_ticket.find_tesseract', return_value='tesseract'), \
          patch('pytesseract.image_to_string',
-               side_effect=['texto borroso', 'mas texto borroso']), \
+               side_effect=['FOLIO 6008430573', 'mas texto borroso']), \
          patch('arybot.ticket_foto._ocr_tira_mejorado',
                return_value=([], False, False)), \
          patch('arybot.ticket_foto._leer_numeros_por_rotulo',
                return_value=['0008430573']), \
          patch('arybot.ticket_foto._validar_compra_en_papel',
                return_value=(True, False)), \
-         patch('arybot.ticket_foto._folios_codigo_barras', return_value=[]):
+         patch('arybot.ticket_foto._folios_codigo_barras', return_value=['0008430573']):
         assert analizar_ticket_foto(foto()) == {'folio': '0008430573'}
 
 
 def test_integracion_compra_en_papel_sigue_rechazando_reimpresiones():
     with patch('arybot.ocr_ticket.find_tesseract', return_value='tesseract'), \
          patch('pytesseract.image_to_string',
-               side_effect=['texto borroso', 'mas texto borroso']), \
+               side_effect=['FOLIO 6008430573', 'mas texto borroso']), \
          patch('arybot.ticket_foto._ocr_tira_mejorado',
                return_value=([], False, False)), \
          patch('arybot.ticket_foto._leer_numeros_por_rotulo',
                return_value=['0008430573']), \
          patch('arybot.ticket_foto._validar_compra_en_papel',
                return_value=(False, True)), \
-         patch('arybot.ticket_foto._folios_codigo_barras', return_value=[]):
+         patch('arybot.ticket_foto._folios_codigo_barras', return_value=['0008430573']):
         with pytest.raises(FotoTicketError, match='REIMPRESIÓN'):
             analizar_ticket_foto(foto())
+
+
+
+
+def test_folios_diferentes_en_codigos_barras_se_rechazan():
+    with patch('arybot.ticket_foto._folios_codigo_barras',
+               return_value=['0008430573', '0008430578']):
+        with pytest.raises(FotoTicketError, match='codigos de barras diferentes'):
+            leer_con_respuestas([
+                'FOLIO 0008430573\nTOTAL $500.00\nLITROS 20.842',
+                'FOLIO 0008430573\nTOTAL $500.00',
+            ])
+
+
+def test_codigo_barras_sin_rotulo_folio_no_se_acepta():
+    with patch('arybot.ticket_foto._folios_codigo_barras',
+               return_value=['0008430573']):
+        with pytest.raises(FotoTicketError, match='no se identifica FOLIO'):
+            leer_con_respuestas([
+                'SERVICIO APACHE\nTOTAL $500.00\nLITROS 20.842',
+                'TOTAL $500.00',
+            ])
+
+
+def test_codigo_barras_valido_puede_corregir_dos_errores_ocr():
+    with patch('arybot.ticket_foto._folios_codigo_barras',
+               return_value=['0008430573']):
+        result = leer_con_respuestas([
+            'FOLIO 6008430573\nTOTAL $500.00\nLITROS 20.842',
+            'FOLIO 0008430578\nDISPENSARIO 7\nTOTAL $500.00',
+        ])
+    assert result['folio'] == '0008430573'
+
+
+def test_sin_codigo_barras_no_basta_que_ocr_repita_error():
+    with patch('arybot.ticket_foto._folios_codigo_barras', return_value=[]):
+        with pytest.raises(FotoTicketError, match='folio exacto'):
+            leer_con_respuestas([
+                'FOLIO 6008430573\nTOTAL $500.00\nLITROS 20.842',
+                'FOLIO 6008430573\nTOTAL $500.00\nLITROS 20.842',
+            ])
 
 
 
