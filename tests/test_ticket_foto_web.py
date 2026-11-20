@@ -356,6 +356,75 @@ def test_integracion_no_acepta_folio_si_papel_es_reimpresion():
 
 
 
+
+def test_compra_en_papel_recortado_reconoce_total_litros_y_precio():
+    from unittest.mock import Mock
+    from arybot.ticket_foto import _validar_compra_en_papel
+
+    api = Mock()
+    api.image_to_string.return_value = (
+        'DISPENSARIO : 7\nLITROS : 20.842\nPRECIO : $23.99\nTOTAL : $506.00'
+    )
+    with patch('arybot.ticket_foto._detectar_papel_por_luz',
+               return_value=(58, 258, 732, 1106)):
+        assert _validar_compra_en_papel(Image.new('RGB', (740, 1600)), api) == (True, False)
+    assert api.image_to_string.call_count == 1
+
+
+def test_compra_recortada_no_acepta_numero_sin_datos_de_compra():
+    from unittest.mock import Mock
+    from arybot.ticket_foto import _validar_compra_en_papel
+
+    api = Mock()
+    api.image_to_string.return_value = 'FOLIO 0008430573\nTOTAL $500.00'
+    with patch('arybot.ticket_foto._detectar_papel_por_luz',
+               return_value=(58, 258, 732, 1106)):
+        assert _validar_compra_en_papel(Image.new('RGB', (740, 1600)), api) == (False, False)
+
+
+def test_compra_recortada_rechaza_reimpresion():
+    from unittest.mock import Mock
+    from arybot.ticket_foto import _validar_compra_en_papel
+
+    api = Mock()
+    api.image_to_string.return_value = (
+        'REIMPRESION\nDISPENSARIO: 7\nLITROS 20.842\nTOTAL $500.00'
+    )
+    with patch('arybot.ticket_foto._detectar_papel_por_luz',
+               return_value=(58, 258, 732, 1106)):
+        assert _validar_compra_en_papel(Image.new('RGB', (740, 1600)), api) == (False, True)
+
+
+def test_integracion_folio_confirmado_con_compra_visible_solo_en_papel():
+    with patch('arybot.ocr_ticket.find_tesseract', return_value='tesseract'), \
+         patch('pytesseract.image_to_string',
+               side_effect=['texto borroso', 'mas texto borroso']), \
+         patch('arybot.ticket_foto._ocr_tira_mejorado',
+               return_value=([], False, False)), \
+         patch('arybot.ticket_foto._leer_numeros_por_rotulo',
+               return_value=['0008430573']), \
+         patch('arybot.ticket_foto._validar_compra_en_papel',
+               return_value=(True, False)), \
+         patch('arybot.ticket_foto._folios_codigo_barras', return_value=[]):
+        assert analizar_ticket_foto(foto()) == {'folio': '0008430573'}
+
+
+def test_integracion_compra_en_papel_sigue_rechazando_reimpresiones():
+    with patch('arybot.ocr_ticket.find_tesseract', return_value='tesseract'), \
+         patch('pytesseract.image_to_string',
+               side_effect=['texto borroso', 'mas texto borroso']), \
+         patch('arybot.ticket_foto._ocr_tira_mejorado',
+               return_value=([], False, False)), \
+         patch('arybot.ticket_foto._leer_numeros_por_rotulo',
+               return_value=['0008430573']), \
+         patch('arybot.ticket_foto._validar_compra_en_papel',
+               return_value=(False, True)), \
+         patch('arybot.ticket_foto._folios_codigo_barras', return_value=[]):
+        with pytest.raises(FotoTicketError, match='REIMPRESIÓN'):
+            analizar_ticket_foto(foto())
+
+
+
 def test_formato_invalido_rechazado():
     with pytest.raises(FotoTicketError):
         analizar_ticket_foto('un_folio_inventado')
