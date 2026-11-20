@@ -7,7 +7,7 @@ from .constancia_fiscal import leer_constancia_pdf_base64, ConstanciaError
 from .cliente_facturacion import (CODIGO_SIN_REGIMEN, MENSAJE_SIN_REGIMEN,
                                  CODIGO_NO_REGISTRADO, MENSAJE_NO_REGISTRADO)
 from .parser import STATIONS, USO_CFDI, Solicitud, normalize_ticket_date
-from .ticket_foto import analizar_ticket_foto, FotoTicketError
+from .ticket_foto import analizar_ticket_foto, analizar_codigo_barras_foto, FotoTicketError
 from .cola_modelo import datos_alta, factura_datos, tracking
 from .asistencia_whatsapp import datos_asistencia
 
@@ -37,7 +37,7 @@ def validar_entrada(body):
     campos_portal = {
         'tipo', 'estacion', 'constancia_pdf', 'correo', 'correo_confirmacion',
         'confirmado', 'sitio_web', 'telefono', 'ticket', 'fecha_ticket',
-        'forma_pago', 'uso_cfdi', 'foto_ticket'
+        'forma_pago', 'uso_cfdi', 'foto_ticket', 'modo_ticket'
     }
     if len(body) > len(campos_portal) or any(not isinstance(k, str) for k in body):
         raise EntradaPortalError('El formulario contiene una estructura no admitida.')
@@ -73,7 +73,7 @@ def validar_entrada(body):
                                     razon_social=identidad.razon_social, calle_constancia=identidad.calle)
             data = datos_alta(sol)
         else:
-            allowed |= {'ticket', 'fecha_ticket', 'forma_pago', 'uso_cfdi', 'foto_ticket'}
+            allowed |= {'ticket', 'fecha_ticket', 'forma_pago', 'uso_cfdi', 'foto_ticket', 'modo_ticket'}
             payment = texto(body, 'forma_pago', max_len=50)
             if payment not in PAGOS:
                 raise EntradaPortalError('Selecciona cómo pagaste: efectivo, crédito, débito o transferencia.')
@@ -89,8 +89,15 @@ def validar_entrada(body):
                 raise EntradaPortalError(
                     'El plazo para solicitar factura es de 72 horas desde la compra. '
                     'La fecha del ticket debe ser de hoy o de los tres días anteriores.')
+            modo_ticket = body.get('modo_ticket', 'ticket_completo')
+            if modo_ticket not in ('ticket_completo', 'codigo_barras'):
+                raise EntradaPortalError('Modo de lectura de ticket no permitido.')
             try:
-                ticket_verificado = analizar_ticket_foto(body.get('foto_ticket'))['folio']
+                if modo_ticket == 'codigo_barras':
+                    ticket_verificado = analizar_codigo_barras_foto(
+                        body.get('foto_ticket'))['folio']
+                else:
+                    ticket_verificado = analizar_ticket_foto(body.get('foto_ticket'))['folio']
             except FotoTicketError as exc:
                 raise EntradaPortalError(str(exc)) from exc
             if ticket_verificado != texto(body, 'ticket', max_len=20):

@@ -568,6 +568,58 @@ def _evidencia_folio_y_compra(im, pytesseract) -> tuple[bool, bool, bool]:
     return tiene_rotulo, tiene_compra, False
 
 
+
+def analizar_codigo_barras_foto(foto_base64: str) -> dict[str, str]:
+    """Lee solo CODE39/CODE128: sin OCR, sin suposiciones ni redondeos.
+
+    La foto puede ser un recorte horizontal que incluya unicamente las
+    barras; conserva los ceros iniciales. El barcode NO acredita por si
+    solo fecha, compra original ni ausencia de reimpresiones. Esos datos
+    deben verificarse en el flujo de facturacion.
+    """
+    if (not isinstance(foto_base64, str) or not foto_base64
+            or len(foto_base64) > MAX_FOTO_BYTES * 4 // 3 + 16):
+        raise FotoTicketError(
+            'Toma una foto JPG, PNG o WEBP del codigo de barras (maximo 3 MB).')
+    try:
+        datos = base64.b64decode(foto_base64, validate=True)
+    except (ValueError, binascii.Error):
+        raise FotoTicketError('No se pudo abrir la foto del codigo de barras.') from None
+    if not 1000 <= len(datos) <= MAX_FOTO_BYTES:
+        raise FotoTicketError('La foto del codigo de barras debe pesar menos de 3 MB.')
+    try:
+        from PIL import Image, ImageOps
+        with Image.open(io.BytesIO(datos)) as imagen:
+            if imagen.format not in {'JPEG', 'PNG', 'WEBP'}:
+                raise FotoTicketError('Usa una imagen JPG, PNG o WEBP.')
+            if imagen.width * imagen.height > MAX_PIXELS:
+                raise FotoTicketError('La imagen es demasiado grande.')
+            imagen.load()
+            foto = ImageOps.exif_transpose(imagen).convert('RGB')
+    except FotoTicketError:
+        raise
+    except Exception:
+        raise FotoTicketError('La foto del codigo de barras no se pudo abrir.') from None
+    # Una foto de solo barras puede medir 350 x 140: no exigir la
+    # resolucion minima de un ticket fotografiado completo.
+    if min(foto.size) < 90 or max(foto.size) < 260:
+        raise FotoTicketError(
+            'Acercate al codigo de barras y enfocalo para que ocupe la foto.')
+
+    codigos = _folios_codigo_barras(foto)
+    if not codigos:
+        raise FotoTicketError(
+            'No se pudo decodificar el codigo de barras. '
+            'Acercate, enfocando todas las barras y ambos extremos.')
+    if len(codigos) != 1:
+        raise FotoTicketError(
+            'Se detectaron codigos distintos. Toma una foto de un solo codigo de barras.')
+
+    # Cada cifra viene de un decodificador de simbologia, NO de OCR.
+    return {'folio': codigos[0]}
+
+
+
 def analizar_ticket_foto(foto_base64: str) -> dict[str, str]:
     """Extrae el folio como cadena y rechaza tickets ilegibles/reimpresiones."""
     if (not isinstance(foto_base64, str) or not foto_base64

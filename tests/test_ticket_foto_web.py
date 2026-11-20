@@ -518,6 +518,49 @@ def test_barra_code39_coincide_aunque_texto_del_folio_se_deforme():
 
 
 
+
+def test_barcode_solo_acepta_recorte_pequeno_y_ceros():
+    from arybot.ticket_foto import analizar_codigo_barras_foto
+    imagen = Image.new('RGB', (500, 165), 'white')
+    buf = io.BytesIO()
+    imagen.save(buf, format='JPEG')
+    contenido = base64.b64encode(buf.getvalue()).decode('ascii')
+    with patch('arybot.ticket_foto._folios_codigo_barras',
+               return_value=['0008430573']) as lector:
+        assert analizar_codigo_barras_foto(contenido) == {'folio': '0008430573'}
+    lector.assert_called_once()
+
+
+def test_barcode_solo_rechaza_ausente_y_ambiguedad():
+    from arybot.ticket_foto import analizar_codigo_barras_foto
+    with patch('arybot.ticket_foto._folios_codigo_barras', return_value=[]):
+        with pytest.raises(FotoTicketError, match='No se pudo decodificar'):
+            analizar_codigo_barras_foto(foto())
+    with patch('arybot.ticket_foto._folios_codigo_barras',
+               return_value=['0008430573', '0008430578']):
+        with pytest.raises(FotoTicketError, match='codigos distintos'):
+            analizar_codigo_barras_foto(foto())
+
+
+def test_envio_barcode_verifica_folio_sin_aceptar_alteraciones():
+    from arybot.portal_modelo import validar_entrada, EntradaPortalError
+    from types import SimpleNamespace
+    identidad = SimpleNamespace(
+        rfc='SEP1312171X9', razon_social='EMPRESA', calle='', idcif='')
+    body = _cuerpo_final()
+    body['modo_ticket'] = 'codigo_barras'
+    with patch('arybot.portal_modelo.leer_constancia_pdf_base64',
+               return_value=identidad), \
+         patch('arybot.portal_modelo.analizar_codigo_barras_foto',
+               return_value={'folio': '0008430573'}) as lector:
+        kind, solicitud, _ = validar_entrada(body)
+        assert kind == 'FACTURA' and solicitud.ticket == '0008430573'
+        body['ticket'] = '0008430578'
+        with pytest.raises(EntradaPortalError, match='no coincide'):
+            validar_entrada(body)
+    assert lector.call_count == 2
+
+
 def test_formato_invalido_rechazado():
     with pytest.raises(FotoTicketError):
         analizar_ticket_foto('un_folio_inventado')
