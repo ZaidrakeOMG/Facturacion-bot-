@@ -590,17 +590,23 @@ def analizar_ticket_foto(foto_base64: str) -> dict[str, str]:
         # no demuestra que pertenezca al numero de folio.
         rotulo = re.search(
             r'\bF[O0]L[I1]O\b', _normalizar(original + '\n' + alternativa))
+        # En capturas moviles el OCR global puede leer "FULIO" por FOLIO.
+        # El OCR por zonas sigue exigiendo encontrar el rotulo FOLIO.
+        numericos = []
         if not rotulo and not etiquetados:
-            raise FotoTicketError(
-                'Se detecto un codigo de barras, pero no se identifica FOLIO. '
-                'Fotografia el ticket completo.')
+            numericos = _leer_numeros_por_rotulo(im, pytesseract)
+            if not numericos:
+                raise FotoTicketError(
+                    'Se detecto un codigo de barras, pero no se identifica FOLIO. '
+                    'Fotografia el ticket completo.')
 
         # Tesseract puede confundir hasta dos cifras de la linea con
         # un 0, 6 u 8. El CODE39 decodificado conserva los ceros originales.
         evidencia = any(_coincide_codigo_y_ocr(elegido, n)
                         for n in etiquetados)
         if not evidencia:
-            numericos = _leer_numeros_por_rotulo(im, pytesseract)
+            if not numericos:
+                numericos = _leer_numeros_por_rotulo(im, pytesseract)
             evidencia = any(_coincide_codigo_y_ocr(elegido, n)
                             for n in numericos)
         if not evidencia:
