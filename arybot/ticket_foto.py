@@ -57,10 +57,10 @@ def _numeros_independientes(texto: str) -> list[str]:
 
 
 def _folios_codigo_barras(imagen) -> list[str]:
-    """Decodifica CODE39/CODE128 sin modificar ceros ni inventar cifras.
+    """Decodifica CODE39/CODE128 directamente del papel y de zonas cercanas.
 
-    ZXing-C++ ofrece ruedas nativas de Windows sin la DLL antigua de zbar.
-    pyzbar queda como respaldo para instalaciones donde ya funcione.
+    CODE39 es preferible a tratar de reconstruir 0/6/8 con OCR. No cambia
+    ningun digito del dato decodificado y conserva ceros iniciales.
     """
     from PIL import ImageOps
 
@@ -70,9 +70,19 @@ def _folios_codigo_barras(imagen) -> list[str]:
         if re.fullmatch(r'[0-9]{6,20}', valor) and valor not in valores:
             valores.append(valor)
 
+    gris = ImageOps.grayscale(imagen)
+    alto = imagen.height
+    recorte = gris.crop((0, round(alto * 0.42), imagen.width, alto))
+    variantes = (
+        imagen,
+        gris,
+        recorte,
+        ImageOps.autocontrast(recorte),
+    )
+
     try:
         import zxingcpp
-        for fuente in (imagen, ImageOps.grayscale(imagen)):
+        for fuente in variantes:
             for codigo in zxingcpp.read_barcodes(fuente):
                 formato = str(codigo.format).replace('_', '').upper()
                 if 'CODE39' in formato or 'CODE128' in formato:
@@ -82,17 +92,19 @@ def _folios_codigo_barras(imagen) -> list[str]:
 
     try:
         from pyzbar.pyzbar import decode
-        for codigo in decode(imagen):
-            if codigo.type not in ('CODE39', 'CODE128'):
-                continue
-            try:
-                agregar(codigo.data.decode('ascii').strip())
-            except (UnicodeDecodeError, AttributeError):
-                continue
+        for fuente in variantes:
+            for codigo in decode(fuente):
+                if codigo.type not in ('CODE39', 'CODE128'):
+                    continue
+                try:
+                    agregar(codigo.data.decode('ascii').strip())
+                except (UnicodeDecodeError, AttributeError):
+                    continue
     except (ImportError, OSError, RuntimeError, ValueError):
         pass
 
     return valores
+
 
 
 def _coincide_codigo_y_ocr(codigo: str, lectura: str) -> bool:
@@ -514,6 +526,48 @@ def _validar_compra_en_papel(im, pytesseract) -> tuple[bool, bool]:
 
 
 
+def _evidencia_folio_y_compra(im, pytesseract) -> tuple[bool, bool, bool]:
+    """Busca la ETIQUETA FOLIO y TOTAL en el papel recortado.
+
+    A diferencia del OCR numerico, aqui no reconstruimos el folio:
+    solo confirmamos que la barra decodificada pertenece a un ticket
+    de compra. Reconoce variantes OCR FULIO/FULTO.
+    """
+    from PIL import ImageOps
+
+    caja = _detectar_papel_por_luz(im)
+    if caja is None:
+        papel = im
+    else:
+        papel = im.crop(caja)
+    papel = ImageOps.autocontrast(ImageOps.grayscale(papel))
+    tiene_rotulo = False
+    tiene_compra = False
+    for psm in (6, 11):
+        try:
+            texto = pytesseract.image_to_string(
+                papel, lang='spa+eng', config=f'--psm {psm}', timeout=12,
+            )
+        except Exception:
+            continue
+        if _es_reimpresion(texto):
+            return False, False, True
+        normal = _normalizar(texto)
+        tiene_rotulo |= bool(re.search(r'\bF[O0U]L[I1T]O\b', normal))
+        tiene_total = bool(re.search(r'\bT[O0]TAL\b', normal))
+        otro_concepto = bool(re.search(
+            r'\b(?:DISPENSARIO|L[I1]TROS|PRODUCTO|PRECIO|'
+            r'OPERACION|SUBTOTAL|MAGNA|DIESEL|PREMIUM)\b',
+            normal,
+        ))
+        tiene_importe = bool(re.search(
+            r'(?:[$S]\s*)?\d{1,7}[.,]\s*\d{2}\b', normal))
+        tiene_compra |= tiene_total and otro_concepto and tiene_importe
+        if tiene_rotulo and tiene_compra:
+            break
+    return tiene_rotulo, tiene_compra, False
+
+
 def analizar_ticket_foto(foto_base64: str) -> dict[str, str]:
     """Extrae el folio como cadena y rechaza tickets ilegibles/reimpresiones."""
     if (not isinstance(foto_base64, str) or not foto_base64
@@ -559,83 +613,59 @@ def analizar_ticket_foto(foto_base64: str) -> dict[str, str]:
     if _es_reimpresion(original) or _es_reimpresion(alternativa):
         raise FotoTicketError('Este ticket indica REIMPRESIÓN. No se puede facturar desde el portal.')
 
-    # IMPORTANTE: varias pasadas del mismo OCR no son evidencia independiente.
-    # Para evitar un folio de otra venta, el codigo de barras se coteja con
-    # cifras impresas junto a la palabra FOLIO. Si falta esa confirmacion,
-    # el portal solicita otra fotografia: jamas elige por mayoria.
-    codigos = _folios_codigo_barras(im)
-    if len(codigos) > 1:
+    # Un OCR que repite 8 veces un digito equivocado NO confirma el folio.
+    # Decodificar CODE39/CODE128 proporciona el numero sin sustituir cifras.
+    barras = _folios_codigo_barras(im)
+    if len(barras) > 1:
         raise FotoTicketError(
-            'La foto contiene codigos de barras diferentes. '
-            'Fotografia un solo ticket completo.')
-    if not codigos:
-        # Sin barras, solo permitir dos REPRESENTACIONES impresas separadas:
-        # FOLIO etiquetado y numero bajo el codigo de barras. Ambos exactos.
-        etiquetados = set(
-            _folios_etiquetados(original) + _folios_etiquetados(alternativa))
-        independientes = set(
-            _numeros_independientes(original) + _numeros_independientes(alternativa))
-        confirmados = etiquetados & independientes
-        if len(confirmados) != 1:
-            raise FotoTicketError(
-                'No se pudo confirmar el folio exacto. '
-                'Incluye el codigo de barras completo en la fotografia.')
-        elegido = next(iter(confirmados))
-    else:
-        elegido = codigos[0]
-        etiquetados = set(
-            _folios_etiquetados(original) + _folios_etiquetados(alternativa))
+            'Se encontraron codigos de barras contradictorios en la foto. '
+            'No se acepto ningun folio.')
 
-        # El rotulo FOLIO debe estar visible; un codigo aislado en una imagen
-        # no demuestra que pertenezca al numero de folio.
-        rotulo = re.search(
-            r'\bF[O0]L[I1]O\b', _normalizar(original + '\n' + alternativa))
-        # En capturas moviles el OCR global puede leer "FULIO" por FOLIO.
-        # El OCR por zonas sigue exigiendo encontrar el rotulo FOLIO.
-        numericos = []
-        if not rotulo and not etiquetados:
-            numericos = _leer_numeros_por_rotulo(im, pytesseract)
-            if not numericos:
-                raise FotoTicketError(
-                    'Se detecto un codigo de barras, pero no se identifica FOLIO. '
-                    'Fotografia el ticket completo.')
-
-        # Tesseract puede confundir hasta dos cifras de la linea con
-        # un 0, 6 u 8. El CODE39 decodificado conserva los ceros originales.
-        evidencia = any(_coincide_codigo_y_ocr(elegido, n)
-                        for n in etiquetados)
-        if not evidencia:
-            if not numericos:
-                numericos = _leer_numeros_por_rotulo(im, pytesseract)
-            evidencia = any(_coincide_codigo_y_ocr(elegido, n)
-                            for n in numericos)
-        if not evidencia:
-            raise FotoTicketError(
-                'El folio impreso no coincide con el codigo de barras. '
-                'No se acepto ningun numero; intenta otra fotografia.')
-
-    # Con independencia del metodo de lectura, conservar las validaciones
-    # de compra y prohibicion de reimpresiones de la fotografia original.
-    comprobante = _normalizar(original + '\n' + alternativa)
-    compra_en_texto = bool(
-        re.search(r'\bTOTAL\b', comprobante)
-        and re.search(r'\b(?:DISPENSARIO|LITROS|PRODUCTO|PRECIO|OPERACION)\b',
-                      comprobante)
-        and re.search(r'(?:[$S]\s*)?\d{1,7}[.,]\s*\d{2}\b', comprobante)
-    )
-    compra_papel, reimp_papel = _validar_compra_en_papel(im, pytesseract)
+    rotulo_papel, compra_papel, reimp_papel = _evidencia_folio_y_compra(
+        im, pytesseract)
     if reimp_papel:
         raise FotoTicketError(
             'Este ticket indica REIMPRESIÓN. No se puede facturar desde el portal.')
-    if not (compra_en_texto or compra_papel):
-        # Respaldo de la validacion de compra: conservar OCR localizado
-        # cuando el detector de papel no ubica la tira. Su lectura del
-        # folio NO modifica el numero validado por codigo de barras.
-        _, compra_en_zona = _rescate_compra_y_folio(im, pytesseract)
-        compra_papel = compra_papel or compra_en_zona
-    if not (compra_en_texto or compra_papel):
-        raise FotoTicketError(
-            'No se pudieron confirmar los datos de compra. '
-            'Fotografia el ticket completo incluyendo TOTAL.')
 
-    return {'folio': elegido}
+    comprobante = _normalizar(original + '\n' + alternativa)
+    rotulo_global = bool(re.search(r'\bF[O0U]L[I1T]O\b', comprobante))
+    compra_global = bool(
+        re.search(r'\bTOTAL\b', comprobante)
+        and re.search(
+            r'\b(?:DISPENSARIO|LITROS|PRODUCTO|PRECIO|OPERACION)\b',
+            comprobante)
+        and re.search(r'(?:[$S]\s*)?\d{1,7}[.,]\s*\d{2}\b',
+                      comprobante))
+
+    if barras:
+        # No exigir que Tesseract LEA BIEN los numeros junto a FOLIO:
+        # el codigo de barras ya contiene el folio exacto. Lo que debe
+        # detectar OCR es la etiqueta FOLIO y datos de una compra.
+        if not (rotulo_papel or rotulo_global):
+            raise FotoTicketError(
+                'El codigo de barras se leyo, pero el OCR no detecto '
+                'la palabra FOLIO en el papel.')
+        if not (compra_papel or compra_global):
+            raise FotoTicketError(
+                'El codigo de barras se leyo, pero no se confirmaron '
+                'TOTAL y datos de la compra.')
+        return {'folio': barras[0]}
+
+    # Sin codigo decodificable NO usar mayoria de 5/8 pasadas. Requerir
+    # dos impresiones diferentes de exactamente el mismo folio: la linea
+    # FOLIO y los numeros que aparecen debajo del codigo de barras.
+    etiquetados = set(
+        _folios_etiquetados(original) + _folios_etiquetados(alternativa))
+    independientes = set(
+        _numeros_independientes(original) + _numeros_independientes(alternativa))
+    coincidentes = etiquetados & independientes
+    if len(coincidentes) != 1:
+        raise FotoTicketError(
+            'No se pudo decodificar el codigo de barras ni confirmar '
+            'dos impresiones identicas del folio. No se acepto ningun numero.')
+
+    if not (compra_papel or compra_global):
+        raise FotoTicketError(
+            'Se leyo el folio, pero no se confirmaron TOTAL y los '
+            'datos de compra.')
+    return {'folio': next(iter(coincidentes))}
