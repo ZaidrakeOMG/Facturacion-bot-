@@ -601,9 +601,15 @@ def analizar_ticket_foto(foto_base64: str) -> dict[str, str]:
             folios_zona = recuperados
         tiene_compra = tiene_compra or compra_local
     if not tiene_compra:
+        compra_papel, reimp_papel = _validar_compra_en_papel(im, pytesseract)
+        if reimp_papel:
+            raise FotoTicketError(
+                'Este ticket indica REIMPRESIÓN. No se puede facturar desde el portal.')
+        tiene_compra = compra_papel
+    if not tiene_compra:
         raise FotoTicketError(
-            'No se reconoce el ticket completo. Toma una foto donde aparezcan '
-            'folio y datos de la compra.')
+            'No se pudieron confirmar los datos de la compra con el OCR. '
+            'Acerca el ticket a la camara y vuelve a intentarlo.')
     if len(folios_zona) == 1:
         folio_zona = folios_zona[0]
         if codigos and folio_zona not in codigos:
