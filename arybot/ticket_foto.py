@@ -638,9 +638,23 @@ def analizar_ticket_foto(foto_base64: str) -> dict[str, str]:
                       comprobante))
 
     if barras:
-        # No exigir que Tesseract LEA BIEN los numeros junto a FOLIO:
-        # el codigo de barras ya contiene el folio exacto. Lo que debe
-        # detectar OCR es la etiqueta FOLIO y datos de una compra.
+        # Un barcode es mas preciso que los digitos OCR; sin embargo,
+        # una lectura etiquetada claramente contradictoria impide
+        # confundir un codigo de otro ticket. FULIO/FULTO no generan
+        # una lectura numerica etiquetada y no bloquean el barcode.
+        impresos = set(_folios_etiquetados(original) +
+                       _folios_etiquetados(alternativa))
+        if impresos and not any(
+            _coincide_codigo_y_ocr(barras[0], impreso)
+            for impreso in impresos
+        ):
+            raise FotoTicketError(
+                'El folio impreso contradice al codigo de barras. '
+                'No se acepto ningun numero.')
+
+        # No exigir que Tesseract lea bien TODOS los digitos: el
+        # codigo de barras ya contiene el folio exacto. El OCR solo
+        # debe confirmar la etiqueta FOLIO y los datos de una compra.
         if not (rotulo_papel or rotulo_global):
             raise FotoTicketError(
                 'El codigo de barras se leyo, pero el OCR no detecto '
