@@ -19,9 +19,20 @@ def foto():
 
 
 def leer_con_respuestas(respuestas):
+    # El OCR del papel es otra pasada independiente; simular lo que la
+    # foto contiene, no permitir que falte una etiqueta FOLIO en las pruebas.
+    import re
+    todas = '\n'.join(respuestas).upper()
+    rotulo = bool(re.search(r'\bF[O0U]L[I1T]O\b', todas))
+    compra = bool(
+        re.search(r'\bTOTAL\b', todas) and
+        re.search(r'\b(?:OPERACION|DISPENSARIO|LITROS|PRODUCTO|PRECIO)\b', todas)
+        and re.search(r'\d+[.,]\d{2}\b', todas))
     with patch('arybot.ocr_ticket.find_tesseract', return_value='tesseract'), \
          patch('pytesseract.image_to_data', return_value={'text': []}), \
-         patch('pytesseract.image_to_string', side_effect=respuestas):
+         patch('pytesseract.image_to_string', side_effect=respuestas), \
+         patch('arybot.ticket_foto._evidencia_folio_y_compra',
+               return_value=(rotulo, compra, False)):
         return analizar_ticket_foto(foto())
 
 
@@ -195,8 +206,8 @@ def test_rescate_integracion_acepta_folio_y_total_solo_zonas():
          ]), \
          patch('arybot.ticket_foto._folios_codigo_barras',
                return_value=['0008430573']), \
-         patch('arybot.ticket_foto._validar_compra_en_papel',
-               return_value=(False, False)), \
+         patch('arybot.ticket_foto._evidencia_folio_y_compra',
+               return_value=(True, True, False)), \
          patch('arybot.ticket_foto._rescate_compra_y_folio',
                return_value=([], True)):
         resultado = analizar_ticket_foto(foto())
@@ -392,8 +403,8 @@ def test_integracion_folio_confirmado_con_compra_visible_solo_en_papel():
                return_value=([], False, False)), \
          patch('arybot.ticket_foto._leer_numeros_por_rotulo',
                return_value=['0008430573']), \
-         patch('arybot.ticket_foto._validar_compra_en_papel',
-               return_value=(True, False)), \
+         patch('arybot.ticket_foto._evidencia_folio_y_compra',
+               return_value=(True, True, False)), \
          patch('arybot.ticket_foto._folios_codigo_barras', return_value=['0008430573']):
         assert analizar_ticket_foto(foto()) == {'folio': '0008430573'}
 
@@ -406,8 +417,8 @@ def test_integracion_compra_en_papel_sigue_rechazando_reimpresiones():
                return_value=([], False, False)), \
          patch('arybot.ticket_foto._leer_numeros_por_rotulo',
                return_value=['0008430573']), \
-         patch('arybot.ticket_foto._validar_compra_en_papel',
-               return_value=(False, True)), \
+         patch('arybot.ticket_foto._evidencia_folio_y_compra',
+               return_value=(True, False, True)), \
          patch('arybot.ticket_foto._folios_codigo_barras', return_value=['0008430573']):
         with pytest.raises(FotoTicketError, match='REIMPRESIÓN'):
             analizar_ticket_foto(foto())
@@ -418,7 +429,7 @@ def test_integracion_compra_en_papel_sigue_rechazando_reimpresiones():
 def test_folios_diferentes_en_codigos_barras_se_rechazan():
     with patch('arybot.ticket_foto._folios_codigo_barras',
                return_value=['0008430573', '0008430578']):
-        with pytest.raises(FotoTicketError, match='codigos de barras diferentes'):
+        with pytest.raises(FotoTicketError, match='codigos de barras contradictorios'):
             leer_con_respuestas([
                 'FOLIO 0008430573\nTOTAL $500.00\nLITROS 20.842',
                 'FOLIO 0008430573\nTOTAL $500.00',
@@ -428,7 +439,7 @@ def test_folios_diferentes_en_codigos_barras_se_rechazan():
 def test_codigo_barras_sin_rotulo_folio_no_se_acepta():
     with patch('arybot.ticket_foto._folios_codigo_barras',
                return_value=['0008430573']):
-        with pytest.raises(FotoTicketError, match='no se identifica FOLIO'):
+        with pytest.raises(FotoTicketError, match='no detecto la palabra FOLIO'):
             leer_con_respuestas([
                 'SERVICIO APACHE\nTOTAL $500.00\nLITROS 20.842',
                 'TOTAL $500.00',
@@ -452,6 +463,58 @@ def test_sin_codigo_barras_no_basta_que_ocr_repita_error():
                 'FOLIO 6008430573\nTOTAL $500.00\nLITROS 20.842',
                 'FOLIO 6008430573\nTOTAL $500.00\nLITROS 20.842',
             ])
+
+
+
+
+def test_evidencia_en_papel_folio_y_compra_sin_digitos_ocr():
+    from unittest.mock import Mock
+    from arybot.ticket_foto import _evidencia_folio_y_compra
+    api = Mock()
+    api.image_to_string.return_value = (
+        'CLAVE PEMEX 123\nFOLIO GAG5Q3A5R3\n'
+        'OPERACION DE CONTADO\nDISPENSARIO 7\n'
+        'LITROS 20,842\nTOTAL $506.06')
+    with patch('arybot.ticket_foto._detectar_papel_por_luz',
+               return_value=(58, 258, 732, 1106)):
+        assert _evidencia_folio_y_compra(
+            Image.new('RGB', (740, 1600)), api) == (True, True, False)
+
+
+def test_evidencia_en_papel_detecta_fulto_de_ocr_movil():
+    from unittest.mock import Mock
+    from arybot.ticket_foto import _evidencia_folio_y_compra
+    api = Mock()
+    api.image_to_string.return_value = (
+        'FULTO UUG84305 73\nDISPENSARIO 7\n'
+        'LITROS 20.842\nTOTAL $500.00')
+    with patch('arybot.ticket_foto._detectar_papel_por_luz',
+               return_value=(58, 258, 732, 1106)):
+        assert _evidencia_folio_y_compra(
+            Image.new('RGB', (740, 1600)), api) == (True, True, False)
+
+
+def test_evidencia_en_papel_rechaza_reimpresion():
+    from unittest.mock import Mock
+    from arybot.ticket_foto import _evidencia_folio_y_compra
+    api = Mock()
+    api.image_to_string.return_value = (
+        'REIMPRESION\nFOLIO 0008430573\n'
+        'DISPENSARIO 7\nTOTAL $500.00')
+    with patch('arybot.ticket_foto._detectar_papel_por_luz',
+               return_value=(58, 258, 732, 1106)):
+        assert _evidencia_folio_y_compra(
+            Image.new('RGB', (740, 1600)), api) == (False, False, True)
+
+
+def test_barra_code39_coincide_aunque_texto_del_folio_se_deforme():
+    with patch('arybot.ticket_foto._folios_codigo_barras',
+               return_value=['0008430573']):
+        resultado = leer_con_respuestas([
+            'FULTO UUG84305 73\nDISPENSARIO 7\nTOTAL $500.00',
+            'LITROS 20.842',
+        ])
+    assert resultado['folio'] == '0008430573'
 
 
 
