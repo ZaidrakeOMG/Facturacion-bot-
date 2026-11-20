@@ -287,6 +287,75 @@ def test_integracion_preferir_papel_confirmado_a_ocr_global_incompleto():
 
 
 
+
+def test_folio_digitos_acepta_ceros_si_8_lecturas_coinciden():
+    from unittest.mock import Mock
+    from arybot.ticket_foto import _leer_numeros_por_rotulo
+
+    api = Mock()
+    api.Output.DICT = 'DICT'
+    api.image_to_data.return_value = {
+        'text': ['FOLIO'],
+        'left': [99], 'top': [107],
+        'width': [137], 'height': [64],
+    }
+    api.image_to_string.side_effect = ['0008430573'] * 8
+    im = Image.new('RGB', (740, 1600), 'white')
+    with patch('arybot.ticket_foto._detectar_papel_por_luz',
+               return_value=(58, 258, 732, 1106)):
+        assert _leer_numeros_por_rotulo(im, api) == ['0008430573']
+
+
+def test_folio_digitos_rechaza_empate_o_lecturas_dudosas():
+    from unittest.mock import Mock
+    from arybot.ticket_foto import _leer_numeros_por_rotulo
+
+    api = Mock()
+    api.Output.DICT = 'DICT'
+    api.image_to_data.return_value = {
+        'text': ['FOLIO'],
+        'left': [99], 'top': [107],
+        'width': [137], 'height': [64],
+    }
+    # Cinco lecturas distintas no permiten inventar ningun folio.
+    api.image_to_string.side_effect = [
+        '0008430573', '0008430573', '0008430573', '0008430573',
+        '6008430573', '6008430573', '6008430573', '6008430573',
+    ] * 10
+    im = Image.new('RGB', (740, 1600), 'white')
+    with patch('arybot.ticket_foto._detectar_papel_por_luz',
+               return_value=(58, 258, 732, 1106)):
+        assert _leer_numeros_por_rotulo(im, api) == []
+
+
+def test_integracion_prevalece_folio_numerico_con_compra_comprobada():
+    with patch('arybot.ocr_ticket.find_tesseract', return_value='tesseract'), \
+         patch('pytesseract.image_to_string', side_effect=[
+             'FOLIO 6008430573', 'MAGNA',
+         ]), \
+         patch('arybot.ticket_foto._ocr_tira_mejorado',
+               return_value=([], True, False)), \
+         patch('arybot.ticket_foto._leer_numeros_por_rotulo',
+               return_value=['0008430573']), \
+         patch('arybot.ticket_foto._folios_codigo_barras', return_value=[]):
+        resultado = analizar_ticket_foto(foto())
+    assert resultado == {'folio': '0008430573'}
+
+
+def test_integracion_no_acepta_folio_si_papel_es_reimpresion():
+    with patch('arybot.ocr_ticket.find_tesseract', return_value='tesseract'), \
+         patch('pytesseract.image_to_string', side_effect=[
+             'FOLIO 0008430573', 'MAGNA',
+         ]), \
+         patch('arybot.ticket_foto._ocr_tira_mejorado',
+               return_value=([], True, True)), \
+         patch('arybot.ticket_foto._leer_numeros_por_rotulo',
+               return_value=['0008430573']):
+        with pytest.raises(FotoTicketError, match='REIMPRESIÓN'):
+            analizar_ticket_foto(foto())
+
+
+
 def test_formato_invalido_rechazado():
     with pytest.raises(FotoTicketError):
         analizar_ticket_foto('un_folio_inventado')
