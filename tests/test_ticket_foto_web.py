@@ -211,6 +211,82 @@ def test_rescate_integracion_acepta_folio_y_total_solo_zonas():
 
 
 
+
+def test_detector_de_papel_en_captura_con_bordes_oscuros():
+    from PIL import ImageDraw
+    from arybot.ticket_foto import _detectar_papel_por_luz
+
+    im = Image.new('RGB', (740, 1600), (22, 28, 40))
+    dibujo = ImageDraw.Draw(im)
+    dibujo.rectangle((125, 253, 652, 1230), fill=(211, 210, 203))
+    bounds = _detectar_papel_por_luz(im)
+    assert bounds is not None
+    x0, y0, x1, y1 = bounds
+    assert 105 <= x0 <= 148
+    assert 240 <= y0 <= 270
+    assert 638 <= x1 <= 665
+    assert 1215 <= y1 <= 1250
+
+
+def test_ocr_mejorado_valida_dos_lecturas_y_compra():
+    from unittest.mock import Mock, patch
+    from arybot.ticket_foto import _ocr_tira_mejorado
+
+    api = Mock()
+    api.image_to_string.side_effect = [
+        'FOLIO 0008430573',
+        'FOLIO 0008430573',
+        'DISPENSARIO 7\nTOTAL $500.00',
+    ]
+    with patch('arybot.ticket_foto._detectar_papel_por_luz', return_value=(125, 253, 652, 1230)):
+        candidatos, compra, reimp = _ocr_tira_mejorado(Image.new('RGB', (740, 1600)), api)
+    assert (candidatos, compra, reimp) == (['0008430573'], True, False)
+
+
+def test_ocr_mejorado_rechaza_folios_discrepantes():
+    from unittest.mock import Mock, patch
+    from arybot.ticket_foto import _ocr_tira_mejorado
+
+    api = Mock()
+    api.image_to_string.side_effect = [
+        'FOLIO 0008430573', 'FOLIO 0008430578',
+        'TOTAL $500.00',
+    ]
+    with patch('arybot.ticket_foto._detectar_papel_por_luz', return_value=(125, 253, 652, 1230)):
+        candidatos, compra, reimp = _ocr_tira_mejorado(Image.new('RGB', (740, 1600)), api)
+    assert candidatos == [] and compra and not reimp
+
+
+def test_ocr_mejorado_bloquea_reimpresiones():
+    from unittest.mock import Mock, patch
+    from arybot.ticket_foto import _ocr_tira_mejorado
+
+    api = Mock()
+    api.image_to_string.side_effect = [
+        'REIMPRESION FOLIO 0008430573',
+        'FOLIO 0008430573',
+        'TOTAL $500.00',
+    ]
+    with patch('arybot.ticket_foto._detectar_papel_por_luz', return_value=(125, 253, 652, 1230)):
+        _, _, reimp = _ocr_tira_mejorado(Image.new('RGB', (740, 1600)), api)
+    assert reimp
+
+
+def test_integracion_preferir_papel_confirmado_a_ocr_global_incompleto():
+    from unittest.mock import patch
+    with patch('arybot.ocr_ticket.find_tesseract', return_value='tesseract'), \
+         patch('pytesseract.image_to_string', side_effect=[
+             'texto del fondo sin concepto',
+             'lectura general borrosa',
+         ]), \
+         patch('arybot.ticket_foto._ocr_tira_mejorado',
+               return_value=(['0008430573'], True, False)), \
+         patch('arybot.ticket_foto._folios_codigo_barras', return_value=[]):
+        result = analizar_ticket_foto(foto())
+    assert result == {'folio': '0008430573'}
+
+
+
 def test_formato_invalido_rechazado():
     with pytest.raises(FotoTicketError):
         analizar_ticket_foto('un_folio_inventado')
