@@ -2095,23 +2095,58 @@ class PolarisBot:
         return h
 
     def _read_date_control(self, inv):
-        """Lee Fecha sin pasar por la validación estricta de Edit único."""
+        """Lee Fecha en controles DevExpress anidados, sin escribir ni cambiar su valor.
+
+        WindowFromPoint puede devolver un wrapper TcxDateEdit vacío aunque
+        el editor interno sí tenga la fecha. Sólo se aceptan lecturas válidas
+        de la misma cadena de HWND del campo; si difieren, no se continúa.
+        """
+        from datetime import datetime
         h=self._date_hwnd_at_point(inv)
-        value=''
-        try:
-            value=self._captura_factura().texto.leer(h)
-        except Exception:
+        reader=self._captura_factura().texto
+        candidatos=[]
+        cur=h
+        for _ in range(8):
+            if not cur or cur==inv or not self._same_polaris_process(inv,cur):
+                break
+            if 'EDIT' in self._class_name(cur).upper() or cur==h:
+                candidatos.append(cur)
             try:
-                value=win32gui.GetWindowText(h) or ''
+                cur=win32gui.GetParent(cur)
             except Exception:
-                value=''
-        value=str(value or '').strip()
+                break
+        fechas=[]
+        for control in candidatos:
+            value=''
+            try:
+                value=reader.leer(control)
+            except Exception:
+                pass
+            if not value:
+                try:value=win32gui.GetWindowText(control) or ''
+                except Exception:pass
+            value=str(value or '').strip()
+            for fmt in ('%d/%m/%Y','%d-%m-%Y','%Y-%m-%d'):
+                try:
+                    parsed=datetime.strptime(value,fmt).date()
+                    # Rechazar textos parciales de etiquetas o wrappers.
+                    if parsed.strftime(fmt)==value:
+                        fechas.append((control,value,parsed))
+                        break
+                except ValueError:
+                    pass
+        distintos={parsed for _,_,parsed in fechas}
+        if len(distintos)>1:
+            self._screenshot_error("fecha_controles_discrepantes")
+            raise PolarisError("Los controles de Fecha muestran valores diferentes. No se continuará al folio.")
+        control,value=(fechas[0][0],fechas[0][1]) if fechas else (h,'')
         self.diag.evento(
             'FACTURACION: fecha','LECTURA_FECHA',
             'Lectura del control Fecha.',
-            {'vacio':not bool(value),'longitud':len(value),'clase':self._class_name(h)}
+            {'vacio':not bool(value),'longitud':len(value),
+             'clase':self._class_name(control),'controles_revisados':len(candidatos)}
         )
-        return h,value
+        return control,value
 
     def _set_ticket_date(self, inv, fecha_ticket):
         """Selecciona la fecha con el calendario nativo de Polaris, como en el video."""
