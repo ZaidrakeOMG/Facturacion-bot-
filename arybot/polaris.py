@@ -1945,6 +1945,12 @@ class PolarisBot:
     def _calendar_day_cell(year, month, day):
         """Casilla del calendario Polaris: domingo primero, máximo seis semanas."""
         weeks=calendar.Calendar(firstweekday=6).monthdayscalendar(int(year),int(month))
+        # El calendario DevExpress de Polaris siempre muestra seis filas.
+        # Cuando el día 1 cae en domingo, agrega una semana COMPLETA
+        # del mes anterior arriba. En el video del 23/11/2026, omitir
+        # esa fila hacía pulsar 16/11/2026 (una semana antes).
+        if calendar.weekday(int(year),int(month),1)==6:
+            weeks.insert(0,[0]*7)
         while len(weeks)<6:
             weeks.append([0]*7)
         for row,week in enumerate(weeks[:6]):
@@ -2184,6 +2190,21 @@ class PolarisBot:
                 {'fecha_inicial_legible':False}
             )
 
+        # Si la fecha ya está correcta NO abrir el calendario: la selección
+        # anterior estaba cambiando el 23/11/2026 por el 16/11/2026.
+        # Verificar una segunda lectura independiente antes de continuar.
+        if current==target:
+            _,confirmed_text=self._read_date_control(inv)
+            if coincide('fecha',confirmed_text,visible):
+                self._pasos_factura['fecha']=iso
+                self.diag.evento(
+                    'FACTURACION: fecha','OK',
+                    'Fecha ya correcta; se verificó dos veces sin modificar Polaris.',
+                    {'fecha_objetivo':visible,'coincide':True}
+                )
+                self.log("Fecha del ticket ya correcta y verificada. Continuando al folio...")
+                return iso
+
         # Abrir la flecha visible del TcxDateEdit directamente. No dependemos de
         # identificar el wrapper exterior, porque DevExpress expone varios HWND.
         ir=self._rect(inv)
@@ -2247,6 +2268,7 @@ class PolarisBot:
         # Verificar que el campo Fecha quedó EXACTAMENTE con la fecha solicitada.
         end=time.time()+3.0
         stable=0
+        observed=''
         while time.time()<end:
             try:
                 _,observed=self._read_date_control(inv)
@@ -2263,9 +2285,12 @@ class PolarisBot:
             self.diag.evento(
                 'FACTURACION: fecha','ERROR',
                 'El calendario no dejó la fecha solicitada. No se continúa al folio.',
-                {'fecha_objetivo':visible,'coincide':False}
+                {'fecha_objetivo':visible,'fecha_observada':observed,'coincide':False}
             )
-            raise PolarisError("La fecha elegida en el calendario no coincide con la fecha del ticket. No se continuará al folio.")
+            raise PolarisError(
+                f"Fecha incorrecta en Polaris: quedó {observed or 'sin lectura'} "
+                f"y debía ser {visible}. Se detuvo antes del folio."
+            )
 
         self._pasos_factura['fecha']=iso
         self.diag.evento(
