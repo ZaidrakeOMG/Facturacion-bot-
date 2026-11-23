@@ -26,10 +26,24 @@ def coincide(campo,a,b):
         return bool(re.fullmatch(r'[0-9]+',str(a).strip()) and re.fullmatch(r'[0-9]+',str(b).strip())
                     and int(str(a).strip())==int(str(b).strip()))
     if campo=='fecha':
+        # Polaris puede exponer el mismo valor con /, - o formato ISO,
+        # según la versión de DevExpress y la configuración de Windows.
+        # Se comprueba la fecha REAL, nunca sólo los números del texto.
+        from datetime import datetime
         def f(v):
-            m=re.fullmatch(r'\s*(\d{1,2})/(\d{1,2})/(\d{4})\s*',str(v or ''))
-            return (int(m.group(3)),int(m.group(2)),int(m.group(1))) if m else None
-        return bool(f(a) and f(a)==f(b))
+            value=str(v or '').strip()
+            patterns=(
+                (r'\d{1,2}/\d{1,2}/\d{4}', '%d/%m/%Y'),
+                (r'\d{1,2}-\d{1,2}-\d{4}', '%d-%m-%Y'),
+                (r'\d{4}-\d{2}-\d{2}', '%Y-%m-%d'),
+            )
+            for pattern,fmt in patterns:
+                if re.fullmatch(pattern,value):
+                    try:return datetime.strptime(value,fmt).date()
+                    except ValueError:return None
+            return None
+        fecha_lectura=f(a)
+        return fecha_lectura is not None and fecha_lectura==f(b)
     return str(a).strip()==str(b).strip()
 
 class LecturaCombo(TextoWindows):
