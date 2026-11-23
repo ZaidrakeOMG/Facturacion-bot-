@@ -2129,8 +2129,12 @@ class PolarisBot:
             for fmt in ('%d/%m/%Y','%d-%m-%Y','%Y-%m-%d'):
                 try:
                     parsed=datetime.strptime(value,fmt).date()
-                    # Rechazar textos parciales de etiquetas o wrappers.
-                    if parsed.strftime(fmt)==value:
+                    # Strptime comprueba los valores; fullmatch rechaza etiquetas
+                    # o lecturas parciales sin excluir fechas con un dígito.
+                    pattern=(r'\d{4}-\d{2}-\d{2}' if fmt=='%Y-%m-%d'
+                             else r'\d{1,2}'+('/' if fmt=='%d/%m/%Y' else '-')
+                             +r'\d{1,2}'+('/' if fmt=='%d/%m/%Y' else '-')+r'\d{4}')
+                    if re.fullmatch(pattern,value):
                         fechas.append((control,value,parsed))
                         break
                 except ValueError:
