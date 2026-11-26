@@ -76,3 +76,16 @@ def test_http_403_safe_diagnostics(code, expected):
     assert expected in str(exc.value)
     assert "fake secret" not in str(exc.value)
     assert "unrecognized_fake_secret" not in str(exc.value)
+
+
+def test_saved_key_button_with_empty_entry(monkeypatch):
+    from types import SimpleNamespace
+    from arybot import groq_gui
+    calls = []
+    monkeypatch.setattr(groq_gui, "get_key", lambda: "gsk_fake_saved")
+    monkeypatch.setattr(groq_gui, "save_key", lambda key: pytest.fail("No debe guardar un campo vacío"))
+    tab = SimpleNamespace(busy=False, session_key=None, key=SimpleNamespace(get=lambda: ""),
+                          _run=lambda kind: calls.append(kind),
+                          _report=lambda *args, **kwargs: pytest.fail("No debe mostrar error"))
+    groq_gui.GroqTab._save(tab)
+    assert calls == ["conexion"]

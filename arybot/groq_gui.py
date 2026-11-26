@@ -39,7 +39,7 @@ class GroqTab(ttk.Frame):
         self.connection_result.pack(fill="x", anchor="w", pady=(5, 8))
         row = ttk.Frame(config); row.pack(fill="x")
         ttk.Entry(row, textvariable=self.key, show="*", width=38).pack(side="left", fill="x", expand=True)
-        self.save_btn = ttk.Button(row, text="Guardar clave en Windows", command=self._save)
+        self.save_btn = ttk.Button(row, text="Guardar o reutilizar clave", command=self._save)
         self.save_btn.pack(side="left", padx=6)
         self.test_btn = ttk.Button(row, text="Probar conexión", command=lambda: self._run("conexion"))
         self.test_btn.pack(side="left")
@@ -86,7 +86,15 @@ class GroqTab(ttk.Frame):
         self.input.insert("1.0", EXAMPLES[self._selected()])
 
     def _save(self):
+        if self.busy:
+            return
         value = self.key.get().strip()
+        if not value:
+            if self.session_key or get_key():
+                self._run("conexion")
+            else:
+                self._report("Introduce una clave de Groq para guardarla.", ok=False)
+            return
         try:
             save_key(value)
         except GroqError as exc:

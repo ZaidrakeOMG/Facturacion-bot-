@@ -189,9 +189,10 @@ def ask(kind, text="", *, api_key=None, http_client=None):
         }
     started = time.monotonic()
     try:
+        # Groq SDK appends /openai/v1/chat/completions itself. Use origin only.
         # Fixed origin, verified HTTPS, no redirects or automatic retries.
         transport = http_client if http_client is not None else DefaultHttpxClient(follow_redirects=False)
-        with Groq(api_key=key, base_url="https://api.groq.com/openai/v1",
+        with Groq(api_key=key, base_url="https://api.groq.com",
                   timeout=25.0, max_retries=0, http_client=transport) as client:
             response = client.chat.completions.create(**payload)
             content = response.choices[0].message.content
