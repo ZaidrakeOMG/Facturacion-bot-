@@ -18,7 +18,7 @@ def piloto_habilitado():
     return os.environ.get("ARY_GROQ_VISION", "1") != "0"
 
 
-def leer_numero_recortado(zona):
+def leer_numero_recortado(zona, *, variante=False):
     from .groq_service import get_key
     key = get_key()
     if not key:
@@ -30,7 +30,15 @@ def leer_numero_recortado(zona):
     try:
         from PIL import Image, ImageOps
         from groq import Groq, DefaultHttpxClient
-        recorte = ImageOps.autocontrast(ImageOps.grayscale(zona))
+        if variante:
+            from PIL import ImageFilter
+            # Segunda consulta sin mostrar el candidato previo al modelo.
+            # Se usa una representación visual distinta, no otro modelo.
+            recorte = ImageOps.grayscale(zona).filter(
+                ImageFilter.UnsharpMask(radius=1.2, percent=120, threshold=3))
+            recorte = ImageOps.autocontrast(recorte, cutoff=1)
+        else:
+            recorte = ImageOps.autocontrast(ImageOps.grayscale(zona))
         recorte.thumbnail((1400, 320), Image.Resampling.LANCZOS)
         if recorte.width < 20 or recorte.height < 10:
             return None
@@ -42,7 +50,8 @@ def leer_numero_recortado(zona):
         buf = io.BytesIO()
         recorte.save(buf, format="PNG")
         encoded = base64.b64encode(buf.getvalue()).decode("ascii")
-        logging.getLogger(__name__).warning("GROQ VISION: consultando Qwen sobre recorte de dígitos.")
+        logging.getLogger(__name__).warning("GROQ VISION: consulta %s sobre recorte de dígitos.",
+                                            "de confirmación" if variante else "inicial")
         with Groq(api_key=key, base_url="https://api.groq.com", timeout=12.0,
                   max_retries=0, http_client=DefaultHttpxClient(follow_redirects=False)) as client:
             reply = client.chat.completions.create(

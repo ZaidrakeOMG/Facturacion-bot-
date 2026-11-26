@@ -703,7 +703,22 @@ def _folio_vision_bajo_barras(imagen):
     return candidato, corroborado
 
 
-def analizar_codigo_barras_foto(foto_base64: str, *, vision=False) -> dict[str, str]:
+def _confirmar_vision(imagen, candidato):
+    """Repite la lectura visual sin revelar el primer folio al modelo.
+    Es concordancia entre lecturas, NO evidencia independiente de la venta.
+    """
+    zona = _zona_numero_bajo_barras(imagen)
+    if zona is None:
+        return False
+    from .ticket_vision import leer_numero_recortado
+    segundo = leer_numero_recortado(zona, variante=True)
+    coincide = isinstance(segundo, str) and segundo == candidato
+    logging.getLogger(__name__).warning("GROQ VISION: segunda lectura %s.",
+                                        "coincidente" if coincide else "no confirmada")
+    return coincide
+
+
+def analizar_codigo_barras_foto(foto_base64: str, *, vision=False, confirmar_vision=False) -> dict[str, str]:
     """Lee CODE39/CODE128 o el numero impreso bajo las barras mediante OCR.
 
     La foto puede ser un recorte horizontal que incluya unicamente las
@@ -755,14 +770,16 @@ def analizar_codigo_barras_foto(foto_base64: str, *, vision=False) -> dict[str, 
     if folio_ocr:
         return {'folio': folio_ocr}
     if vision:
-        # Vision is available in both operating modes. The portal may display
-        # an AI-only candidate, but final submission requires corroboration.
+        # Vision works in production. At submission a non-corroborated
+        # candidate requires a second matching visual reading.
         from .ticket_vision import piloto_habilitado
         if piloto_habilitado():
             folio_vision, corroborado = _folio_vision_bajo_barras(foto)
             if folio_vision:
-                return {'folio': folio_vision,
-                        'lectura': 'groq_corroborada' if corroborado else 'groq_no_verificada'}
+                metodo = 'groq_corroborada' if corroborado else 'groq_no_verificada'
+                if not corroborado and confirmar_vision and _confirmar_vision(foto, folio_vision):
+                    metodo = 'groq_doble_lectura'
+                return {'folio': folio_vision, 'lectura': metodo}
     if error_lector is not None:
         raise error_lector
     raise FotoTicketError(

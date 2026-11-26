@@ -74,7 +74,7 @@ class PortalRedWSGI:
             if environ.get('REQUEST_METHOD', 'GET').upper() != 'GET':
                 return self.responder(start_response, 405, {'error': 'La prueba solo admite GET.'})
             return self.responder(start_response, 200, {
-                'ok': True, 'servicio': 'ARY Portal Facturacion', 'version': '1.2-integrado', 'lector': 'vision-r4',
+                'ok': True, 'servicio': 'ARY Portal Facturacion', 'version': '1.2-integrado', 'lector': 'vision-r5',
                 'modo_seguro': self.app.modo_seguro(), 'recepcion_activa': self.app.aceptando})
 
         if self.lan:
