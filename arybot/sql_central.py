@@ -23,6 +23,12 @@ STATES = frozenset(("EN_COLA","EJECUTANDO","PREPARADA_FACTURA","PREPARADA_ALTA",
     "PRUEBA_PENDIENTE","ACEPTAR_ALTA","ALTA_CONFIRMADA","ENVIO_SOLICITADO",
     "YA_FACTURADO","REVISION_REQUERIDA","REVISION_ENTRADA","ESPERANDO_DATOS",
     "DUPLICADA","CANCELADA","PRUEBA_CERRADA","REVISION_CERRADA","FINALIZADA"))
+PAYMENTS = frozenset(("EFECTIVO","CHEQUE NOMINATIVO","TRANSFERENCIA ELECTRONICA DE FONDOS",
+    "TARJETA DE CREDITO","TARJETA DE DEBITO","MONEDERO ELECTRONICO","DINERO ELECTRONICO",
+    "VALES DE DESPENSA","DACION EN PAGO","PAGO POR SUBROGACION","PAGO POR CONSIGNACION",
+    "CONDONACION","COMPENSACION","NOVACION","CONFUSION","REMISION DE DEUDA",
+    "PRESCRIPCION O CADUCIDAD","A SATISFACCION DEL ACREEDOR","TARJETA DE SERVICIOS",
+    "POR DEFINIR","APLICACION DE ANTICIPOS","INTERMEDIARIO PAGOS"))
 REQUIRED_TABLES = frozenset(("BotEsquema","Estaciones","ConexionesPolaris","Solicitudes",
     "Facturas","EventosSolicitud","ConsultasIA","AlertasBot","ConfiguracionBot"))
 
@@ -191,7 +197,8 @@ def to_record(row):
         folio = str(data.get("ticket") or "") if kind == "FACTURA" else ""
         folio = folio if re.fullmatch(r"[0-9]{1,20}", folio) else None
         date = normalize_ticket_date(data.get("fecha_ticket")) or None if kind == "FACTURA" else None
-        pay = _plain(str(data.get("forma_pago") or ""))[:60] or None if kind == "FACTURA" else None
+        pay = _plain(str(data.get("forma_pago") or "")) if kind == "FACTURA" else ""
+        pay = pay if pay in PAYMENTS else None
         usage = _plain(str(data.get("uso_cfdi") or ""))
         cfdi = next((code for code, desc in USO_CFDI.items() if usage in (code, _plain(desc))), None) if kind == "FACTURA" and usage else None
         started, ended = utc(row["iniciado"]), utc(row["terminado"])
@@ -223,6 +230,8 @@ DECLARE @Estacion int=(SELECT EstacionID FROM dbo.Estaciones WHERE Codigo=@Codig
 IF @Estacion IS NULL THROW 50021,'Estacion no registrada',1;
 IF EXISTS(SELECT 1 FROM dbo.Solicitudes WITH (UPDLOCK,HOLDLOCK) WHERE IdLocal=@IdLocal)
 BEGIN
+ IF EXISTS(SELECT 1 FROM dbo.Solicitudes WHERE IdLocal=@IdLocal AND (EstacionID<>@Estacion OR Tipo<>@Tipo))
+  THROW 50022,'Conflicto de identidad de solicitud',1;
  UPDATE dbo.Solicitudes SET Estado=@Estado,ActualizadoUTC=@Actualizado,IniciadoUTC=@Iniciado,TerminadoUTC=@Terminado
  WHERE IdLocal=@IdLocal AND ActualizadoUTC<@Actualizado AND EstacionID=@Estacion AND Tipo=@Tipo;
 END
