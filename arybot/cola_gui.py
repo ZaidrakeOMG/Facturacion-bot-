@@ -10,7 +10,7 @@ class ColaTab(ttk.Frame):
         super().__init__(parent,padding=10);self.app=app;self.cola=app.cola;self._closed=False
         self.status=tk.StringVar();self.options=ajustes_cola(app.cfg)
         ttk.Label(self,text='Cola de trabajo y avisos al cliente',font=('Segoe UI',13,'bold')).pack(anchor='w')
-        self.explanation=ttk.Label(self,text='Gmail recibe y los correos se envían en segundo plano. Una sola operación controla Polaris. '
+        self.explanation=ttk.Label(self,text='El portal web y la captura manual alimentan la cola. Los avisos Gmail están desactivados en esta edición. Una sola operación controla Polaris. '
                            'No uses teclado/ratón en este escritorio mientras el robot está capturando.',
                   wraplength=950,foreground='#374c60')
         self.explanation.pack(anchor='w',pady=(5,8))
@@ -37,12 +37,13 @@ class ColaTab(ttk.Frame):
             ttk.Button(acts,text=txt,command=fn).pack(side='left',padx=(0,7))
         ttk.Label(jobs,text='Liberar revisiones solo cambia su estado local; no toca Polaris ni repite operaciones. Los casos inciertos quedan protegidos.',
                   wraplength=850).pack(anchor='w')
-        self.enabled=tk.BooleanVar(value=self.options['avisar_cliente'])
-        self.in_safe=tk.BooleanVar(value=self.options['avisar_en_modo_seguro'])
+        mail_enabled=app.cfg.get('app',{}).get('gmail_habilitado',True)
+        self.enabled=tk.BooleanVar(value=self.options['avisar_cliente'] and mail_enabled)
+        self.in_safe=tk.BooleanVar(value=self.options['avisar_en_modo_seguro'] and mail_enabled)
         self.fact=tk.IntVar(value=self.options['minutos_factura']);self.alta=tk.IntVar(value=self.options['minutos_alta'])
         self.margin=tk.IntVar(value=self.options['margen_minutos'])
-        ttk.Checkbutton(opts,text='Enviar avisos al cliente: recepción, proceso, resultado o revisión',variable=self.enabled).grid(row=0,column=0,columnspan=3,sticky='w',pady=5)
-        ttk.Checkbutton(opts,text='Enviar avisos REALES también en MODO SEGURO (identificados como PRUEBA)',variable=self.in_safe).grid(row=1,column=0,columnspan=3,sticky='w',pady=5)
+        ttk.Checkbutton(opts,text='Enviar avisos al cliente: recepción, proceso, resultado o revisión',variable=self.enabled,state='normal' if mail_enabled else 'disabled').grid(row=0,column=0,columnspan=3,sticky='w',pady=5)
+        ttk.Checkbutton(opts,text='Enviar avisos REALES también en MODO SEGURO (identificados como PRUEBA)',variable=self.in_safe,state='normal' if mail_enabled else 'disabled').grid(row=1,column=0,columnspan=3,sticky='w',pady=5)
         for r,label,var in [(2,'Minutos base por factura',self.fact),(3,'Minutos base por alta',self.alta),(4,'Margen adicional (minutos)',self.margin)]:
             ttk.Label(opts,text=label).grid(row=r,column=0,sticky='e',pady=6,padx=8)
             ttk.Spinbox(opts,from_=1,to=240,textvariable=var,width=7).grid(row=r,column=1,sticky='w')
@@ -62,8 +63,8 @@ class ColaTab(ttk.Frame):
         ms.pack(side='right',fill='y');self.mailtree.pack(fill='both',expand=True)
         mb=ttk.Frame(mails);mb.pack(fill='x',pady=8)
         ttk.Button(mb,text='Ver mensaje',command=self.mail_detail).pack(side='left',padx=6)
-        ttk.Button(mb,text='Reenviar aviso seleccionado (REAL)',command=self.retry_mail).pack(side='left',padx=6)
-        ttk.Label(mails,text='ENVIADA = Gmail aceptó el mensaje; no confirma recepción. Reenviar SOLO manda el aviso, nunca repite Polaris.',wraplength=870).pack(anchor='w')
+        ttk.Button(mb,text='Reenviar aviso seleccionado (REAL)',command=self.retry_mail,state='normal' if mail_enabled else 'disabled').pack(side='left',padx=6)
+        ttk.Label(mails,text='Historial de avisos. En esta edición Gmail está desactivado; Polaris conserva su propio envío de factura.',wraplength=870).pack(anchor='w')
         self._poll=self.after(500,self._tick);self.bind('<Destroy>',self._destroy,add='+')
         self.refresh()
 
