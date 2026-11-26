@@ -714,7 +714,8 @@ def _confirmar_vision(imagen, candidato):
     segundo = leer_numero_recortado(zona, variante=True)
     coincide = isinstance(segundo, str) and segundo == candidato
     logging.getLogger(__name__).warning("GROQ VISION: segunda lectura %s.",
-                                        "coincidente" if coincide else "no confirmada")
+                                        "coincidente" if coincide else
+                                        ("sin respuesta válida" if segundo is None else "discrepante"))
     return coincide
 
 

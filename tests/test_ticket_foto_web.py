@@ -710,3 +710,22 @@ def test_portal_admite_doble_lectura_y_no_folio_editado():
         body["ticket"] = "0008430578"
         with pytest.raises(EntradaPortalError, match="no coincide"):
             validar_entrada(body, vision=True)
+
+
+def test_cache_vision_temporal_y_no_almacena_fallos(monkeypatch):
+    from collections import OrderedDict
+    from arybot import ticket_vision as v
+    monkeypatch.setattr(v, "_cache", OrderedDict())
+    monkeypatch.setattr(v, "_CACHE_MAX", 2)
+    clock = [100.0]
+    monkeypatch.setattr(v.time, "monotonic", lambda: clock[0])
+    v._remember(b"a", "0008430573")
+    v._remember(b"bad", None)
+    assert v._cached(b"a") == "0008430573"
+    assert v._cached(b"bad") is None
+    v._remember(b"b", "0008430574")
+    v._remember(b"c", "0008430575")
+    assert v._cached(b"a") is None
+    assert v._cached(b"b") == "0008430574"
+    clock[0] += 601
+    assert v._cached(b"b") is None

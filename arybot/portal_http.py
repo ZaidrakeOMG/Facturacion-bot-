@@ -278,7 +278,7 @@ class PortalWSGI:
                 raise HttpError(429, 'Se alcanzó el límite de lectura de fotos. Intenta más tarde.')
             try:
                 if modo_ticket == 'codigo_barras':
-                    self.cola.log('LECTOR vision-r5 | Groq: ' +
+                    self.cola.log('LECTOR vision-r6 | Groq: ' +
                                   ('ACTIVO' if piloto_habilitado() else 'INACTIVO'))
                     if piloto_habilitado():
                         resultado = analizar_codigo_barras_foto(body['foto_ticket'], vision=True)
@@ -369,7 +369,7 @@ class PortalWSGI:
         if content_type.startswith('application/json'):
             headers.append(('Content-Security-Policy', "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'"))
         if environ.get('PATH_INFO') == PREFIX + '/validar-ticket':
-            headers.append(('X-ARY-Lector', 'vision-r5'))
+            headers.append(('X-ARY-Lector', 'vision-r6'))
         if code == 429:
             headers.append(('Retry-After', '60'))
         start_response(str(code) + ' ' + HTTPStatus(code).phrase, headers)
