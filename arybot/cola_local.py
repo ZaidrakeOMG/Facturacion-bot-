@@ -289,6 +289,15 @@ class ColaLocal:
                 self._set(c,'pausada','0')
                 self._set(c,'motivo_pausa','')
 
+    def cancel_pending(self):
+        """Withdraw waiting jobs atomically, preserving history and active work."""
+        with self.connect(True) as c:
+            ids=[r[0] for r in c.execute("SELECT id FROM trabajos WHERE estado='EN_COLA'")]
+            now=time.time()
+            c.execute("UPDATE trabajos SET estado='CANCELADA',motivo=?,actualizado=?,terminado=? WHERE estado='EN_COLA'",
+                      ('Retirada en lote antes de iniciar.',now,now))
+            return ids
+
     def cancel(self,ident):
         with self.connect(True) as c:
             row=c.execute('SELECT estado FROM trabajos WHERE id=?',(ident,)).fetchone()

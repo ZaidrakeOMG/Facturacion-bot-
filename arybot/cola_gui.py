@@ -33,7 +33,7 @@ class ColaTab(ttk.Frame):
         acts=ttk.Frame(jobs);acts.pack(fill='x',pady=8)
         for txt,fn in [('Ver detalle',self.detail),('Revisar alta seleccionada',self.open_alta),
                        ('Liberar revisión',self.release),('Liberar todas las revisiones',self.release_all),
-                       ('Retirar de la cola',self.cancel)]:
+                       ('Retirar de la cola',self.cancel),('Retirar todos los pendientes',self.cancel_all)]:
             ttk.Button(acts,text=txt,command=fn).pack(side='left',padx=(0,7))
         ttk.Label(jobs,text='Liberar revisiones solo cambia su estado local; no toca Polaris ni repite operaciones. Los casos inciertos quedan protegidos.',
                   wraplength=850).pack(anchor='w')
@@ -163,6 +163,25 @@ class ColaTab(ttk.Frame):
             f"Se conservaron {resultado['protegidas']} por seguridad.\n\n"
             'No se alteraron facturas, registros de Polaris ni correos.',
             parent=self)
+
+    def cancel_all(self):
+        # No modal while Polaris is capturing; require a second click instead.
+        if self.cola.ocupada:
+            if not getattr(self,'_bulk_cancel_armed',False):
+                self._bulk_cancel_armed=True
+                self.status.set('Vuelve a pulsar Retirar todos los pendientes para confirmar. No se interrumpe la actual.')
+                self.after(10000,lambda:setattr(self,'_bulk_cancel_armed',False))
+                return
+        else:
+            n=self.cola.store.status()['conteos'].get('EN_COLA',0)
+            if not n:return
+            if not messagebox.askyesno('Retirar pendientes',
+                    f'¿Retirar las {n} solicitudes pendientes? Se conserva la actual y el historial.',
+                    parent=self,default='no'):return
+        self._bulk_cancel_armed=False
+        try:self.cola.cancelar_pendientes(confirmado=True)
+        except Exception as exc:self.status.set(str(exc));return
+        self.refresh()
 
     def cancel(self):
         if not self._can_dialog():return

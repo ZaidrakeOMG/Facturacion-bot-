@@ -275,6 +275,8 @@ class ColaOperaciones:
                         if job and job['tipo']=='ALTA' and self.alta is not None:
                             self.alta.liberar()
                     except Exception as close_exc:
+                        self._manual_pause=True
+                        self.store.pause('Polaris no confirmó el cierre. Revisar sesión antes de continuar.')
                         self.log('No se pudo cerrar Polaris al terminar la solicitud: '+str(close_exc))
             finally:
                 self._consumer.release()
@@ -321,6 +323,17 @@ class ColaOperaciones:
             self.log('No se pudo actualizar la vista; los cambios quedaron guardados.')
         self._wake.set()
         return result
+
+    def cancelar_pendientes(self, *, confirmado=False):
+        if confirmado is not True:
+            raise ColaError('Confirma retirar las solicitudes pendientes.')
+        ids=self.store.cancel_pending()
+        for ident in ids:
+            self._notice(self.store.get(ident),'cancelada')
+            self._changed(ident)
+        self._wake.set()
+        self.log('Cola: '+str(len(ids))+' pendientes retiradas; historial conservado.')
+        return len(ids)
 
     def cancelar(self,ident):
         self.store.cancel(ident);self._notice(self.store.get(ident),'cancelada');self._changed(ident)
