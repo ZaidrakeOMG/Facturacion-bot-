@@ -6,6 +6,7 @@ from __future__ import annotations
 import base64
 import binascii
 import io
+import logging
 import re
 import unicodedata
 from collections import Counter
@@ -56,7 +57,7 @@ def _numeros_independientes(texto: str) -> list[str]:
 
 
 
-def _folios_codigo_barras(imagen) -> list[str]:
+def _folios_codigo_barras(imagen, *, exigir_lector=False) -> list[str]:
     """Decodifica CODE39/CODE128 directamente del papel y de zonas cercanas.
 
     CODE39 es preferible a tratar de reconstruir 0/6/8 con OCR. No cambia
@@ -70,38 +71,55 @@ def _folios_codigo_barras(imagen) -> list[str]:
         if re.fullmatch(r'[0-9]{6,20}', valor) and valor not in valores:
             valores.append(valor)
 
+    from PIL import Image
+
+    log = logging.getLogger(__name__)
     gris = ImageOps.grayscale(imagen)
     alto = imagen.height
     recorte = gris.crop((0, round(alto * 0.42), imagen.width, alto))
-    variantes = (
-        imagen,
-        gris,
-        recorte,
-        ImageOps.autocontrast(recorte),
-    )
+    contraste = ImageOps.autocontrast(gris)
+    variantes = [imagen, gris, recorte, contraste, ImageOps.autocontrast(recorte)]
+    # Las capturas pequeñas pueden mejorar al ampliar y añadir zona blanca.
+    # Limitar el tamaño para no aumentar demasiado el coste por solicitud.
+    if max(gris.size) <= 1000:
+        ampliada = contraste.resize(
+            (gris.width * 2, gris.height * 2), Image.Resampling.LANCZOS)
+        variantes.append(ImageOps.expand(ampliada, border=48, fill=255))
 
+    lector_operativo = False
     try:
         import zxingcpp
         for fuente in variantes:
-            for codigo in zxingcpp.read_barcodes(fuente):
+            codigos = zxingcpp.read_barcodes(fuente)
+            lector_operativo = True
+            for codigo in codigos:
                 formato = str(codigo.format).upper().replace(' ', '').replace('_', '')
                 if 'CODE39' in formato or 'CODE128' in formato:
                     agregar(str(codigo.text).strip())
-    except (ImportError, OSError, RuntimeError, ValueError):
-        pass
+    except (ImportError, OSError, RuntimeError, ValueError, AttributeError) as exc:
+        log.debug('ZXing no pudo leer: %s', type(exc).__name__)
 
     try:
         from pyzbar.pyzbar import decode
         for fuente in variantes:
-            for codigo in decode(fuente):
+            codigos = decode(fuente)
+            lector_operativo = True
+            for codigo in codigos:
                 if codigo.type not in ('CODE39', 'CODE128'):
                     continue
                 try:
                     agregar(codigo.data.decode('ascii').strip())
                 except (UnicodeDecodeError, AttributeError):
                     continue
-    except (ImportError, OSError, RuntimeError, ValueError):
-        pass
+    except (ImportError, OSError, RuntimeError, ValueError, AttributeError) as exc:
+        log.debug('PyZbar no pudo leer: %s', type(exc).__name__)
+
+    if not lector_operativo:
+        log.error('Ningun lector de barras operativo: comprobar zxingcpp y pyzbar en el Python del portal.')
+        if exigir_lector:
+            raise FotoTicketError(
+                'El lector de codigo de barras no esta disponible temporalmente. '
+                'Comunicate con facturacion; no es un problema de tu foto.')
 
     return valores
 
@@ -606,7 +624,7 @@ def analizar_codigo_barras_foto(foto_base64: str) -> dict[str, str]:
         raise FotoTicketError(
             'Acercate al codigo de barras y enfocalo para que ocupe la foto.')
 
-    codigos = _folios_codigo_barras(foto)
+    codigos = _folios_codigo_barras(foto, exigir_lector=True)
     if not codigos:
         raise FotoTicketError(
             'No se pudo decodificar el codigo de barras. '

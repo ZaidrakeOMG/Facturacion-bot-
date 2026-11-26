@@ -18,7 +18,7 @@ VERSION = 'VM-BASE-ORIGINAL-2026-10-03-R1'
 MODULOS = ['tkinter', 'pyautogui', 'win32gui', 'win32process', 'win32clipboard',
            'win32api', 'win32security', 'win32ui', 'pywinauto', 'keyring',
            'psutil', 'PIL', 'pypdf', 'pytesseract', 'bs4', 'googleapiclient.discovery',
-           'google_auth_oauthlib.flow', 'waitress']
+           'google_auth_oauthlib.flow', 'waitress', 'zxingcpp']
 
 
 def log(text):
