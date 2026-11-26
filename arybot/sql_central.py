@@ -108,7 +108,7 @@ def _driver():
     return pyodbc
 
 
-def connection_string(settings, password):
+def connection_string(settings, password, *, test_untrusted=False):
     settings.validate()
     if not password or "\x00" in password:
         raise SqlError("Introduce una contraseña SQL.")
@@ -116,7 +116,8 @@ def connection_string(settings, password):
     pw = "{" + password.replace("}", "}}") + "}"
     return ("DRIVER={ODBC Driver 18 for SQL Server};"
             f"SERVER=tcp:{settings.server},{settings.port};DATABASE={DATABASE};"
-            f"UID={settings.user};PWD={pw};Encrypt=yes;TrustServerCertificate=no;")
+            f"UID={settings.user};PWD={pw};Encrypt=yes;"
+            f"TrustServerCertificate={'yes' if test_untrusted else 'no'};")
 
 
 def friendly_error(exc):
@@ -134,10 +135,10 @@ def friendly_error(exc):
 
 
 @contextmanager
-def connect(settings, password):
+def connect(settings, password, *, test_untrusted=False):
     driver = _driver()
     try:
-        with closing(driver.connect(connection_string(settings, password), timeout=5, autocommit=False)) as conn:
+        with closing(driver.connect(connection_string(settings, password, test_untrusted=test_untrusted), timeout=5, autocommit=False)) as conn:
             conn.timeout = 15
             yield conn
     except SqlError:
@@ -162,15 +163,15 @@ def verify(cursor, *, write=False):
     return str(row[1]), bool(row[2] or row[3])
 
 
-def check(settings, password):
-    with connect(settings, password) as conn:
+def check(settings, password, *, test_untrusted=False):
+    with connect(settings, password, test_untrusted=test_untrusted) as conn:
         cur = conn.cursor()
         version, admin = verify(cur)
         stations = cur.execute("SELECT COUNT(*) FROM dbo.Estaciones").fetchone()[0]
         jobs = cur.execute("SELECT COUNT_BIG(*) FROM dbo.Solicitudes").fetchone()[0]
         verified = cur.execute("SELECT COUNT_BIG(*) FROM dbo.v_FacturasVerificadas").fetchone()[0]
         conn.rollback()
-        return dict(version=version, admin=admin, stations=stations, jobs=jobs, verified=verified)
+        return dict(version=version, admin=admin, stations=stations, jobs=jobs, verified=verified, tls_verified=not test_untrusted)
 
 
 def utc(value):
