@@ -626,3 +626,22 @@ def test_el_servidor_rechaza_folio_alterado_aunque_haya_foto():
         kind,sol,datos=validar_entrada(_cuerpo_final())
     assert kind == 'FACTURA' and sol.ticket == '0008430573'
     assert 'foto_ticket' not in datos
+
+
+def test_vision_pilot_requires_independent_local_match():
+    from collections import Counter
+    from arybot.ticket_foto import _folio_vision_bajo_barras
+    zona = Image.new("L", (300, 40), "white")
+    with patch("arybot.ticket_foto._zona_numero_bajo_barras", return_value=zona), \
+         patch("arybot.ticket_foto._votos_ocr_bajo_barras", return_value=Counter({"0008430573": 1})), \
+         patch("arybot.ticket_vision.leer_numero_recortado", return_value="0008430573"):
+        assert _folio_vision_bajo_barras(zona) == "0008430573"
+    with patch("arybot.ticket_foto._zona_numero_bajo_barras", return_value=zona), \
+         patch("arybot.ticket_foto._votos_ocr_bajo_barras", return_value=Counter({"0008430573": 1})), \
+         patch("arybot.ticket_vision.leer_numero_recortado", return_value="0008430578"):
+        assert _folio_vision_bajo_barras(zona) is None
+    with patch("arybot.ticket_foto._zona_numero_bajo_barras", return_value=zona), \
+         patch("arybot.ticket_foto._votos_ocr_bajo_barras", return_value=Counter()), \
+         patch("arybot.ticket_vision.leer_numero_recortado") as vision:
+        assert _folio_vision_bajo_barras(zona) is None
+        vision.assert_not_called()

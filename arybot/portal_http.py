@@ -21,6 +21,7 @@ from urllib.parse import urlsplit
 from .cola_modelo import SolicitudDuplicada
 from .portal_modelo import validar_entrada, catalogos, estado_publico, EntradaPortalError
 from .ticket_foto import analizar_ticket_foto, analizar_codigo_barras_foto, FotoTicketError
+from .ticket_vision import piloto_habilitado
 from .asistencia_whatsapp import perfil_local_facturacion
 
 PREFIX = '/api/facturacion'
@@ -277,7 +278,10 @@ class PortalWSGI:
                 raise HttpError(429, 'Se alcanzó el límite de lectura de fotos. Intenta más tarde.')
             try:
                 if modo_ticket == 'codigo_barras':
-                    resultado = analizar_codigo_barras_foto(body['foto_ticket'])
+                    if piloto_habilitado() and self.modo_seguro():
+                        resultado = analizar_codigo_barras_foto(body['foto_ticket'], vision=True)
+                    else:
+                        resultado = analizar_codigo_barras_foto(body['foto_ticket'])
                 else:
                     resultado = analizar_ticket_foto(body['foto_ticket'])
             except FotoTicketError as exc:
@@ -306,7 +310,8 @@ class PortalWSGI:
         request_id = environ.get('HTTP_X_ARY_REQUEST_ID', '')
         if not re.fullmatch('[0-9a-f]{32}', request_id):
             raise HttpError(400, 'Falta el identificador único del formulario.')
-        kind, sol, data = validar_entrada(body)
+        vision = piloto_habilitado() and self.modo_seguro()
+        kind, sol, data = validar_entrada(body, vision=True) if vision else validar_entrada(body)
         source_id = 'web:' + self._mac('request', session['sid'] + ':' + request_id)
         with self.lock:
             # Primero recuperar un envío de resultado incierto; no se repite en Polaris.
@@ -317,6 +322,8 @@ class PortalWSGI:
                 return 200, self._response_job(old, incluir_perfil_local=True), 'application/json; charset=utf-8', headers
             expected_mode = environ.get('HTTP_X_ARY_MODE', '')
             actual_mode = 'seguro' if self.modo_seguro() else 'real'
+            if vision and actual_mode != 'seguro':
+                raise HttpError(409, 'La prueba de visión requiere MODO SEGURO. Recarga la página.')
             if expected_mode != actual_mode:
                 raise HttpError(409, 'El modo de operación cambió o no se confirmó. Recarga la página y revisa si es prueba o trámite real antes de enviar.')
             if not self.aceptando:
