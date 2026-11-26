@@ -23,6 +23,7 @@ class GroqTab(ttk.Frame):
         self.busy = False
         self.calls = self.success = self.errors = self.tokens = 0
         self.session_key = None
+        self.auto_tested = False
         self.state = tk.StringVar(value="Clave disponible; falta probar conexión." if get_key() else "Sin clave configurada.")
         self.metrics = tk.StringVar(value="Solicitudes: 0  |  Correctas: 0  |  Errores: 0  |  Tokens: 0")
         self.kind = tk.StringVar(value="Diagnóstico de Polaris")
@@ -42,7 +43,7 @@ class GroqTab(ttk.Frame):
         self.save_btn.pack(side="left", padx=6)
         self.test_btn = ttk.Button(row, text="Probar conexión", command=lambda: self._run("conexion"))
         self.test_btn.pack(side="left")
-        ttk.Label(config, text="La clave se oculta al probar. Guarda primero para reutilizarla.",
+        ttk.Label(config, text="Se reutiliza la clave guardada en Windows. Solo necesitas pegarla si quieres cambiarla.",
                   foreground=MUTED, wraplength=620).pack(anchor="w", pady=(5, 0))
         ttk.Label(self, textvariable=self.metrics, foreground=MUTED).pack(anchor="w", pady=8)
 
@@ -63,6 +64,12 @@ class GroqTab(ttk.Frame):
         self.output.pack(fill="both", expand=True)
         self._example()
         self.after(150, self._poll)
+        self.bind("<Map>", self._auto_test, add="+")
+
+    def _auto_test(self, event=None):
+        if not self.auto_tested and not self.busy and not self.app.cola.ocupada and get_key():
+            self.auto_tested = True
+            self._run("conexion")
 
     def _report(self, message, *, ok=None, record=True):
         prefix = "CONECTADO: " if ok is True else "ERROR: " if ok is False else ""
@@ -87,7 +94,8 @@ class GroqTab(ttk.Frame):
             return
         self.session_key = value
         self.key.set("")
-        self._report("Clave guardada en Windows. Pulsa Probar conexión.")
+        self._report("Clave guardada en Windows. Comprobando conexión…")
+        self._run("conexion")
 
     def _analyze(self):
         self._run(self._selected(), self.input.get("1.0", "end-1c"))
@@ -103,6 +111,8 @@ class GroqTab(ttk.Frame):
             self._report("Introduce una clave o configura GROQ_API_KEY en Windows.", ok=False)
             return
         self.key.set("")
+        self.session_key = key
+        self.auto_tested = True
         self.busy = True
         self.calls += 1
         self._report("Consultando Groq…")
