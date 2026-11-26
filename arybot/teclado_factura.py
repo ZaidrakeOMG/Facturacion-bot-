@@ -28,7 +28,7 @@ class TecladoFactura:
     """API inyectable para probar sin Windows ni Polaris."""
     MODS=(0x10,0x11,0x12,0x5B,0x5C)  # Shift, Ctrl, Alt, Win
     TECLAS={'backspace':0x08,'tab':0x09,'enter':0x0D,'home':0x24,
-            'end':0x23,'up':0x26,'down':0x28}
+            'end':0x23,'up':0x26,'down':0x28,'f4':0x73}
     def __init__(self, api=None, dormir=time.sleep):
         self._u=api;self.dormir=dormir
     def api(self):
