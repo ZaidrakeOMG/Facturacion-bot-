@@ -59,11 +59,12 @@ class AvisosCliente:
         if event=='recibida' and job['estado'] not in {'EN_COLA','EJECUTANDO'}:return
         if event=='procesando' and job['seguro']:return
         subject,body=texto_cliente(job,event,opts,eta=self.store.eta(job['id'],opts['margen_minutos']),reason=reason)
-        send=opts['avisar_cliente'] and (not job['seguro'] or opts['avisar_en_modo_seguro'])
+        send=self.cfg.get('app',{}).get('gmail_habilitado',True) and opts['avisar_cliente'] and (not job['seguro'] or opts['avisar_en_modo_seguro'])
         self.store.notice(job,event,subject,body,send=send)
         self._wake.set();self.on_event('aviso',job['id'])
 
     def enviar_una(self):
+        if not self.cfg.get('app',{}).get('gmail_habilitado',True):return False
         opts=ajustes_cola(self.cfg)
         if not opts['avisar_cliente']:return False
         row=self.store.claim_notice()
@@ -106,6 +107,7 @@ class AvisosCliente:
         return True
 
     def iniciar(self):
+        if not self.cfg.get('app',{}).get('gmail_habilitado',True):return
         if self.thread and self.thread.is_alive():return
         self._stop.clear()
         def loop():
@@ -117,4 +119,6 @@ class AvisosCliente:
         self.thread=threading.Thread(target=loop,daemon=True,name='ARY-Avisos-Cliente');self.thread.start()
 
     def detener(self):self._stop.set();self._wake.set()
-    def reenviar(self,ident):self.store.retry_notice(ident);self._wake.set()
+    def reenviar(self,ident):
+        if not self.cfg.get('app',{}).get('gmail_habilitado',True):raise ValueError('Los avisos por Gmail están desactivados en esta edición.')
+        self.store.retry_notice(ident);self._wake.set()
