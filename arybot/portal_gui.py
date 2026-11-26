@@ -55,8 +55,9 @@ def main():
             self.portal = PortalWSGI(self.cola, self.cfg, settings, BASE)
             self._build_portal_tab()
             self._start_portal()
-            self.root.title('ARY Facturación Bot v4.3 fecha + Portal integrado 1.2')
-            self.nb.select(self.portal_tab)
+            self.root.title('ARY | Centro de facturación V2')
+            self.nb.select(self.dashboard_tab)
+            self._sync_navigation()
             self.root.after(150, self._drain_portal_diagnostics)
             self.root.deiconify()
 
@@ -159,7 +160,7 @@ def main():
 
         def _build_portal_tab(self):
             tab = ttk.Frame(self.nb, padding=16)
-            self.nb.add(tab, text='Portal web')
+            self.nb.insert(1, tab, text='Portal web')
             self.portal_tab = tab
             ttk.Label(tab, text='Alta de clientes y facturación desde la página', font=('Segoe UI', 14, 'bold')).pack(anchor='w')
             self.portal_status = tk.StringVar(value='Iniciando portal...')
