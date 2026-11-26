@@ -21,6 +21,7 @@ class SqlTab(ttk.Frame):
         self.port = tk.StringVar(value=str(settings.port))
         self.user = tk.StringVar(value=settings.user)
         self.password = tk.StringVar()
+        self.test_untrusted = tk.BooleanVar(value=False)
         self.status = tk.StringVar(value="Sin conexión comprobada.")
         self.stats = tk.StringVar(value="Estaciones: —    |    Solicitudes SQL: —    |    CFDI verificados: —")
 
@@ -44,6 +45,8 @@ class SqlTab(ttk.Frame):
         self.connection_result.grid(row=6,column=0,columnspan=2,sticky="ew",pady=(10,4))
         ttk.Label(form,text="La contraseña se borra al iniciar la prueba por seguridad.",
                   foreground=MUTED,wraplength=620).grid(row=7,column=0,columnspan=2,sticky="w",pady=4)
+        ttk.Checkbutton(form,text="Prueba temporal: omitir validación del certificado TLS",
+                        variable=self.test_untrusted).grid(row=8,column=0,columnspan=2,sticky="w",pady=4)
 
         mirror = ttk.LabelFrame(self,text="Historial central",padding=12)
         mirror.pack(fill="x")
@@ -89,6 +92,13 @@ class SqlTab(ttk.Frame):
             return
         try:
             settings,password=self._credentials()
+            temporary_tls=bool(self.test_untrusted.get())
+            if temporary_tls and (synchronize or not self.app.cfg.get("app",{}).get("modo_prueba",True)):
+                raise sql.SqlError("El certificado sin validar solo se permite para probar conexión en MODO SEGURO.")
+            if temporary_tls and not messagebox.askyesno("Diagnóstico temporal TLS",
+                   "La conexión seguirá cifrada, pero no se verificará la identidad del servidor. Solo se consultará el esquema y los contadores. ¿Continuar esta vez?",
+                   parent=self,default="no"):
+                return
             if synchronize and settings.user.casefold()!=sql.APP_USER.casefold():
                 raise sql.SqlError("Para sincronizar utiliza POLARISBOT_APP, no sa.")
             if synchronize and not messagebox.askyesno("Sincronizar historial",
@@ -99,6 +109,7 @@ class SqlTab(ttk.Frame):
             self._report(str(exc), ok=False)
             return
         self.password.set("")
+        self.test_untrusted.set(False)
         self.busy=True
         for button in (self.test,self.save,self.sync):button.configure(state="disabled")
         self._report("Consultando SQL Server…" if not synchronize else "Sincronizando historial…")
@@ -107,7 +118,7 @@ class SqlTab(ttk.Frame):
         def work():
             try:
                 result=sql.synchronize(settings,password,path) if synchronize else None
-                self.events.put((result,sql.check(settings,password),None))
+                self.events.put((result,sql.check(settings,password,test_untrusted=temporary_tls),None))
             except Exception as exc:
                 self.events.put((None,None,sql.friendly_error(exc)))
         threading.Thread(target=work,daemon=True,name="ARY-SQL-Central").start()
@@ -130,5 +141,6 @@ class SqlTab(ttk.Frame):
                     self._report(f"Historial sincronizado: {result['processed']} examinadas, {result['skipped']} omitidas por datos incompletos.", ok=True)
                 else:
                     self._report("PolarisBot • SQL Server "+check["version"]+
-                                 (" • Cuenta administrativa: solo prueba." if check["admin"] else " • Consulta de esquema correcta."), ok=True)
+                                 (" • Cuenta administrativa: solo prueba." if check["admin"] else " • Consulta de esquema correcta.")+
+                                 (" • TLS sin verificar: solo diagnóstico." if not check["tls_verified"] else ""), ok=True)
         self.after(180,self._poll)
