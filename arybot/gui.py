@@ -358,6 +358,9 @@ class App:
         self.tab_panel=ttk.Frame(nb,padding=10)
         self.tab_test=ttk.Frame(nb,padding=10)
         self.tab_cfg=ttk.Frame(nb,padding=10)
+        # Inicializar los formularios base antes de las pestañas dependientes.
+        # AltaClientesTab lee test_station durante su constructor.
+        self._build_panel(); self._build_test(); self._build_cfg()
         self.cola_tab=ColaTab(nb,self); nb.add(self.cola_tab,text="Cola y avisos")
         nb.add(self.tab_test,text="Facturación manual")
         self.alta_clientes_tab=AltaClientesTab(nb,self); nb.add(self.alta_clientes_tab,text="Alta de cliente")
@@ -368,7 +371,6 @@ class App:
         self.native_tab=NativeTab(nb,self); nb.add(self.native_tab,text="Motor nativo")
         self.sql_tab=SqlTab(nb,self); nb.add(self.sql_tab,text="Conexiones SQL")
         nb.add(self.tab_cfg,text="Configuración")
-        self._build_panel(); self._build_test(); self._build_cfg()
         self._sync_navigation=attach_navigation(self,nav)
         nb.select(self.dashboard_tab)
 
