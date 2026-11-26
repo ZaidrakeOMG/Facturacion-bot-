@@ -21,16 +21,16 @@ class GroqError(RuntimeError):
 
 
 def get_key():
-    env = os.environ.get("GROQ_API_KEY", "").strip()
-    if env:
-        return env
-    try:
-        if os.name != "nt":
-            return ""
-        from keyring.backends.Windows import WinVaultKeyring
-        return (WinVaultKeyring().get_password(SERVICE, ACCOUNT) or "").strip()
-    except Exception:
-        return ""
+    # Explicitly saved Windows credentials take priority over stale environment keys.
+    if os.name == "nt":
+        try:
+            from keyring.backends.Windows import WinVaultKeyring
+            saved = (WinVaultKeyring().get_password(SERVICE, ACCOUNT) or "").strip()
+            if saved:
+                return saved
+        except Exception:
+            pass
+    return os.environ.get("GROQ_API_KEY", "").strip()
 
 
 def save_key(key):
@@ -132,6 +132,32 @@ def _usage(value):
     return value if type(value) is int and value >= 0 else 0
 
 
+def http_error_message(exc):
+    # Never display arbitrary remote messages, headers, credentials or response bodies.
+    details = {
+        "model_permission_blocked_org": "Modelo bloqueado en Organization > Limits. Habilita " + MODEL + ".",
+        "model_permission_blocked_project": "Modelo bloqueado en Project > Limits. Revisa el proyecto de la API Key.",
+        "model_terms_required": "Falta aceptar los términos del modelo en Model Terms.",
+        "model_not_found": "El modelo no está disponible para esta cuenta.",
+        "model_decommissioned": "El modelo fue retirado.",
+        "invalid_api_key": "Clave rechazada o revocada.",
+    }
+    try:
+        raw = exc.read(8192)
+        error = json.loads(raw).get("error", {})
+        code = error.get("code")
+        if isinstance(code, str) and code in details:
+            return f"HTTP {exc.code} | {details[code]} ({code})"
+    except (OSError, ValueError, TypeError, AttributeError):
+        pass
+    messages = {401: "Clave rechazada o revocada.",
+                403: "Acceso no autorizado. Groq no informó un código de permiso reconocido; revisa términos, proyecto, organización y proxy/firewall.",
+                429: "Límite de solicitudes o cuota alcanzado.",
+                400: "Groq rechazó el modelo o el formato solicitado.",
+                404: "Modelo o endpoint no disponible."}
+    return f"HTTP {exc.code} | " + messages.get(exc.code, "Solicitud rechazada por el servidor.")
+
+
 def ask(kind, text="", *, api_key=None, opener=None):
     if kind not in SCHEMAS:
         raise GroqError("Módulo no permitido.")
@@ -174,11 +200,7 @@ def ask(kind, text="", *, api_key=None, opener=None):
         return Reply(data, _usage(usage.get("prompt_tokens")), _usage(usage.get("completion_tokens")),
                      int((time.monotonic() - started) * 1000))
     except urllib.error.HTTPError as exc:
-        messages = {401: "Clave rechazada o revocada.", 403: "Acceso no autorizado.",
-                    429: "Límite de solicitudes o cuota alcanzado.",
-                    400: "Groq rechazó el modelo o el formato solicitado.",
-                    404: "Modelo o endpoint no disponible."}
-        raise GroqError(messages.get(exc.code, "Groq devolvió HTTP " + str(exc.code))) from None
+        raise GroqError(http_error_message(exc)) from None
     except (urllib.error.URLError, TimeoutError, OSError):
         raise GroqError("Sin conexión con Groq o tiempo de espera agotado.") from None
     except (ValueError, KeyError, IndexError, TypeError, AttributeError):
