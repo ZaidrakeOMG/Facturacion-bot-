@@ -44,3 +44,22 @@ def test_http_failure_does_not_expose_key():
             raise urllib.error.HTTPError(ENDPOINT, 401, "fake secret", {}, None)
     with pytest.raises(GroqError, match="Clave rechazada"):
         ask("conexion", api_key="fake secret", opener=Bad())
+
+
+@pytest.mark.parametrize("code,expected", [
+    ("model_permission_blocked_org", "Organization"),
+    ("model_permission_blocked_project", "Project"),
+    ("model_terms_required", "Model Terms"),
+    ("unrecognized_fake_secret", "código de permiso reconocido"),
+])
+def test_http_403_safe_diagnostics(code, expected):
+    class Forbidden:
+        def open(self, req, timeout):
+            raw = json.dumps({"error": {"code": code, "message": "fake secret"}}).encode()
+            raise urllib.error.HTTPError(ENDPOINT, 403, "Forbidden", {}, io.BytesIO(raw))
+    with pytest.raises(GroqError) as exc:
+        ask("conexion", api_key="fake secret", opener=Forbidden())
+    assert "HTTP 403" in str(exc.value)
+    assert expected in str(exc.value)
+    assert "fake secret" not in str(exc.value)
+    assert "unrecognized_fake_secret" not in str(exc.value)
