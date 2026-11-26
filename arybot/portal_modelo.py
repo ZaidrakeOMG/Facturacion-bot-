@@ -95,8 +95,13 @@ def validar_entrada(body, *, vision=False):
             try:
                 if modo_ticket == 'codigo_barras':
                     if vision:
-                        ticket_verificado = analizar_codigo_barras_foto(
-                            body.get('foto_ticket'), vision=True)['folio']
+                        lectura = analizar_codigo_barras_foto(
+                            body.get('foto_ticket'), vision=True)
+                        if lectura.get('lectura') == 'groq_no_verificada':
+                            raise FotoTicketError(
+                                'Groq leyó el folio, pero no se pudo confirmar de forma independiente. '
+                                'Continúa con facturación para verificarlo antes de emitir el CFDI.')
+                        ticket_verificado = lectura['folio']
                     else:
                         ticket_verificado = analizar_codigo_barras_foto(
                             body.get('foto_ticket'))['folio']

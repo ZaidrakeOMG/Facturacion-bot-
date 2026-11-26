@@ -1,4 +1,4 @@
-"""Opt-in Groq Vision for isolated safe-mode tests; output is a candidate."""
+"""Groq Vision fallback for portal barcode crops; output is a candidate."""
 from __future__ import annotations
 import base64
 import io
@@ -13,7 +13,9 @@ _slots = threading.BoundedSemaphore(1)
 
 
 def piloto_habilitado():
-    return os.environ.get("ARY_GROQ_VISION_PRUEBA") == "1"
+    # Enabled for the portal independently of the invoicing mode.
+    # A local environment opt-out is available if the service is unavailable.
+    return os.environ.get("ARY_GROQ_VISION", "1") != "0"
 
 
 def leer_numero_recortado(zona):
@@ -40,7 +42,7 @@ def leer_numero_recortado(zona):
         buf = io.BytesIO()
         recorte.save(buf, format="PNG")
         encoded = base64.b64encode(buf.getvalue()).decode("ascii")
-        logging.getLogger(__name__).info("GROQ VISION: consultando Qwen sobre recorte de dígitos.")
+        logging.getLogger(__name__).warning("GROQ VISION: consultando Qwen sobre recorte de dígitos.")
         with Groq(api_key=key, base_url="https://api.groq.com", timeout=12.0,
                   max_retries=0, http_client=DefaultHttpxClient(follow_redirects=False)) as client:
             reply = client.chat.completions.create(

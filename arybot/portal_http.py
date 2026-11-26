@@ -278,9 +278,9 @@ class PortalWSGI:
                 raise HttpError(429, 'Se alcanzó el límite de lectura de fotos. Intenta más tarde.')
             try:
                 if modo_ticket == 'codigo_barras':
-                    self.cola.log('LECTOR vision-r3 | Groq piloto: ' +
-                                  ('ACTIVO' if piloto_habilitado() and self.modo_seguro() else 'INACTIVO'))
-                    if piloto_habilitado() and self.modo_seguro():
+                    self.cola.log('LECTOR vision-r4 | Groq: ' +
+                                  ('ACTIVO' if piloto_habilitado() else 'INACTIVO'))
+                    if piloto_habilitado():
                         resultado = analizar_codigo_barras_foto(body['foto_ticket'], vision=True)
                     else:
                         resultado = analizar_codigo_barras_foto(body['foto_ticket'])
@@ -312,7 +312,7 @@ class PortalWSGI:
         request_id = environ.get('HTTP_X_ARY_REQUEST_ID', '')
         if not re.fullmatch('[0-9a-f]{32}', request_id):
             raise HttpError(400, 'Falta el identificador único del formulario.')
-        vision = piloto_habilitado() and self.modo_seguro()
+        vision = piloto_habilitado()
         kind, sol, data = validar_entrada(body, vision=True) if vision else validar_entrada(body)
         source_id = 'web:' + self._mac('request', session['sid'] + ':' + request_id)
         with self.lock:
@@ -324,8 +324,6 @@ class PortalWSGI:
                 return 200, self._response_job(old, incluir_perfil_local=True), 'application/json; charset=utf-8', headers
             expected_mode = environ.get('HTTP_X_ARY_MODE', '')
             actual_mode = 'seguro' if self.modo_seguro() else 'real'
-            if vision and actual_mode != 'seguro':
-                raise HttpError(409, 'La prueba de visión requiere MODO SEGURO. Recarga la página.')
             if expected_mode != actual_mode:
                 raise HttpError(409, 'El modo de operación cambió o no se confirmó. Recarga la página y revisa si es prueba o trámite real antes de enviar.')
             if not self.aceptando:
@@ -371,7 +369,7 @@ class PortalWSGI:
         if content_type.startswith('application/json'):
             headers.append(('Content-Security-Policy', "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'"))
         if environ.get('PATH_INFO') == PREFIX + '/validar-ticket':
-            headers.append(('X-ARY-Lector', 'vision-r3'))
+            headers.append(('X-ARY-Lector', 'vision-r4'))
         if code == 429:
             headers.append(('Retry-After', '60'))
         start_response(str(code) + ' ' + HTTPStatus(code).phrase, headers)

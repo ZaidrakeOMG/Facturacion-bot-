@@ -685,7 +685,7 @@ def _folio_ocr_bajo_barras(imagen) -> str | None:
 
 
 def _folio_vision_bajo_barras(imagen):
-    """Return candidate and corroboration separately. Pilot never proves a sale."""
+    """Return candidate and independent local corroboration separately."""
     zona = _zona_numero_bajo_barras(imagen)
     if zona is None:
         return None, False
@@ -698,8 +698,8 @@ def _folio_vision_bajo_barras(imagen):
         return None, False
     votos = _votos_ocr_bajo_barras(zona)
     corroborado = len(votos) == 1 and candidato in votos
-    log.info("GROQ VISION: %s.", "lectura corroborada por OCR local" if corroborado
-             else "candidato NO VERIFICADO; exclusivamente ensayo sin timbrar")
+    log.warning("GROQ VISION: %s.", "lectura corroborada por OCR local" if corroborado
+                else "candidato sin corroboración local")
     return candidato, corroborado
 
 
@@ -755,14 +755,14 @@ def analizar_codigo_barras_foto(foto_base64: str, *, vision=False) -> dict[str, 
     if folio_ocr:
         return {'folio': folio_ocr}
     if vision:
-        # Portal calls this only with explicit opt-in AND safe mode, including
-        # a second reading on form submission. No AI-only folio in production.
+        # Vision is available in both operating modes. The portal may display
+        # an AI-only candidate, but final submission requires corroboration.
         from .ticket_vision import piloto_habilitado
         if piloto_habilitado():
             folio_vision, corroborado = _folio_vision_bajo_barras(foto)
             if folio_vision:
                 return {'folio': folio_vision,
-                        'lectura': 'groq_corroborada' if corroborado else 'groq_prueba_no_verificada'}
+                        'lectura': 'groq_corroborada' if corroborado else 'groq_no_verificada'}
     if error_lector is not None:
         raise error_lector
     raise FotoTicketError(
