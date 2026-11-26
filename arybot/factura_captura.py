@@ -66,6 +66,7 @@ class CapturaFactura:
         self.b=bot;self.texto=texto or TextoWindows();self.teclado=teclado or TecladoFactura()
         self.combo=combo or LecturaCombo();self.reloj=reloj or time.monotonic
         self.dormir=dormir or time.sleep;self.foco_override=foco;self.eventos=[]
+        self._native_targets=set()
     @property
     def w(self):
         from . import polaris
@@ -112,6 +113,12 @@ class CapturaFactura:
                 raise CapturaFacturaError('El foco no está en el campo esperado. No se envían más teclas.')
     def control(self,root,pt,campo,tipo='edit',lectura=False):
         self._guard(root)
+        from .native_controls import mapped, resolve
+        if not lectura and mapped(self.b,campo):
+            h=resolve(self.b,root,campo)
+            self._native_targets.add((root,h))
+            self._evento(campo,'CONTROL_NATIVO_IDENTIFICADO',clase=self.b._class_name(h))
+            return h
         r=self.b._rect(root);x=r.left+int(r.width*pt[0]);y=r.top+int(r.height*pt[1])
         under=self.w.WindowFromPoint((x,y))
         if not under or not self.b._is_descendant_or_same(root,under):
@@ -164,6 +171,10 @@ class CapturaFactura:
         self._evento(campo,'CONTROL_IDENTIFICADO',clase=self.b._class_name(h))
         return h
     def enfocar(self,root,h):
+        if (root,h) in self._native_targets:
+            from .native_controls import focus_native
+            self._guard(root);focus_native(self.b,root,h);self.dormir(.2);self._guard(root,h)
+            return
         from . import polaris
         self._guard(root);r=self.b._rect(h);x=(r.left+r.right)//2;y=(r.top+r.bottom)//2
         under=self.w.WindowFromPoint((x,y))
@@ -226,12 +237,16 @@ class CapturaFactura:
             raise CapturaFacturaError('La opción solicitada no se encontró de forma única en el catálogo de '+campo+'.')
         idx=matches[0]
         self.enfocar(root,h)
-        # Clic en flecha dentro del Combo, no en un Edit vecino.
-        from . import polaris
-        r=self.b._rect(h);x=r.right-8;y=(r.top+r.bottom)//2
-        if not self.b._is_descendant_or_same(h,self.w.WindowFromPoint((x,y))):
-            raise CapturaFacturaError('No se localizó la flecha de '+campo+'.')
-        if not self.combo.abierto(h):polaris.pyautogui.click(x,y);self.dormir(.2)
+        if (root,h) in self._native_targets:
+            # F4 se dirige al selector nativo ya enfocado; nunca a Cuenta.
+            if not self.combo.abierto(h):self.teclado.tecla('f4',lambda:self._guard(root,h));self.dormir(.2)
+        else:
+            # Flujo legado para los controles aún no calibrados.
+            from . import polaris
+            r=self.b._rect(h);x=r.right-8;y=(r.top+r.bottom)//2
+            if not self.b._is_descendant_or_same(h,self.w.WindowFromPoint((x,y))):
+                raise CapturaFacturaError('No se localizó la flecha de '+campo+'.')
+            if not self.combo.abierto(h):polaris.pyautogui.click(x,y);self.dormir(.2)
         if not self.combo.abierto(h):raise CapturaFacturaError('No se abrió la lista de '+campo+'. No se pulsa Enter.')
         guard=lambda:self._guard_combo(root,h)
         # Selección EXPLÍCITA aunque la etiqueta inicial muestre G03/Efectivo.
