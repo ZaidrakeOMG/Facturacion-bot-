@@ -24,6 +24,7 @@ from .diagnostico_gui import DiagnosticoTab
 from .dashboard import Dashboard, apply_style, attach_navigation, NAVY, BLUE, BG, WHITE, INK, MUTED
 from .groq_gui import GroqTab
 from .native_gui import NativeTab
+from .sql_gui import SqlTab
 
 BASE=Path(__file__).resolve().parent.parent
 
@@ -365,6 +366,7 @@ class App:
         nb.add(self.tab_panel,text="Actividad del bot")
         self.groq_tab=GroqTab(nb,self); nb.add(self.groq_tab,text="Inteligencia artificial")
         self.native_tab=NativeTab(nb,self); nb.add(self.native_tab,text="Motor nativo")
+        self.sql_tab=SqlTab(nb,self); nb.add(self.sql_tab,text="Conexiones SQL")
         nb.add(self.tab_cfg,text="Configuración")
         self._build_panel(); self._build_test(); self._build_cfg()
         self._sync_navigation=attach_navigation(self,nav)
