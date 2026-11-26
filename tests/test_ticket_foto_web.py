@@ -628,20 +628,34 @@ def test_el_servidor_rechaza_folio_alterado_aunque_haya_foto():
     assert 'foto_ticket' not in datos
 
 
-def test_vision_pilot_requires_independent_local_match():
+def test_vision_pilot_marks_uncorroborated_candidate():
     from collections import Counter
     from arybot.ticket_foto import _folio_vision_bajo_barras
     zona = Image.new("L", (300, 40), "white")
-    with patch("arybot.ticket_foto._zona_numero_bajo_barras", return_value=zona), \
-         patch("arybot.ticket_foto._votos_ocr_bajo_barras", return_value=Counter({"0008430573": 1})), \
-         patch("arybot.ticket_vision.leer_numero_recortado", return_value="0008430573"):
-        assert _folio_vision_bajo_barras(zona) == "0008430573"
-    with patch("arybot.ticket_foto._zona_numero_bajo_barras", return_value=zona), \
-         patch("arybot.ticket_foto._votos_ocr_bajo_barras", return_value=Counter({"0008430573": 1})), \
-         patch("arybot.ticket_vision.leer_numero_recortado", return_value="0008430578"):
-        assert _folio_vision_bajo_barras(zona) is None
-    with patch("arybot.ticket_foto._zona_numero_bajo_barras", return_value=zona), \
-         patch("arybot.ticket_foto._votos_ocr_bajo_barras", return_value=Counter()), \
-         patch("arybot.ticket_vision.leer_numero_recortado") as vision:
-        assert _folio_vision_bajo_barras(zona) is None
+    for votes, result in [
+        (Counter({"0008430573": 1}), ("0008430573", True)),
+        (Counter({"0008430578": 1}), ("0008430573", False)),
+        (Counter(), ("0008430573", False)),
+    ]:
+        with patch("arybot.ticket_foto._zona_numero_bajo_barras", return_value=zona), \
+             patch("arybot.ticket_foto._votos_ocr_bajo_barras", return_value=votes), \
+             patch("arybot.ticket_vision.leer_numero_recortado", return_value="0008430573") as vision:
+            assert _folio_vision_bajo_barras(zona) == result
+            vision.assert_called_once()
+
+
+def test_vision_candidate_requires_explicit_pilot(monkeypatch):
+    from arybot.ticket_foto import analizar_codigo_barras_foto
+    with patch("arybot.ticket_foto._folios_codigo_barras", return_value=[]), \
+         patch("arybot.ticket_foto._folio_ocr_bajo_barras", return_value=None), \
+         patch("arybot.ticket_foto._folio_vision_bajo_barras", return_value=("0008430573", False)) as vision:
+        monkeypatch.delenv("ARY_GROQ_VISION_PRUEBA", raising=False)
+        with pytest.raises(FotoTicketError):
+            analizar_codigo_barras_foto(foto(), vision=True)
         vision.assert_not_called()
+        monkeypatch.setenv("ARY_GROQ_VISION_PRUEBA", "1")
+        with pytest.raises(FotoTicketError):
+            analizar_codigo_barras_foto(foto())
+        vision.assert_not_called()
+        assert analizar_codigo_barras_foto(foto(), vision=True) == {
+            "folio": "0008430573", "lectura": "groq_prueba_no_verificada"}
