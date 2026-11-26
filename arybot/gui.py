@@ -23,6 +23,7 @@ from .diagnostico import Diagnostico
 from .diagnostico_gui import DiagnosticoTab
 from .dashboard import Dashboard, apply_style, attach_navigation, NAVY, BLUE, BG, WHITE, INK, MUTED
 from .groq_gui import GroqTab
+from .native_gui import NativeTab
 
 BASE=Path(__file__).resolve().parent.parent
 
@@ -363,6 +364,7 @@ class App:
         self.diagnostico_tab=DiagnosticoTab(nb,self); nb.add(self.diagnostico_tab,text="Diagnóstico")
         nb.add(self.tab_panel,text="Actividad del bot")
         self.groq_tab=GroqTab(nb,self); nb.add(self.groq_tab,text="Inteligencia artificial")
+        self.native_tab=NativeTab(nb,self); nb.add(self.native_tab,text="Motor nativo")
         nb.add(self.tab_cfg,text="Configuración")
         self._build_panel(); self._build_test(); self._build_cfg()
         self._sync_navigation=attach_navigation(self,nav)
@@ -511,6 +513,10 @@ class App:
 
     def _mode_changed(self):
         new=bool(self.mode_var.get())
+        if not new and getattr(self.polaris,"_native_pilot",False):
+            self.mode_var.set(True)
+            self.log("Desactiva primero el piloto nativo para autorizar producción.")
+            return
         if not new:
             if hasattr(self,'cola') and self.cola.ocupada:
                 self.mode_var.set(True)
