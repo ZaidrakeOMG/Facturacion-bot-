@@ -97,13 +97,20 @@ def clear_mapping(bot, role):
 
 
 def mapped(bot, role):
-    return active(bot) and role in load_map(bot)
+    if role not in ROLES or not requested(bot):
+        return False
+    if not active(bot):
+        return False
+    maps = load_map(bot)
+    if role in REQUIRED and role not in maps:
+        raise NativeError('Falta una identidad obligatoria; no se utilizarán coordenadas.')
+    return role in maps
 
 
 def preflight(bot, test_mode):
     if not requested(bot):
         return
-    if not test_mode or bot.cfg.get("app", {}).get("modo_prueba", True) is not True:
+    if test_mode is not True or bot.cfg.get("app", {}).get("modo_prueba", True) is not True:
         raise NativeError("Piloto nativo activo: solo permite facturas en MODO SEGURO.")
     if not REQUIRED <= set(load_map(bot)):
         raise NativeError("Calibra primero RFC de búsqueda y Folio en Motor de automatización.")
@@ -244,7 +251,7 @@ def inventory(bot, root, role, *, uia_names=False):
         return True
     w.EnumChildWindows(root, visit, None)
     if len(rows) > 300:
-        raise NativeError("Demasiados controles; usa la captura del campo enfocado.")
+        raise NativeError("Demasiados controles para verificar una identidad de forma segura.")
     return rows
 
 
@@ -343,6 +350,22 @@ def invoke_mapped(bot, root, role):
     except Exception:
         raise NativeError("Resultado de invocación incierto; revisa Polaris. No se repite.") from None
     bot.log("MOTOR NATIVO: invocación UIA solicitada una sola vez: " + ROLES[role][2])
+
+
+def enrich_labels(bot, rows):
+    """Local UIA names only: retain only the closed set of known UI labels."""
+    import pythoncom
+    pythoncom.CoInitialize()
+    try:
+        result = []
+        for row in rows:
+            copy = dict(row)
+            if not copy['label']:
+                copy['label'] = _label(bot, row['handle'], 'edit', uia_names=True)
+            result.append(copy)
+        return result
+    finally:
+        pythoncom.CoUninitialize()
 
 
 def groq_candidates(role, rows):
