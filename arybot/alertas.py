@@ -245,6 +245,7 @@ class AlertasInternas:
 
     def enviar_una(self):
         """Solo la usa el hilo de alertas. Nunca hace reintentos de Polaris."""
+        if not self.cfg.get('app',{}).get('gmail_habilitado',True):return False
         opts = self.ajustes()
         if not opts['activas']: return False
         row = self.cola.reservar()
@@ -292,6 +293,7 @@ class AlertasInternas:
         return True
 
     def iniciar(self):
+        if not self.cfg.get('app',{}).get('gmail_habilitado',True):return
         if self._thread and self._thread.is_alive(): return
         self._stop.clear()
         def run():
