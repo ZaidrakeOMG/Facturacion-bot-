@@ -447,3 +447,21 @@ def test_coordinador_liberacion_masiva_exige_confirmacion_y_no_toca_polaris(tmp_
     bot.assert_not_called()
     avisos.assert_not_called()
     ui_event.assert_called_with('cola', '')
+
+
+def test_retirar_pendientes_en_lote_preserva_activa_y_revision(tmp_path):
+    from arybot.cola_local import ColaLocal
+    store=ColaLocal(tmp_path)
+    def add(n):
+        return store.enqueue('FACTURA',{'ticket':str(n)},source='Portal web',
+                             correo='cliente@example.com',safe=False,clave=str(n),minutes=5)[0]
+    a,b,c,d=[add(i) for i in range(4)]
+    store.resume()
+    assert store.claim()['id']==a['id']
+    store.finish(d['id'],'REVISION_REQUERIDA',reason='Caso anterior.')
+    assert set(store.cancel_pending())=={b['id'],c['id']}
+    assert store.get(a['id'])['estado']=='EJECUTANDO'
+    assert store.get(d['id'])['estado']=='REVISION_REQUERIDA'
+    assert store.get(b['id'])['estado']=='CANCELADA'
+    assert store.get(c['id'])['estado']=='CANCELADA'
+    assert store.cancel_pending()==[]

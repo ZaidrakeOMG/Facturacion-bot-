@@ -132,7 +132,7 @@ class ColaOperaciones:
     def detener(self):
         self._stop.set();self._wake.set();self.avisos.detener()
     @property
-    def ocupada(self):return bool(self.store.status()['activa'])
+    def ocupada(self):return self._consumer.locked() or bool(self.store.status()['activa'])
 
     def ejecutar_una(self):
         if not self._consumer.acquire(blocking=False):return False
@@ -219,12 +219,10 @@ class ColaOperaciones:
                 # NO cerrar/terminar Polaris ni abrir otro cliente sobre un envío vivo.
                 fiscal_incierto=(kind=='FACTURA' and
                                  step.startswith(('TIMBRADO:', 'ENVIO_CORREO:')))
-                if receptor_pendiente:
-                    cerrar_sesion=False
-                    reason=(str(exc)+' | Sin timbrado: se conservaron los datos '
-                            'de Facturación en Polaris para que un operador revise '
-                            'manualmente el RFC, número de cliente y folio antes '
-                            'de decidir si procede Aceptar. La cola queda bloqueada.')
+                if receptor_pendiente and not fiscal_incierto:
+                    motivo_cierre='ERROR FACTURA'
+                    reason=(str(exc)+' | Captura omitida por receptor no verificado. '
+                            'Se limpiará Polaris antes de continuar; no se reintenta.')
                 elif alta_incierta:
                     cerrar_sesion=False
                     reason=(str(exc)+' | Posible alta guardada. Revise el número de cliente en Polaris antes de liberar la revisión; no repita el registro.')
@@ -236,7 +234,7 @@ class ColaOperaciones:
                     motivo_cierre='ERROR '+kind
                     reason=str(exc)
                 self.store.finish(ident,'REVISION_REQUERIDA',
-                                  hold=fiscal_incierto or alta_incierta or receptor_pendiente,reason=reason,
+                                  hold=fiscal_incierto or alta_incierta,reason=reason,
                                   result={'codigo_cliente': (CODIGO_SIN_REGIMEN if sin_regimen
                                                             else CODIGO_NO_REGISTRADO if no_registrado
                                                             else CODIGO_VERIFICACION_FISCAL)}
@@ -251,10 +249,8 @@ class ColaOperaciones:
                              'rfc':data.get('rfc',''),'folio':data.get('ticket',''),'correo_cliente':job['correo']}
                     try:self.alertas.reportar(category,step,exc,contexto=context,modo_seguro=safe,bot=self.polaris)
                     except Exception:self.log('No se pudo preparar la alerta interna; revise la solicitud.')
-                if receptor_pendiente:
-                    self.log('RFC receptor sin lectura automática concluyente. '
-                             'No se pulsó Aceptar final; Polaris permanece abierto '
-                             'y la cola espera revisión presencial.')
+                if receptor_pendiente and not fiscal_incierto:
+                    self.log('RFC receptor sin confirmar: se omite esta solicitud y se limpia Polaris. No se pulsó Aceptar.')
                 elif alta_incierta:
                     self.log('Alta con guardado incierto: Polaris sigue abierto y la cola espera revisión; no se repite Aceptar.')
                 elif sin_regimen or no_registrado:

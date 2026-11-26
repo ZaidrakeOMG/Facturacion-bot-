@@ -552,7 +552,7 @@ def test_copia_dirigida_del_rfc_no_escribe_ni_usa_ocr(monkeypatch):
             bot, 55, captura, [18], 'SEP1312171X9')
 
 
-def test_error_rfc_receptor_conserva_polaris_y_bloquea_cola(tmp_path):
+def test_error_rfc_receptor_limpia_polaris_y_continua_cola(tmp_path):
     from arybot.cola_operaciones import ColaOperaciones
     from arybot.cola_modelo import DEFAULTS
     from arybot.polaris import ReceptorNoVerificadoError
@@ -568,6 +568,6 @@ def test_error_rfc_receptor_conserva_polaris_y_bloquea_cola(tmp_path):
     assert q.ejecutar_una()
     record=q.store.get(job['id'])
     assert record['estado']=='REVISION_REQUERIDA'
-    assert q.store.status()['bloqueo']==job['id']
+    assert not q.store.status()['bloqueo']
     assert 'no se pulsó Aceptar' in record['motivo']
-    bot.cerrar_polaris_tras_solicitud.assert_not_called()
+    bot.cerrar_polaris_tras_solicitud.assert_called_once()
