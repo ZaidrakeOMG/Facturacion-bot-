@@ -5,7 +5,7 @@ import threading
 import tkinter as tk
 from tkinter import ttk, messagebox
 
-from .dashboard import BLUE, MUTED
+from .dashboard import BLUE, MUTED, GREEN, RED
 from . import sql_central as sql
 
 
@@ -39,7 +39,11 @@ class SqlTab(ttk.Frame):
         self.test.pack(side="left")
         self.save = ttk.Button(actions,text="Guardar cuenta limitada",command=self._save)
         self.save.pack(side="left",padx=8)
-        ttk.Label(self,textvariable=self.status,foreground=BLUE,wraplength=720).pack(anchor="w",pady=10)
+        self.connection_result = ttk.Label(form,textvariable=self.status,foreground=BLUE,
+                                           font=("Segoe UI",11,"bold"),wraplength=620)
+        self.connection_result.grid(row=6,column=0,columnspan=2,sticky="ew",pady=(10,4))
+        ttk.Label(form,text="La contraseña se borra al iniciar la prueba por seguridad.",
+                  foreground=MUTED,wraplength=620).grid(row=7,column=0,columnspan=2,sticky="w",pady=4)
 
         mirror = ttk.LabelFrame(self,text="Historial central",padding=12)
         mirror.pack(fill="x")
@@ -51,6 +55,12 @@ class SqlTab(ttk.Frame):
         ttk.Label(self,text="Para pruebas puedes usar sa sin guardar su contraseña. Para sincronizar, utiliza POLARISBOT_APP. "
                             "No se guardan RFC, nombres, correos, contraseñas ni constancias en SQL.",foreground=MUTED,wraplength=720).pack(anchor="w",pady=12)
         self.after(180,self._poll)
+
+    def _report(self, message, *, ok=None):
+        prefix = "CONECTADO: " if ok is True else "ERROR: " if ok is False else ""
+        self.status.set(prefix + message)
+        self.connection_result.configure(foreground=GREEN if ok is True else RED if ok is False else BLUE)
+        self.app.log("SQL | " + prefix + message)
 
     def _settings(self):
         try:
@@ -70,9 +80,9 @@ class SqlTab(ttk.Frame):
             settings,password=self._credentials()
             sql.save_settings(self.base,settings,password)
             self.password.set("")
-            self.status.set("Cuenta limitada guardada en el Administrador de credenciales de Windows.")
+            self._report("Cuenta limitada guardada en el Administrador de credenciales de Windows.")
         except sql.SqlError as exc:
-            self.status.set(str(exc))
+            self._report(str(exc), ok=False)
 
     def _run(self, synchronize):
         if self.busy:
@@ -86,12 +96,13 @@ class SqlTab(ttk.Frame):
                    parent=self,default="no"):
                 return
         except sql.SqlError as exc:
-            self.status.set(str(exc))
+            self._report(str(exc), ok=False)
             return
         self.password.set("")
         self.busy=True
         for button in (self.test,self.save,self.sync):button.configure(state="disabled")
-        self.status.set("Consultando SQL Server…" if not synchronize else "Sincronizando historial…")
+        self._report("Consultando SQL Server…" if not synchronize else "Sincronizando historial…")
+        self.test.configure(text="Probando…" if not synchronize else "Probar conexión")
         path=self.app.cola.store.path
         def work():
             try:
@@ -108,14 +119,16 @@ class SqlTab(ttk.Frame):
             pass
         else:
             self.busy=False
+            self.test.configure(text="Probar conexión")
             for button in (self.test,self.save,self.sync):button.configure(state="normal")
             if error:
-                self.status.set(error)
+                self.stats.set("Estaciones: —    |    Solicitudes SQL: —    |    CFDI verificados: —")
+                self._report(error, ok=False)
             else:
                 self.stats.set(f"Estaciones: {check['stations']}    |    Solicitudes SQL: {check['jobs']}    |    CFDI verificados: {check['verified']}")
                 if result is not None:
-                    self.status.set(f"Historial sincronizado: {result['processed']} examinadas, {result['skipped']} omitidas por datos incompletos.")
+                    self._report(f"Historial sincronizado: {result['processed']} examinadas, {result['skipped']} omitidas por datos incompletos.", ok=True)
                 else:
-                    self.status.set("PolarisBot conectado • SQL Server "+check["version"]+
-                                    (" • Cuenta administrativa: solo prueba." if check["admin"] else " • Consulta de esquema correcta."))
+                    self._report("PolarisBot • SQL Server "+check["version"]+
+                                 (" • Cuenta administrativa: solo prueba." if check["admin"] else " • Consulta de esquema correcta."), ok=True)
         self.after(180,self._poll)
