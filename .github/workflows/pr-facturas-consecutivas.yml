@@ -21,7 +21,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Instalar pytest
-        run: python -m pip install pytest pypdf reportlab bandit Pillow pytesseract
+        run: python -m pip install pytest pypdf reportlab bandit Pillow pytesseract 'groq>=1.7.0,<2'
       - name: Analisis estatico de alta severidad en el portal
         run: python -m bandit -q -lll arybot/portal_http.py arybot/portal_red.py arybot/portal_modelo.py arybot/constancia_fiscal.py
       - name: Probar facturas consecutivas, altas, RFC y seguridad del portal

@@ -5,8 +5,6 @@ import json
 import os
 import re
 import time
-import urllib.error
-import urllib.request
 from dataclasses import dataclass
 
 ENDPOINT = "https://api.groq.com/openai/v1/chat/completions"
@@ -45,11 +43,6 @@ def save_key(key):
         WinVaultKeyring().set_password(SERVICE, ACCOUNT, key)
     except Exception:
         raise GroqError("No se pudo guardar en el Administrador de credenciales de Windows.") from None
-
-
-class NoRedirect(urllib.request.HTTPRedirectHandler):
-    def redirect_request(self, req, fp, code, msg, headers, newurl):
-        return None
 
 
 @dataclass(frozen=True)
@@ -132,7 +125,7 @@ def _usage(value):
     return value if type(value) is int and value >= 0 else 0
 
 
-def http_error_message(exc):
+def http_error_message(status, body):
     # Never display arbitrary remote messages, headers, credentials or response bodies.
     details = {
         "model_permission_blocked_org": "Modelo bloqueado en Organization > Limits. Habilita " + MODEL + ".",
@@ -143,11 +136,10 @@ def http_error_message(exc):
         "invalid_api_key": "Clave rechazada o revocada.",
     }
     try:
-        raw = exc.read(8192)
-        error = json.loads(raw).get("error", {})
+        error = body.get("error", body) if isinstance(body, dict) else {}
         code = error.get("code")
         if isinstance(code, str) and code in details:
-            return f"HTTP {exc.code} | {details[code]} ({code})"
+            return f"HTTP {status} | {details[code]} ({code})"
     except (OSError, ValueError, TypeError, AttributeError):
         pass
     messages = {401: "Clave rechazada o revocada.",
@@ -155,10 +147,10 @@ def http_error_message(exc):
                 429: "Límite de solicitudes o cuota alcanzado.",
                 400: "Groq rechazó el modelo o el formato solicitado.",
                 404: "Modelo o endpoint no disponible."}
-    return f"HTTP {exc.code} | " + messages.get(exc.code, "Solicitud rechazada por el servidor.")
+    return f"HTTP {status} | " + messages.get(status, "Solicitud rechazada por el servidor.")
 
 
-def ask(kind, text="", *, api_key=None, opener=None):
+def ask(kind, text="", *, api_key=None, http_client=None):
     if kind not in SCHEMAS:
         raise GroqError("Módulo no permitido.")
     key = (api_key if api_key is not None else get_key()).strip()
@@ -176,32 +168,50 @@ def ask(kind, text="", *, api_key=None, opener=None):
         or re.search(r"(?:contrase(?:ñ|n)a|password|api[_ ]?key|token)\s*[:=]", text, re.I)
     ):
         raise GroqError("Retira claves, RFC y correos. Utiliza exclusivamente ejemplos ficticios.")
-    payload = {
-        "model": MODEL,
-        "messages": [{"role": "system", "content": PROMPTS[kind]},
-                     {"role": "user", "content": text}],
-        "max_completion_tokens": 1024,
-        "response_format": {"type": "json_schema", "json_schema": {
-            "name": "ary_" + kind, "strict": True, "schema": SCHEMAS[kind]}},
-    }
-    req = urllib.request.Request(ENDPOINT, data=json.dumps(payload).encode("utf-8"),
-                                 headers={"Authorization": "Bearer " + key,
-                                          "Content-Type": "application/json"}, method="POST")
+    # Use the same official SDK that succeeded in the Windows VM.
+    try:
+        from groq import Groq, APIStatusError, APIConnectionError, APIError, DefaultHttpxClient
+    except ImportError:
+        raise GroqError("Falta el SDK oficial de Groq. Instala groq en el entorno Python del bot.") from None
+
+    # Simple connectivity probe: no structured schema or extra model options.
+    # Actual diagnostic and extraction requests retain strict structured output.
+    if kind == "conexion":
+        payload = {"model": MODEL, "messages": [{"role": "user", "content": "Responde solamente OK"}]}
+    else:
+        payload = {
+            "model": MODEL,
+            "messages": [{"role": "system", "content": PROMPTS[kind]},
+                         {"role": "user", "content": text}],
+            "max_completion_tokens": 1024,
+            "response_format": {"type": "json_schema", "json_schema": {
+                "name": "ary_" + kind, "strict": True, "schema": SCHEMAS[kind]}},
+        }
     started = time.monotonic()
     try:
-        client = opener or urllib.request.build_opener(NoRedirect())
-        with client.open(req, timeout=25) as response:
-            raw = response.read(262145)
-        if len(raw) > 262144:
-            raise GroqError("Respuesta demasiado grande.")
-        obj = json.loads(raw)
-        data = validate_reply(kind, json.loads(obj["choices"][0]["message"]["content"]))
-        usage = obj.get("usage") or {}
-        return Reply(data, _usage(usage.get("prompt_tokens")), _usage(usage.get("completion_tokens")),
-                     int((time.monotonic() - started) * 1000))
-    except urllib.error.HTTPError as exc:
-        raise GroqError(http_error_message(exc)) from None
-    except (urllib.error.URLError, TimeoutError, OSError):
+        # Fixed origin, verified HTTPS, no redirects or automatic retries.
+        transport = http_client if http_client is not None else DefaultHttpxClient(follow_redirects=False)
+        with Groq(api_key=key, base_url="https://api.groq.com/openai/v1",
+                  timeout=25.0, max_retries=0, http_client=transport) as client:
+            response = client.chat.completions.create(**payload)
+            content = response.choices[0].message.content
+            if not isinstance(content, str) or len(content) > 262144:
+                raise GroqError("Respuesta de Groq vacía o demasiado grande.")
+            if kind == "conexion":
+                if content.strip().upper() != "OK":
+                    raise GroqError("Groq respondió, pero no confirmó la prueba de conexión.")
+                data = {"estado": "ARY CONECTADO"}
+            else:
+                data = validate_reply(kind, json.loads(content))
+            usage = response.usage
+            return Reply(data, _usage(getattr(usage, "prompt_tokens", None)),
+                         _usage(getattr(usage, "completion_tokens", None)),
+                         int((time.monotonic() - started) * 1000))
+    except APIStatusError as exc:
+        raise GroqError(http_error_message(exc.status_code, exc.body)) from None
+    except (APIConnectionError, TimeoutError, OSError):
         raise GroqError("Sin conexión con Groq o tiempo de espera agotado.") from None
+    except APIError:
+        raise GroqError("El SDK de Groq no pudo completar la solicitud.") from None
     except (ValueError, KeyError, IndexError, TypeError, AttributeError):
         raise GroqError("Groq devolvió una respuesta que no se pudo validar.") from None
