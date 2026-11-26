@@ -1610,7 +1610,10 @@ class PolarisBot:
             dlg, self.BUSCAR["campo_busqueda"], "rfc", rfc
         )
         self.log('RFC escrito y confirmado después de salir del campo. Ejecutando Buscar...')
-        self._click_rel(dlg,self.BUSCAR["buscar"],wait=.20)
+        from .native_controls import mapped, invoke_mapped
+        if mapped(self,'buscar'):
+            invoke_mapped(self,dlg,'buscar');time.sleep(.20)
+        else:self._click_rel(dlg,self.BUSCAR["buscar"],wait=.20)
         time.sleep(1.2)
         from .cliente_facturacion import exigir_cliente_facturable
         from .lectura_catalogo_fiscal import seleccionar_cliente_exacto
@@ -1699,6 +1702,14 @@ class PolarisBot:
         }
         canon=aliases.get(target.upper().replace(" ",""), target)
         canon_plain=plain(canon)
+
+        from .native_controls import mapped
+        if mapped(self,"uso_cfdi"):
+            self._activate(inv)
+            selected=self._captura_factura().seleccionar(inv,None,"uso_cfdi",canon)
+            self._pasos_factura["cfdi"]=selected
+            self.diag.evento("FACTURACION: Uso CFDI","OK","Selección nativa confirmada",{"seleccion_no_vacia":True})
+            return selected
 
         # CASO NORMAL ARY: Polaris ya muestra GASTOS EN GENERAL por defecto.
         # NO hacemos clic en Cuenta ni enviamos HOME/DOWN/ENTER. El siguiente
@@ -1906,6 +1917,13 @@ class PolarisBot:
             raise PolarisError(f"Forma de pago no soportada: '{payment}'.")
 
         self._activate(inv)
+
+        from .native_controls import mapped
+        if mapped(self,"forma_pago"):
+            self._captura_factura().seleccionar(inv,None,"forma_pago",target)
+            self._pasos_factura["pago"]=target
+            self.diag.evento("FACTURACION: forma de pago","OK","Selección nativa confirmada",{"seleccion_no_vacia":True})
+            return target
 
         # EFECTIVO es el valor con el que abre Facturación de Efectivo. No hay
         # necesidad de tocar el control si eso es lo solicitado.
@@ -2267,7 +2285,9 @@ class PolarisBot:
 
         # Escritura real de teclado: cada carácter genera eventos normales de
         # Windows y después se sale con Tab para que Polaris confirme el valor.
-        self._assert_point_inside_window(inv,self.FACTURA["ticket"],"folio_ticket")
+        from .native_controls import mapped, invoke_mapped
+        if not mapped(self,"folio"):
+            self._assert_point_inside_window(inv,self.FACTURA["ticket"],"folio_ticket")
         self.log("Folio: escribiendo carácter por carácter (sin portapapeles)...")
         self._captura_factura().escribir_rel(
             inv, self.FACTURA["ticket"], "folio", ticket
@@ -2275,8 +2295,11 @@ class PolarisBot:
         time.sleep(.35)
 
         self.log("Folio escrito, confirmado y abandonado con Tab. Pulsando Agregar Folio...")
-        self._assert_point_inside_window(inv,self.FACTURA["agregar_folio"],"agregar_folio")
-        self._click_rel(inv,self.FACTURA["agregar_folio"],wait=.35)
+        if mapped(self,"agregar_folio"):
+            invoke_mapped(self,inv,"agregar_folio");time.sleep(.35)
+        else:
+            self._assert_point_inside_window(inv,self.FACTURA["agregar_folio"],"agregar_folio")
+            self._click_rel(inv,self.FACTURA["agregar_folio"],wait=.35)
         time.sleep(2.0)
 
         # Si por algún motivo se abrió "Accesos al Sistema", detectarlo y parar.
@@ -2472,6 +2495,8 @@ class PolarisBot:
         self.etapa_alerta="FACTURACION: comprobaciones previas"
         self._pasos_factura={}
         self._factura_test_mode=test_mode
+        from .native_controls import preflight
+        preflight(self,test_mode)
         self._guardia_campos_solicitud(sol,test_mode)
         from .factura_final import validar_correo
         if not isinstance(test_mode, bool):
