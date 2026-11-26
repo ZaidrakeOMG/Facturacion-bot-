@@ -14,3 +14,4 @@ beautifulsoup4>=4.12.3
 waitress>=3.0.2,<4
 pyzbar>=0.1.9,<0.2
 zxing-cpp>=2.3.0,<4
+pyodbc>=5.1,<6
