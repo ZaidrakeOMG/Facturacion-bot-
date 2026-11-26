@@ -22,6 +22,7 @@ class NativeTab(ttk.Frame):
         self.pilot = tk.BooleanVar(value=False)
         self.rows = {}
         self.snapshot = None
+        self.proof = None
         self.pending = False
         self.events = queue.Queue()
 
@@ -126,6 +127,7 @@ class NativeTab(ttk.Frame):
         self.tree.delete(*self.tree.get_children())
         self.rows.clear()
         self.snapshot = None
+        self.proof = None
 
     def _role_changed(self, _event=None):
         self._clear()
@@ -185,6 +187,7 @@ class NativeTab(ttk.Frame):
                 raise native.NativeError("No se identificó un candidato único para el campo enfocado.")
             self.tree.selection_set(matches[0])
             self.tree.see(matches[0])
+            self.proof = (root, role, self.rows[matches[0]]["signature"])
             self.status.set("Campo enfocado identificado. Regresa a ARY y pulsa Confirmar control seleccionado.")
         except (native.NativeError, OSError) as exc:
             self.status.set(str(exc))
@@ -201,6 +204,8 @@ class NativeTab(ttk.Frame):
             row = self.rows[selected[0]]
             if self._role() != role:
                 raise native.NativeError("Cambió la función. Inspecciona otra vez.")
+            if native.ROLES[role][1] != 'button' and self.proof != (root, role, row['signature']):
+                raise native.NativeError('Verifica primero el campo mediante Capturar foco (5 s). Groq no puede aprobarlo.')
             # Never trust a Groq candidate or a stale handle without operator review.
             if not messagebox.askyesno("Confirmar identidad",
                 "¿Verificaste visualmente que este control es " + native.ROLES[role][2] +
@@ -240,7 +245,8 @@ class NativeTab(ttk.Frame):
             root, role = self.snapshot
             if role != self._role() or native.find_root(bot, role) != root:
                 raise native.NativeError("Cambió el formulario. Inspecciona otra vez.")
-            payload, aliases = native.groq_candidates(role, list(self.rows.values()))
+            rows = list(self.rows.values())
+            native.groq_candidates(role, rows)
         except (native.NativeError, OSError) as exc:
             self.status.set(str(exc))
             return
@@ -250,6 +256,8 @@ class NativeTab(ttk.Frame):
         snapshot = self.snapshot
         def work():
             try:
+                enriched = native.enrich_labels(bot, rows)
+                payload, aliases = native.groq_candidates(role, enriched)
                 reply = ask("control", payload)
                 handle = native.validate_suggestion(reply, aliases)
                 self.events.put((snapshot, handle, reply.data["motivo"], None))
