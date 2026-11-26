@@ -10,6 +10,8 @@ client_secret*.json
 *.p12
 *.key
 data/portal_secret.key
+data/native_controls.json
+data/native_controls.tmp
 __pycache__/
 *.pyc
 .pytest_cache/
