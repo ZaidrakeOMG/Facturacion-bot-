@@ -66,7 +66,7 @@ class CapturaFactura:
         self.b=bot;self.texto=texto or TextoWindows();self.teclado=teclado or TecladoFactura()
         self.combo=combo or LecturaCombo();self.reloj=reloj or time.monotonic
         self.dormir=dormir or time.sleep;self.foco_override=foco;self.eventos=[]
-        self._native_targets=set()
+        self._native_targets={}
     @property
     def w(self):
         from . import polaris
@@ -116,7 +116,7 @@ class CapturaFactura:
         from .native_controls import mapped, resolve
         if not lectura and mapped(self.b,campo):
             h=resolve(self.b,root,campo)
-            self._native_targets.add((root,h))
+            self._native_targets[(root,h)]=campo
             self._evento(campo,'CONTROL_NATIVO_IDENTIFICADO',clase=self.b._class_name(h))
             return h
         r=self.b._rect(root);x=r.left+int(r.width*pt[0]);y=r.top+int(r.height*pt[1])
@@ -172,8 +172,11 @@ class CapturaFactura:
         return h
     def enfocar(self,root,h):
         if (root,h) in self._native_targets:
-            from .native_controls import focus_native
-            self._guard(root);focus_native(self.b,root,h);self.dormir(.2);self._guard(root,h)
+            from .native_controls import focus_native, resolve
+            self._guard(root)
+            if resolve(self.b,root,self._native_targets[(root,h)])!=h:
+                raise CapturaFacturaError('Cambió la identidad nativa antes de enfocar.')
+            focus_native(self.b,root,h);self.dormir(.2);self._guard(root,h)
             return
         from . import polaris
         self._guard(root);r=self.b._rect(h);x=(r.left+r.right)//2;y=(r.top+r.bottom)//2
@@ -236,6 +239,12 @@ class CapturaFactura:
             self._evento(campo,'OPCION_NO_UNICA',opciones=len(items))
             raise CapturaFacturaError('La opción solicitada no se encontró de forma única en el catálogo de '+campo+'.')
         idx=matches[0]
+        if (root,h) in self._native_targets and not self.combo.abierto(h):
+            try:actual,value=self.combo.actual(h)
+            except Exception:actual,value=-1,''
+            if actual==idx and canon(value)==canon(target):
+                self.validar_combo(root,h,campo,target)
+                return items[idx]
         self.enfocar(root,h)
         if (root,h) in self._native_targets:
             # F4 se dirige al selector nativo ya enfocado; nunca a Cuenta.
