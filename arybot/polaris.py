@@ -1611,7 +1611,7 @@ class PolarisBot:
         )
         self.log('RFC escrito y confirmado después de salir del campo. Ejecutando Buscar...')
         from .native_controls import mapped, invoke_mapped
-        if mapped(self,'buscar'):
+        if mapped(self,'buscar',dlg):
             invoke_mapped(self,dlg,'buscar');time.sleep(.20)
         else:self._click_rel(dlg,self.BUSCAR["buscar"],wait=.20)
         time.sleep(1.2)
@@ -1704,9 +1704,9 @@ class PolarisBot:
         canon_plain=plain(canon)
 
         from .native_controls import mapped
-        if mapped(self,"uso_cfdi"):
+        if mapped(self,"uso_cfdi",inv):
             self._activate(inv)
-            selected=self._captura_factura().seleccionar(inv,None,"uso_cfdi",canon)
+            selected=self._captura_factura().seleccionar(inv,self.FACTURA["uso_cfdi"],"uso_cfdi",canon)
             self._pasos_factura["cfdi"]=selected
             self.diag.evento("FACTURACION: Uso CFDI","OK","Selección nativa confirmada",{"seleccion_no_vacia":True})
             return selected
@@ -1919,8 +1919,8 @@ class PolarisBot:
         self._activate(inv)
 
         from .native_controls import mapped
-        if mapped(self,"forma_pago"):
-            self._captura_factura().seleccionar(inv,None,"forma_pago",target)
+        if mapped(self,"forma_pago",inv):
+            self._captura_factura().seleccionar(inv,self.FACTURA["forma_pago"],"forma_pago",target)
             self._pasos_factura["pago"]=target
             self.diag.evento("FACTURACION: forma de pago","OK","Selección nativa confirmada",{"seleccion_no_vacia":True})
             return target
@@ -2286,7 +2286,7 @@ class PolarisBot:
         # Escritura real de teclado: cada carácter genera eventos normales de
         # Windows y después se sale con Tab para que Polaris confirme el valor.
         from .native_controls import mapped, invoke_mapped
-        if not mapped(self,"folio"):
+        if not mapped(self,"folio",inv):
             self._assert_point_inside_window(inv,self.FACTURA["ticket"],"folio_ticket")
         self.log("Folio: escribiendo carácter por carácter (sin portapapeles)...")
         self._captura_factura().escribir_rel(
@@ -2295,7 +2295,7 @@ class PolarisBot:
         time.sleep(.35)
 
         self.log("Folio escrito, confirmado y abandonado con Tab. Pulsando Agregar Folio...")
-        if mapped(self,"agregar_folio"):
+        if mapped(self,"agregar_folio",inv):
             invoke_mapped(self,inv,"agregar_folio");time.sleep(.35)
         else:
             self._assert_point_inside_window(inv,self.FACTURA["agregar_folio"],"agregar_folio")

@@ -28,12 +28,12 @@ class NativeTab(ttk.Frame):
 
         ttk.Label(self, text="Motor de automatización", font=("Segoe UI", 19, "bold")).pack(anchor="w")
         ttk.Label(self, text="Polaris • Win32 / UI Automation • Groq", foreground=BLUE).pack(anchor="w", pady=(2, 8))
-        ttk.Label(self, text="Calibra controles nativos en modo seguro. La IA solo sugiere candidatos; "
-                            "el operador confirma. No se envían valores fiscales ni capturas de pantalla.",
+        ttk.Label(self, text="Reconocimiento automático durante la factura de prueba. No necesitas calibrar. "
+                            "Groq solo sugiere candidatos; no se envían valores fiscales ni capturas.",
                   foreground=MUTED, wraplength=720).pack(anchor="w", pady=(0, 8))
         bar = ttk.Frame(self)
         bar.pack(fill="x")
-        ttk.Checkbutton(bar, text="Activar piloto nativo en MODO SEGURO", variable=self.pilot,
+        ttk.Checkbutton(bar, text="Activar motor automático en MODO SEGURO", variable=self.pilot,
                         command=self._toggle).pack(side="left")
         ttk.Button(bar, text="Pausar cola", command=self._pause).pack(side="right")
         ttk.Label(self, textvariable=self.summary, foreground=BLUE, wraplength=730).pack(anchor="w", pady=6)
@@ -65,9 +65,9 @@ class NativeTab(ttk.Frame):
         ttk.Button(actions, text="Confirmar control seleccionado", command=self._assign).pack(side="left")
         ttk.Button(actions, text="Quitar asignación", command=self._remove).pack(side="left", padx=6)
         ttk.Label(self, textvariable=self.status, foreground=BLUE, wraplength=740).pack(anchor="w", pady=8)
-        ttk.Label(self, text="Para calibrar: pausa la recepción web y la cola, abre manualmente la ventana correspondiente "
-                            "de Polaris y usa Capturar foco en un campo. Para botones, selecciona su etiqueta en la tabla. "
-                            "RFC y Folio son obligatorios. Pago, CFDI y botones son opcionales. El modo se desactiva al reiniciar.",
+        ttk.Label(self, text="Para probar: pausa el portal y la cola, activa el motor y ve a Facturación manual. "
+                            "El motor reconoce controles al abrir cada formulario; conserva el flujo original si no hay coincidencia segura. "
+                            "La inspección y calibración de abajo son herramientas opcionales. El modo se desactiva al reiniciar.",
                   wraplength=740, foreground=MUTED).pack(anchor="w")
         self._summary()
         self.after(180, self._poll)
@@ -102,7 +102,7 @@ class NativeTab(ttk.Frame):
             bot = self.app.polaris
             maps = native.load_map(bot) if bot else {}
             names = ", ".join(native.ROLES[r][2] for r in native.ROLES if r in maps) or "ninguno"
-            self.summary.set("Calibrados " + str(len(maps)) + "/6: " + names)
+            self.summary.set("Identidades guardadas (opcionales) " + str(len(maps)) + "/6: " + names)
         except native.NativeError as exc:
             self.summary.set(str(exc))
 
@@ -112,10 +112,12 @@ class NativeTab(ttk.Frame):
             if self.pending:
                 raise native.NativeError("Finaliza la calibración en curso.")
             if self.pilot.get():
-                if not native.REQUIRED <= set(native.load_map(bot)):
-                    raise native.NativeError("Calibra RFC de búsqueda y Folio antes de activar.")
+                native.load_map(bot)
+                state = self.app.cola.store.status()
+                if state.get("conteos", {}).get("EN_COLA", 0):
+                    raise native.NativeError("Hay solicitudes pendientes. Revisa la cola antes de iniciar una prueba individual.")
                 bot._native_pilot = True
-                self.status.set("Piloto activado. Reanuda la cola solo para una prueba individual, sin timbrar.")
+                self.status.set("Motor automático activo. Ve a Facturación manual y encola UNA prueba segura; revisa la cola antes de continuar.")
             else:
                 bot._native_pilot = False
                 self.status.set("Piloto desactivado. Se conserva el mapa local.")

@@ -1,8 +1,8 @@
 """Native Polaris pilot: exact local control identity, no screen coordinates.
 
-The pilot is opt-in, safe-mode only. The operator calibrates a control once,
-then the robot resolves it again in the current window. No HWND is persisted,
-no customer data is read by the inspector, and Groq cannot approve mappings.
+The pilot is opt-in, safe-mode only. Discover controls from known labels or
+verified local identities corroborated by the established form geometry.
+No HWND is persisted. Groq suggestions cannot authorize an action.
 """
 from __future__ import annotations
 
@@ -22,6 +22,13 @@ ROLES = {
 }
 REQUIRED = frozenset({"rfc", "folio"})
 BUTTON_LABELS = {"buscar": {"BUSCAR"}, "agregar_folio": {"AGREGARFOLIO"}}
+ROLE_LABELS = {
+    "rfc": {"RFC", "RFCDEBUSQUEDA"},
+    "folio": {"FOLIO", "FOLIODELTICKET", "TICKET"},
+    "forma_pago": {"FORMAPAGO", "FORMADEPAGO"},
+    "uso_cfdi": {"USOCFDI"},
+    **BUTTON_LABELS,
+}
 PUBLIC_LABELS = {"RFC", "RFCDEBUSQUEDA", "FOLIO", "FOLIODELTICKET", "TICKET",
                  "FORMAPAGO", "FORMADEPAGO", "USOCFDI", "BUSCAR", "AGREGARFOLIO",
                  "BUSCARCLIENTE", "ACEPTAR", "CANCELAR", "CUENTA", "FECHA"}
@@ -96,15 +103,17 @@ def clear_mapping(bot, role):
     tmp.replace(path)
 
 
-def mapped(bot, role):
-    if role not in ROLES or not requested(bot):
+def mapped(bot, role, root=None):
+    """Decide before any action. A missing native candidate permits the original path."""
+    if role not in ROLES or not active(bot):
         return False
-    if not active(bot):
+    if root is None:
+        return role in load_map(bot)
+    row = auto_row(bot, root, role)
+    if row is None:
         return False
-    maps = load_map(bot)
-    if role in REQUIRED and role not in maps:
-        raise NativeError('Falta una identidad obligatoria; no se utilizarán coordenadas.')
-    return role in maps
+    # Do not select a native path if its UIA capability is unavailable.
+    return supports_native(bot, root, role, row["handle"])
 
 
 def preflight(bot, test_mode):
@@ -112,8 +121,10 @@ def preflight(bot, test_mode):
         return
     if test_mode is not True or bot.cfg.get("app", {}).get("modo_prueba", True) is not True:
         raise NativeError("Piloto nativo activo: solo permite facturas en MODO SEGURO.")
-    if not REQUIRED <= set(load_map(bot)):
-        raise NativeError("Calibra primero RFC de búsqueda y Folio en Motor de automatización.")
+    # No calibration requirement. Validate any previously saved local map.
+    load_map(bot)
+    bot._native_advised = set()
+    bot.log("MOTOR AUTOMÁTICO: identifica controles durante la prueba; conserva el flujo original si no hay identidad nativa inequívoca.")
 
 
 def _windows():
@@ -289,15 +300,144 @@ def focused_candidate(bot, root, role):
     raise NativeError("El campo enfocado no coincide con el tipo solicitado.")
 
 
+def exact_candidate(role, rows):
+    """Only an unambiguous, enabled and uniquely identifiable exact public label."""
+    matches = [r for r in rows if r["label"] in ROLE_LABELS[role]]
+    if len(matches) != 1 or not matches[0]["enabled"]:
+        return None
+    try:
+        return unique_match(rows, matches[0]["signature"])
+    except NativeError:
+        return None
+
+
+def known_point(bot, role):
+    if role == "rfc":
+        return bot.BUSCAR["campo_busqueda"]
+    return bot.FACTURA[{"folio": "ticket", "forma_pago": "forma_pago",
+                        "uso_cfdi": "uso_cfdi", "buscar": "buscar_cliente",
+                        "agregar_folio": "agregar_folio"}[role]]
+
+
+def corroborates_geometry(bot, root, role, row):
+    # A saved numeric VCL ID may be recycled. Never trust it by itself.
+    if role in BUTTON_LABELS:
+        return row["label"] in BUTTON_LABELS[role]
+    pt = known_point(bot, role)
+    r = bot._rect(root)
+    x, y = r.left + int(r.width * pt[0]), r.top + int(r.height * pt[1])
+    h = row["handle"]
+    q = bot._rect(h)
+    under = _windows().WindowFromPoint((x, y))
+    return (q.left <= x < q.right and q.top <= y < q.bottom
+            and bool(under) and bot._is_descendant_or_same(h, under))
+
+
+def auto_row(bot, root, role):
+    if not active(bot):
+        return None
+    rows = inventory(bot, root, role)
+    # Win32 button captions are exact; edit/combobox UIA names are filtered
+    # to a closed public label set. Never send field contents to Groq.
+    if role not in BUTTON_LABELS and rows:
+        try:
+            rows = enrich_labels(bot, rows)
+        except Exception:
+            pass
+    chosen = exact_candidate(role, rows)
+    # A native edit label alone can refer to a fiscal read-only field.
+    # Require agreement with the known form region for an edit/selector.
+    if chosen is not None and corroborates_geometry(bot, root, role, chosen):
+        return chosen
+    # Do not select a cached identity against conflicting explicit labels.
+    if role in BUTTON_LABELS or any(r["label"] in ROLE_LABELS[role] for r in rows):
+        return None
+    signature = load_map(bot).get(role)
+    if signature is None:
+        return None
+    try:
+        row = unique_match(rows, signature)
+    except NativeError:
+        return None
+    if row["label"] and row["label"] not in ROLE_LABELS[role]:
+        return None
+    return row if corroborates_geometry(bot, root, role, row) else None
+
+
+def supports_native(bot, root, role, h):
+    """Read-only capability check before choosing UIA over the stable path."""
+    try:
+        import pythoncom
+        pythoncom.CoInitialize()
+        try:
+            from pywinauto import Desktop
+            wrapper = Desktop(backend="uia").window(handle=h).wrapper_object()
+            element = wrapper.element_info.element
+            if int(element.CurrentNativeWindowHandle) != int(h):
+                return False
+            if role in BUTTON_LABELS:
+                return wrapper.iface_invoke is not None
+            return bool(element.CurrentIsKeyboardFocusable)
+        finally:
+            pythoncom.CoUninitialize()
+    except Exception:
+        return False
+
+
 def resolve(bot, root, role, *, lectura=False):
     if not active(bot):
         raise NativeError("La automatización nativa no está activa para esta operación.")
-    signature = load_map(bot).get(role)
-    if signature is None:
-        raise NativeError("Falta calibrar " + ROLES[role][2] + ".")
-    row = unique_match(inventory(bot, root, role), signature, enabled=not lectura)
-    bot.log("MOTOR NATIVO: " + ROLES[role][2] + " localizado por identidad de control.")
+    row = auto_row(bot, root, role)
+    if row is None:
+        raise NativeError("Cambió la identidad de " + ROLES[role][2] + ". No se repetirá una acción.")
+    bot.log("MOTOR NATIVO: " + ROLES[role][2] + " localizado por identidad comprobada.")
     return row["handle"]
+
+
+def remember_verified(bot, root, role, hwnd):
+    """Learn only AFTER the original capture independently verified its result."""
+    if role not in ROLES or not active(bot):
+        return
+    try:
+        rows = inventory(bot, root, role)
+        matches = [r for r in rows if r["handle"] == hwnd]
+        if len(matches) != 1:
+            return
+        row = unique_match(rows, matches[0]["signature"])
+        if not corroborates_geometry(bot, root, role, row):
+            return
+        save_mapping(bot, role, row["signature"])
+        bot.log("MOTOR AUTOMÁTICO: identidad verificada guardada: " + ROLES[role][2])
+    except (NativeError, OSError):
+        # Cache is an optimization only, not a prerequisite or a second action.
+        bot.log("MOTOR AUTOMÁTICO: no se guardó identidad de " + ROLES[role][2])
+
+
+def advise_fallback(bot, root, role, expected=None):
+    """Optional AI advice on public metadata; never use it as authority to act."""
+    if role not in ROLES or not active(bot):
+        return
+    seen = getattr(bot, "_native_advised", set())
+    if role in seen:
+        return
+    seen.add(role)
+    bot._native_advised = seen
+    bot.log("MOTOR AUTOMÁTICO: flujo original para " + ROLES[role][2] + " (sin identidad nativa comprobada).")
+    try:
+        rows = enrich_labels(bot, inventory(bot, root, role))
+        if not 1 <= len(rows) <= 24 or not any(r["label"] for r in rows):
+            return
+        from .groq_service import ask, get_key
+        if not get_key():
+            return
+        payload, aliases = groq_candidates(role, rows)
+        suggestion = validate_suggestion(ask("control", payload), aliases)
+        if suggestion is not None and expected is not None and suggestion == expected:
+            bot.log("GROQ: sugerencia coincide con el control ya identificado localmente; no autoriza acciones.")
+        else:
+            bot.log("GROQ: sin corroboración independiente; se descarta la sugerencia.")
+    except Exception:
+        bot.log("GROQ: asistencia de control no disponible; no se cambia el flujo original.")
 
 
 def _guard(bot, root, h):

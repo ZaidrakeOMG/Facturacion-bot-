@@ -33,10 +33,12 @@ def test_only_unique_enabled_native_control_can_resolve():
         n.unique_match([row(sig(41), enabled=False)], sig(41))
 
 
-def test_pilot_requires_calibration_and_is_safe_mode_only(tmp_path):
+def test_pilot_needs_no_calibration_and_is_safe_mode_only(tmp_path):
     b = bot(tmp_path)
-    with pytest.raises(n.NativeError):
-        n.preflight(b, True)
+    b.log = lambda msg: None
+    n.preflight(b, True)
+    assert not n.mapped(b, "rfc")
+    assert not n.mapped(b, "folio")
     n.save_mapping(b, "rfc", sig(51, "TFORMBUSQUEDA"))
     n.save_mapping(b, "folio", sig(52))
     n.preflight(b, True)
@@ -53,13 +55,12 @@ def test_pilot_requires_calibration_and_is_safe_mode_only(tmp_path):
     assert not n.mapped(b, "folio")
 
 
-def test_no_silent_fallback_if_required_mapping_removed(tmp_path):
+def test_missing_mapping_does_not_block_original_before_action(tmp_path):
     b = bot(tmp_path)
     n.save_mapping(b, "rfc", sig(51, "TFORMBUSQUEDA"))
     n.save_mapping(b, "folio", sig(52))
     n.clear_mapping(b, "folio")
-    with pytest.raises(n.NativeError):
-        n.mapped(b, "folio")
+    assert not n.mapped(b, "folio")
 
 
 def test_map_keeps_structure_not_handles_and_rejects_duplicates(tmp_path):
@@ -90,3 +91,34 @@ def test_groq_only_gets_public_metadata_and_cannot_execute():
         n.validate_suggestion(SimpleNamespace(data={"control": "C2"}), aliases)
     with pytest.raises(GroqError):
         validate_reply("control", {"control": "aceptar", "motivo": "no"})
+
+
+def test_exact_label_only_and_no_ambiguous_choice():
+    a = row(sig(41), label="FOLIO")
+    assert n.exact_candidate("folio", [a]) == a
+    assert n.exact_candidate("folio", [row(sig(41), label="CUENTA")]) is None
+    assert n.exact_candidate("folio", [a, row(sig(42), handle=456, label="FOLIO")]) is None
+    assert n.exact_candidate("folio", [row(sig(41), enabled=False)]) is None
+    assert n.exact_candidate("folio", [a, row(sig(41), handle=456, label="")]) is None
+
+
+def test_auto_cache_requires_geometry_and_fresh_identity(tmp_path, monkeypatch):
+    b = bot(tmp_path)
+    candidate = row(sig(41), label="")
+    n.save_mapping(b, "folio", candidate["signature"])
+    monkeypatch.setattr(n, "inventory", lambda *a: [candidate])
+    monkeypatch.setattr(n, "enrich_labels", lambda b, rows: rows)
+    monkeypatch.setattr(n, "corroborates_geometry", lambda *a: False)
+    assert n.auto_row(b, 9, "folio") is None
+    monkeypatch.setattr(n, "corroborates_geometry", lambda *a: True)
+    assert n.auto_row(b, 9, "folio") == candidate
+    candidate["label"] = "CUENTA"
+    assert n.auto_row(b, 9, "folio") is None
+
+
+def test_no_native_action_when_identity_disappears(tmp_path, monkeypatch):
+    b = bot(tmp_path)
+    monkeypatch.setattr(n, "auto_row", lambda *a: None)
+    assert not n.mapped(b, "folio", 9)
+    with pytest.raises(n.NativeError, match="Cambió la identidad"):
+        n.resolve(b, 9, "folio")

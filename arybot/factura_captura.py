@@ -113,8 +113,8 @@ class CapturaFactura:
                 raise CapturaFacturaError('El foco no está en el campo esperado. No se envían más teclas.')
     def control(self,root,pt,campo,tipo='edit',lectura=False):
         self._guard(root)
-        from .native_controls import mapped, resolve
-        if not lectura and mapped(self.b,campo):
+        from .native_controls import mapped, resolve, advise_fallback
+        if not lectura and mapped(self.b,campo,root):
             h=resolve(self.b,root,campo)
             self._native_targets[(root,h)]=campo
             self._evento(campo,'CONTROL_NATIVO_IDENTIFICADO',clase=self.b._class_name(h))
@@ -169,6 +169,7 @@ class CapturaFactura:
             self._evento(campo,'CONTROL_ANIDADO_RESUELTO',clase=self.b._class_name(h),coincidencias=len(unique))
         if not lectura and not self.w.IsWindowEnabled(h):raise CapturaFacturaError('El campo '+campo+' está deshabilitado.')
         self._evento(campo,'CONTROL_IDENTIFICADO',clase=self.b._class_name(h))
+        if not lectura:advise_fallback(self.b,root,campo,h)
         return h
     def enfocar(self,root,h):
         if (root,h) in self._native_targets:
@@ -230,6 +231,8 @@ class CapturaFactura:
         self.salir(root,h,campo)
         self.confirmar(root,h,campo,value)
         self._evento(campo,'CAMPO_CONFIRMADO_NO_VACIO',vacio=False,longitud=len(value))
+        from .native_controls import remember_verified
+        remember_verified(self.b,root,campo,h)
     def escribir_rel(self,root,pt,campo,value):
         h=self.control(root,pt,campo);self.escribir(root,h,campo,value);return h
     def seleccionar(self,root,pt,campo,target):
@@ -293,6 +296,8 @@ class CapturaFactura:
             if canon(actual)!=canon(target):raise CapturaFacturaError('Polaris no conserva la selección de '+campo+'.')
             self.dormir(.15)
         self._evento(campo,'SELECCION_CONFIRMADA',coincide=True)
+        from .native_controls import remember_verified
+        remember_verified(self.b,root,campo,h)
     def verificar_receptor(self,inv,rfc):
         """Sólo lectura de campos que Polaris llena. No los 'repara'."""
         handles={k:self.control(inv,pt,k,lectura=True) for k,pt in self.RECEPTOR.items()}
