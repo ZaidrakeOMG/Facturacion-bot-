@@ -32,8 +32,9 @@ class AlertasTab(ttk.Frame):
 
     def _build(self):
         b=self.body
+        mail_enabled=self.app.cfg.get('app',{}).get('gmail_habilitado',True)
         ttk.Label(b,text='Alertas internas — Grupo ARY',font=('Segoe UI',14,'bold')).grid(row=0,column=0,sticky='w')
-        ttk.Label(b,text='Avisos de alta, facturación y envío. No se mandan al cliente ni responden su hilo.',
+        ttk.Label(b,text='Historial de alta, facturación y errores. En esta edición los envíos Gmail están desactivados.',
                   wraplength=840).grid(row=1,column=0,sticky='w',pady=(4,8))
         ttk.Checkbutton(b,text='Activar correos de alertas internas',variable=self.vars['activas']).grid(row=2,column=0,sticky='w')
         recipients=ttk.LabelFrame(b,text='Destinatarios internos (todos reciben las categorías marcadas)',padding=8)
@@ -66,7 +67,7 @@ class AlertasTab(ttk.Frame):
         bar=ttk.Frame(b);bar.grid(row=7,column=0,sticky='w',pady=6)
         ttk.Button(bar,text='Guardar alertas',command=self.guardar).pack(side='left',padx=(0,7))
         ttk.Button(bar,text='Ver ejemplo (SIN ENVIAR)',command=self.ejemplo).pack(side='left',padx=7)
-        ttk.Button(bar,text='Enviar correo de prueba REAL',command=self.probar).pack(side='left',padx=7)
+        ttk.Button(bar,text='Enviar correo de prueba REAL',command=self.probar,state='normal' if mail_enabled else 'disabled').pack(side='left',padx=7)
         ttk.Label(b,textvariable=self.status,wraplength=840,foreground='#8a4c10').grid(row=8,column=0,sticky='w',pady=(2,6))
         ttk.Label(b,text='Historial local de alertas',font=('Segoe UI',11,'bold')).grid(row=9,column=0,sticky='w')
         frame=ttk.Frame(b);frame.grid(row=10,column=0,sticky='ew',pady=5);frame.columnconfigure(0,weight=1)
@@ -79,8 +80,8 @@ class AlertasTab(ttk.Frame):
         actions=ttk.Frame(b);actions.grid(row=11,column=0,sticky='w',pady=5)
         for text,fn in [('Actualizar',self.actualizar),('Ver mensaje',self.ver),
                         ('Reenviar seleccionada (REAL)',self.reenviar),('Cancelar pendiente',self.cancelar)]:
-            ttk.Button(actions,text=text,command=fn).pack(side='left',padx=(0,8))
-        ttk.Label(b,text='ENVIADA = Gmail aceptó el mensaje; no acredita recepción. ERROR_ENVIO / ENVIO_INCIERTO no se reenvían solos.\n'
+            ttk.Button(actions,text=text,command=fn,state='disabled' if not mail_enabled and fn==self.reenviar else 'normal').pack(side='left',padx=(0,8))
+        ttk.Label(b,text='Las alertas se conservan localmente. Gmail permanece desactivado en esta edición.\n'
                          'Solo se reenvía el aviso interno. No se repite el alta, la factura ni el correo de Polaris.',
                   wraplength=840,foreground='#526173').grid(row=12,column=0,sticky='w',pady=(0,8))
 
