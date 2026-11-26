@@ -25,8 +25,10 @@ def get_key():
     if env:
         return env
     try:
-        import keyring
-        return (keyring.get_password(SERVICE, ACCOUNT) or "").strip()
+        if os.name != "nt":
+            return ""
+        from keyring.backends.Windows import WinVaultKeyring
+        return (WinVaultKeyring().get_password(SERVICE, ACCOUNT) or "").strip()
     except Exception:
         return ""
 
