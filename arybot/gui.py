@@ -22,6 +22,7 @@ from .alta_clientes import AltaClientes
 from .diagnostico import Diagnostico
 from .diagnostico_gui import DiagnosticoTab
 from .dashboard import Dashboard, apply_style, attach_navigation, NAVY, BLUE, BG, WHITE, INK, MUTED
+from .groq_gui import GroqTab
 
 BASE=Path(__file__).resolve().parent.parent
 
@@ -361,6 +362,7 @@ class App:
         self.alertas_tab=AlertasTab(nb,self); nb.add(self.alertas_tab,text="Alertas internas")
         self.diagnostico_tab=DiagnosticoTab(nb,self); nb.add(self.diagnostico_tab,text="Diagnóstico")
         nb.add(self.tab_panel,text="Actividad del bot")
+        self.groq_tab=GroqTab(nb,self); nb.add(self.groq_tab,text="Inteligencia artificial")
         nb.add(self.tab_cfg,text="Configuración")
         self._build_panel(); self._build_test(); self._build_cfg()
         self._sync_navigation=attach_navigation(self,nav)
@@ -486,7 +488,7 @@ class App:
         ttk.Separator(self.tab_cfg).grid(row=r,column=0,columnspan=4,sticky="ew",pady=12); r+=1
         ttk.Label(self.tab_cfg,text="Lectura de documentos / OCR",font=("Segoe UI",12,"bold")).grid(row=r,column=0,columnspan=4,sticky="w",pady=(0,8)); r+=1
         ttk.Label(self.tab_cfg,text="Tesseract.exe (opcional)").grid(row=r,column=0,sticky="e",padx=6,pady=5); ttk.Entry(self.tab_cfg,textvariable=self.tess_var,width=50).grid(row=r,column=1,columnspan=2,sticky="ew"); ttk.Button(self.tab_cfg,text="Examinar...",command=self.pick_tess).grid(row=r,column=3,padx=6); r+=1
-        ttk.Label(self.tab_cfg,text="Groq: integración pendiente. Esta edición no requiere Gmail.",foreground=MUTED).grid(row=r,column=0,columnspan=4,sticky="w",pady=8); r+=1
+        ttk.Label(self.tab_cfg,text="Groq: configura la clave desde Inteligencia artificial. Gmail desactivado.",foreground=MUTED).grid(row=r,column=0,columnspan=4,sticky="w",pady=8); r+=1
         ttk.Button(self.tab_cfg,text="Guardar configuración",command=self.save_config).grid(row=r,column=1,sticky="w",pady=14)
         self.tab_cfg.columnconfigure(2,weight=1)
 
