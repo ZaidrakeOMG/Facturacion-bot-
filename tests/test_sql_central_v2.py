@@ -41,6 +41,9 @@ def test_connection_string_requires_tls_and_fixed_database():
     assert "DATABASE=PolarisBot;" in string
     assert "PWD={fake}};DATABASE=Other};" in string
     assert "Encrypt=yes;TrustServerCertificate=no;" in string
+    temporary = sql.connection_string(sql.Settings("sql.example.local"), "fake", test_untrusted=True)
+    assert "Encrypt=yes;TrustServerCertificate=yes;" in temporary
+    assert "TrustServerCertificate=no;" in sql.connection_string(sql.Settings("sql.example.local"), "fake")
     with pytest.raises(sql.SqlError):
         sql.connection_string(sql.Settings("host;DATABASE=Other"), "fake")
 
