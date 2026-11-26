@@ -42,8 +42,11 @@ class Settings:
     server: str
     port: int = 1433
     user: str = APP_USER
+    diagnostic_untrusted: bool = False
 
     def validate(self):
+        if type(self.diagnostic_untrusted) is not bool:
+            raise SqlError("Configuración TLS inválida.")
         if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9.-]{0,252}", self.server):
             raise SqlError("Introduce la IP o el nombre DNS del servidor, sin instancia ni prefijos.")
         if type(self.port) is not int or not 1 <= self.port <= 65535:
@@ -76,23 +79,27 @@ def config_path(base):
 def load_settings(base):
     try:
         raw = json.loads(config_path(base).read_text(encoding="utf-8"))
-        return Settings(raw["server"], raw["port"], raw["user"]).validate()
+        return Settings(raw["server"], raw["port"], raw["user"],
+                        raw.get("diagnostic_untrusted", False)).validate()
     except (OSError, ValueError, KeyError, TypeError, SqlError):
         return Settings("")
 
 
-def save_settings(base, settings, password):
+def save_settings(base, settings, password, *, diagnostic=False):
     settings.validate()
-    if settings.user.casefold() != APP_USER.casefold():
-        raise SqlError("Guarda únicamente la cuenta limitada POLARISBOT_APP; sa solo sirve para una prueba puntual.")
-    if not password:
-        raise SqlError("Introduce la contraseña de la cuenta limitada.")
+    if settings.user.casefold() != APP_USER.casefold() and not diagnostic:
+        raise SqlError("Guarda la cuenta administrativa únicamente para diagnóstico explícito.")
+    if settings.diagnostic_untrusted and not diagnostic:
+        raise SqlError("La excepción TLS guardada requiere autorización de diagnóstico.")
+    if not password or "\x00" in password:
+        raise SqlError("Introduce la contraseña SQL.")
     try:
         _vault().set_password(SERVICE, settings.credential, password)
         path = config_path(base)
         path.parent.mkdir(parents=True, exist_ok=True)
         tmp = path.with_suffix(".tmp")
-        tmp.write_text(json.dumps(dict(server=settings.server, port=settings.port, user=settings.user), indent=2), encoding="utf-8")
+        tmp.write_text(json.dumps(dict(server=settings.server, port=settings.port, user=settings.user,
+                                       diagnostic_untrusted=settings.diagnostic_untrusted), indent=2), encoding="utf-8")
         tmp.replace(path)
     except Exception:
         raise SqlError("No se pudo guardar la configuración en Windows.") from None

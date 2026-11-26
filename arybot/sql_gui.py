@@ -21,8 +21,9 @@ class SqlTab(ttk.Frame):
         self.port = tk.StringVar(value=str(settings.port))
         self.user = tk.StringVar(value=settings.user)
         self.password = tk.StringVar()
-        self.test_untrusted = tk.BooleanVar(value=False)
-        self.status = tk.StringVar(value="Sin conexión comprobada.")
+        self.test_untrusted = tk.BooleanVar(value=settings.diagnostic_untrusted)
+        self.auto_tested = False
+        self.status = tk.StringVar(value="Cuenta guardada; comprobación pendiente." if settings.server and sql.get_password(settings) else "Sin conexión comprobada.")
         self.stats = tk.StringVar(value="Estaciones: —    |    Solicitudes SQL: —    |    CFDI verificados: —")
 
         ttk.Label(self, text="Centro de datos SQL", font=("Segoe UI", 19, "bold")).pack(anchor="w")
@@ -34,18 +35,18 @@ class SqlTab(ttk.Frame):
                                             ("Usuario",self.user),("Contraseña",self.password))):
             ttk.Label(form, text=label).grid(row=i,column=0,sticky="w",padx=(0,10),pady=5)
             ttk.Entry(form,textvariable=var,show="*" if i==3 else "").grid(row=i,column=1,sticky="ew",pady=5)
-        ttk.Label(form,text="Base de datos: PolarisBot • TLS con certificado verificado").grid(row=4,column=0,columnspan=2,sticky="w",pady=8)
+        ttk.Label(form,text="Base de datos: PolarisBot • TLS cifrado; excepción solo para diagnóstico").grid(row=4,column=0,columnspan=2,sticky="w",pady=8)
         actions = ttk.Frame(form);actions.grid(row=5,column=0,columnspan=2,sticky="w")
         self.test = ttk.Button(actions,text="Probar conexión",command=lambda:self._run(False))
         self.test.pack(side="left")
-        self.save = ttk.Button(actions,text="Guardar cuenta limitada",command=self._save)
+        self.save = ttk.Button(actions,text="Guardar conexión en Windows",command=self._save)
         self.save.pack(side="left",padx=8)
         self.connection_result = ttk.Label(form,textvariable=self.status,foreground=BLUE,
                                            font=("Segoe UI",11,"bold"),wraplength=620)
         self.connection_result.grid(row=6,column=0,columnspan=2,sticky="ew",pady=(10,4))
-        ttk.Label(form,text="La contraseña se borra al iniciar la prueba por seguridad.",
+        ttk.Label(form,text="La contraseña guardada se reutiliza automáticamente; el campo permanece vacío.",
                   foreground=MUTED,wraplength=620).grid(row=7,column=0,columnspan=2,sticky="w",pady=4)
-        ttk.Checkbutton(form,text="Prueba temporal: omitir validación del certificado TLS",
+        ttk.Checkbutton(form,text="Diagnóstico en MODO SEGURO: permitir certificado TLS sin validar",
                         variable=self.test_untrusted).grid(row=8,column=0,columnspan=2,sticky="w",pady=4)
 
         mirror = ttk.LabelFrame(self,text="Historial central",padding=12)
@@ -55,9 +56,22 @@ class SqlTab(ttk.Frame):
                             "La cola local sigue funcionando aunque SQL no responda.",foreground=MUTED,wraplength=710).pack(anchor="w",pady=8)
         self.sync = ttk.Button(mirror,text="Sincronizar historial local",command=lambda:self._run(True))
         self.sync.pack(anchor="w")
-        ttk.Label(self,text="Para pruebas puedes usar sa sin guardar su contraseña. Para sincronizar, utiliza POLARISBOT_APP. "
+        ttk.Label(self,text="Se puede guardar sa para diagnóstico de solo lectura. Para sincronizar, utiliza POLARISBOT_APP con TLS verificado. "
                             "No se guardan RFC, nombres, correos, contraseñas ni constancias en SQL.",foreground=MUTED,wraplength=720).pack(anchor="w",pady=12)
         self.after(180,self._poll)
+        self.bind("<Map>", self._auto_test, add="+")
+
+    def _auto_test(self, event=None):
+        if self.auto_tested or self.busy:
+            return
+        saved = sql.load_settings(self.base)
+        if not saved.server or not sql.get_password(saved):
+            return
+        if saved.diagnostic_untrusted and not self.app.cfg.get("app",{}).get("modo_prueba",True):
+            self._report("Conexión guardada. Activa MODO SEGURO para diagnóstico TLS.")
+            return
+        self.auto_tested = True
+        self._run(False)
 
     def _report(self, message, *, ok=None):
         prefix = "CONECTADO: " if ok is True else "ERROR: " if ok is False else ""
@@ -67,7 +81,8 @@ class SqlTab(ttk.Frame):
 
     def _settings(self):
         try:
-            return sql.Settings(self.server.get().strip(),int(self.port.get()),self.user.get().strip()).validate()
+            return sql.Settings(self.server.get().strip(),int(self.port.get()),self.user.get().strip(),
+                                bool(self.test_untrusted.get())).validate()
         except ValueError:
             raise sql.SqlError("Introduce un puerto numérico.") from None
 
@@ -79,11 +94,24 @@ class SqlTab(ttk.Frame):
         return settings,password
 
     def _save(self):
+        if self.busy:
+            return
         try:
             settings,password=self._credentials()
-            sql.save_settings(self.base,settings,password)
+            diagnostic = settings.user.casefold()!=sql.APP_USER.casefold() or settings.diagnostic_untrusted
+            if diagnostic:
+                if not self.app.cfg.get("app",{}).get("modo_prueba",True):
+                    raise sql.SqlError("Activa MODO SEGURO para guardar una conexión de diagnóstico.")
+                if not messagebox.askyesno("Guardar diagnóstico SQL",
+                        "La contraseña se guarda solo en el Administrador de credenciales de Windows. "
+                        "La cuenta administrativa no podrá sincronizar. Si elegiste omitir la validación TLS, "
+                        "solo se aplicará a consultas de diagnóstico en MODO SEGURO. ¿Guardar esta configuración?",
+                        parent=self,default="no"):
+                    return
+            sql.save_settings(self.base,settings,password,diagnostic=diagnostic)
             self.password.set("")
-            self._report("Cuenta limitada guardada en el Administrador de credenciales de Windows.")
+            self._report("Conexión guardada en Windows. Comprobando…")
+            self._run(False)
         except sql.SqlError as exc:
             self._report(str(exc), ok=False)
 
@@ -92,10 +120,10 @@ class SqlTab(ttk.Frame):
             return
         try:
             settings,password=self._credentials()
-            temporary_tls=bool(self.test_untrusted.get())
+            temporary_tls=settings.diagnostic_untrusted if not synchronize else False
             if temporary_tls and (synchronize or not self.app.cfg.get("app",{}).get("modo_prueba",True)):
                 raise sql.SqlError("El certificado sin validar solo se permite para probar conexión en MODO SEGURO.")
-            if temporary_tls and not messagebox.askyesno("Diagnóstico temporal TLS",
+            if temporary_tls and settings != sql.load_settings(self.base) and not messagebox.askyesno("Diagnóstico temporal TLS",
                    "La conexión seguirá cifrada, pero no se verificará la identidad del servidor. Solo se consultará el esquema y los contadores. ¿Continuar esta vez?",
                    parent=self,default="no"):
                 return
@@ -109,7 +137,7 @@ class SqlTab(ttk.Frame):
             self._report(str(exc), ok=False)
             return
         self.password.set("")
-        self.test_untrusted.set(False)
+        self.auto_tested=True
         self.busy=True
         for button in (self.test,self.save,self.sync):button.configure(state="disabled")
         self._report("Consultando SQL Server…" if not synchronize else "Sincronizando historial…")

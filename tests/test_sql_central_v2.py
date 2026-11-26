@@ -53,3 +53,24 @@ def test_admin_never_used_for_sync(tmp_path):
         sql.synchronize(sql.Settings("localhost",1433,"sa"),"fake",tmp_path/"missing.db")
     with pytest.raises(sql.SqlError):
         sql.save_settings(tmp_path,sql.Settings("localhost",1433,"sa"),"fake")
+
+
+def test_save_admin_diagnostic_in_local_vault_only(tmp_path, monkeypatch):
+    class Vault:
+        def __init__(self):
+            self.values = {}
+        def set_password(self, service, account, password):
+            self.values[service, account] = password
+        def get_password(self, service, account):
+            return self.values.get((service, account))
+    vault = Vault()
+    monkeypatch.setattr(sql, "_vault", lambda: vault)
+    settings = sql.Settings("sql.example.local", 1433, "sa", True)
+    sql.save_settings(tmp_path, settings, "fake-secret", diagnostic=True)
+    assert sql.load_settings(tmp_path) == settings
+    assert sql.get_password(settings) == "fake-secret"
+    assert "fake-secret" not in sql.config_path(tmp_path).read_text()
+    with pytest.raises(sql.SqlError, match="POLARISBOT_APP"):
+        sql.synchronize(settings, "fake-secret", tmp_path/"missing.db")
+    assert "TrustServerCertificate=no;" in sql.connection_string(settings, "fake-secret")
+
