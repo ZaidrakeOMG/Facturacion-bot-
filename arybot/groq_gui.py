@@ -33,13 +33,17 @@ class GroqTab(ttk.Frame):
         config = ttk.LabelFrame(self, text="Conexión segura", padding=10)
         config.pack(fill="x")
         ttk.Label(config, text="Modelo: " + MODEL).pack(anchor="w")
-        ttk.Label(config, textvariable=self.state, foreground=BLUE, wraplength=730).pack(anchor="w", pady=5)
+        self.connection_result = ttk.Label(config, textvariable=self.state, foreground=BLUE,
+                                           font=("Segoe UI", 11, "bold"), wraplength=620)
+        self.connection_result.pack(fill="x", anchor="w", pady=(5, 8))
         row = ttk.Frame(config); row.pack(fill="x")
         ttk.Entry(row, textvariable=self.key, show="*", width=38).pack(side="left", fill="x", expand=True)
         self.save_btn = ttk.Button(row, text="Guardar clave en Windows", command=self._save)
         self.save_btn.pack(side="left", padx=6)
         self.test_btn = ttk.Button(row, text="Probar conexión", command=lambda: self._run("conexion"))
         self.test_btn.pack(side="left")
+        ttk.Label(config, text="La clave se oculta al probar. Guarda primero para reutilizarla.",
+                  foreground=MUTED, wraplength=620).pack(anchor="w", pady=(5, 0))
         ttk.Label(self, textvariable=self.metrics, foreground=MUTED).pack(anchor="w", pady=8)
 
         lab = ttk.LabelFrame(self, text="Pruebas manuales — sin timbrado ni impresión", padding=10)
@@ -60,6 +64,13 @@ class GroqTab(ttk.Frame):
         self._example()
         self.after(150, self._poll)
 
+    def _report(self, message, *, ok=None, record=True):
+        prefix = "CONECTADO: " if ok is True else "ERROR: " if ok is False else ""
+        self.state.set(prefix + message)
+        self.connection_result.configure(foreground=GREEN if ok is True else RED if ok is False else BLUE)
+        if record:
+            self.app.log("GROQ | " + prefix + message)
+
     def _selected(self):
         return "ticket" if self.kind.get() == "Lectura de ticket ficticio" else "diagnostico"
 
@@ -72,11 +83,11 @@ class GroqTab(ttk.Frame):
         try:
             save_key(value)
         except GroqError as exc:
-            self.state.set(str(exc))
+            self._report(str(exc), ok=False)
             return
         self.session_key = value
         self.key.set("")
-        self.state.set("Clave guardada en Windows. Pulsa Probar conexión.")
+        self._report("Clave guardada en Windows. Pulsa Probar conexión.")
 
     def _analyze(self):
         self._run(self._selected(), self.input.get("1.0", "end-1c"))
@@ -85,16 +96,17 @@ class GroqTab(ttk.Frame):
         if self.busy:
             return
         if self.app.cola.ocupada:
-            self.state.set("Polaris está trabajando. Realiza las pruebas cuando termine.")
+            self._report("Polaris está trabajando. Realiza las pruebas cuando termine.", ok=False)
             return
         key = self.key.get().strip() or self.session_key or get_key()
         if not key:
-            self.state.set("Introduce una clave o configura GROQ_API_KEY en Windows.")
+            self._report("Introduce una clave o configura GROQ_API_KEY en Windows.", ok=False)
             return
         self.key.set("")
         self.busy = True
         self.calls += 1
-        self.state.set("Consultando Groq…")
+        self._report("Consultando Groq…")
+        self.test_btn.configure(text="Probando…")
         for button in (self.run_btn, self.test_btn, self.save_btn):
             button.configure(state="disabled")
         def work():
@@ -113,15 +125,16 @@ class GroqTab(ttk.Frame):
             pass
         else:
             self.busy = False
+            self.test_btn.configure(text="Probar conexión")
             for button in (self.run_btn, self.test_btn, self.save_btn):
                 button.configure(state="normal")
             if error:
                 self.errors += 1
-                self.state.set(error)
+                self._report(error, ok=False)
             else:
                 self.success += 1
                 self.tokens += reply.prompt_tokens + reply.completion_tokens
-                self.state.set(f"Groq respondió correctamente • {reply.elapsed_ms} ms")
+                self._report(f"Groq respondió correctamente • {reply.elapsed_ms} ms", ok=True)
             self.metrics.set(f"Solicitudes: {self.calls}  |  Correctas: {self.success}  |  Errores: {self.errors}  |  Tokens: {self.tokens} (esta sesión)")
             if error:
                 result = error
