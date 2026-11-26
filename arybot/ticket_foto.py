@@ -587,6 +587,261 @@ def _evidencia_folio_y_compra(im, pytesseract) -> tuple[bool, bool, bool]:
 
 
 
+def _zona_numero_bajo_barras(imagen):
+    """Localiza una banda de barras aunque no se pueda decodificar."""
+    from PIL import ImageOps
+    mini = ImageOps.autocontrast(ImageOps.grayscale(imagen))
+    mini.thumbnail((1000, 1000))
+    w, h = mini.size
+    pix = mini.load()
+    bandas = []
+    inicio = None
+    for y in range(h + 1):
+        activo = False
+        if y < h:
+            fila = [pix[x, y] < 110 for x in range(w)]
+            cambios = sum(a != b for a, b in zip(fila, fila[1:]))
+            activo = cambios >= 24 and 0.10 < sum(fila) / w < 0.85
+        if activo and inicio is None:
+            inicio = y
+        elif not activo and inicio is not None:
+            if y - inicio >= max(12, round(h * 0.035)):
+                bandas.append((inicio, y))
+            inicio = None
+    if not bandas:
+        return None
+    a, b = max(bandas, key=lambda z: z[1] - z[0])
+    altura = b - a
+    if any(z != (a, b) and z[1] - z[0] >= altura * 0.6 for z in bandas):
+        return None
+    arriba = min(h, b + max(2, round(altura * 0.02)))
+    abajo = min(h, b + max(42, round(altura * 0.48), round(h * 0.12)))
+    if abajo - arriba < 10:
+        return None
+    xs = [x for x in range(w) if pix[x, (a + b) // 2] < 110]
+    izq = max(0, min(xs) - round(w * 0.025))
+    der = min(w, max(xs) + round(w * 0.025) + 1)
+    return imagen.crop((
+        round(izq * imagen.width / w), round(arriba * imagen.height / h),
+        round(der * imagen.width / w), round(abajo * imagen.height / h)))
+
+
+def _folio_ocr_bajo_barras(imagen) -> str | None:
+    """Respaldo: diez digitos impresos, dos lecturas iguales, sin inventar ceros."""
+    from PIL import Image, ImageOps
+    zona = _zona_numero_bajo_barras(imagen)
+    if zona is None:
+        return None
+    try:
+        import pytesseract
+        from .ocr_ticket import find_tesseract
+        exe = find_tesseract()
+        if not exe:
+            logging.getLogger(__name__).warning('Respaldo OCR: Tesseract no instalado.')
+            return None
+        pytesseract.pytesseract.tesseract_cmd = exe
+    except (ImportError, OSError):
+        return None
+    gris = ImageOps.autocontrast(ImageOps.grayscale(zona))
+    gris.thumbnail((1600, 900), Image.Resampling.LANCZOS)
+    if gris.width < 1200 and gris.height < 450:
+        gris = gris.resize((gris.width * 2, gris.height * 2), Image.Resampling.LANCZOS)
+    gris = ImageOps.expand(gris, border=20, fill=255)
+    variantes = (
+        (gris, 11),
+        (gris.point(lambda v: 0 if v < 130 else 255), 6),
+        (gris.point(lambda v: 0 if v < 150 else 255), 11),
+    )
+    votos = Counter()
+    for fuente, modo in variantes:
+        try:
+            texto = pytesseract.image_to_string(
+                fuente, lang='eng', config=f'--psm {modo}', timeout=4)
+        except Exception as exc:
+            logging.getLogger(__name__).debug('Respaldo OCR: %s', type(exc).__name__)
+            continue
+        # No eliminar signos ni juntar fragmentos de numeros.
+        candidatos = set(re.findall(r'(?m)^[ \t]*([0-9]{10})[ \t]*
+    """Lee CODE39/CODE128 o el numero impreso bajo las barras mediante OCR.
+
+    La foto puede ser un recorte horizontal que incluya unicamente las
+    barras; conserva los ceros iniciales. El barcode NO acredita por si
+    solo fecha, compra original ni ausencia de reimpresiones. Esos datos
+    deben verificarse en el flujo de facturacion.
+    """
+    if (not isinstance(foto_base64, str) or not foto_base64
+            or len(foto_base64) > MAX_FOTO_BYTES * 4 // 3 + 16):
+        raise FotoTicketError(
+            'Toma una foto JPG, PNG o WEBP del codigo de barras (maximo 3 MB).')
+    try:
+        datos = base64.b64decode(foto_base64, validate=True)
+    except (ValueError, binascii.Error):
+        raise FotoTicketError('No se pudo abrir la foto del codigo de barras.') from None
+    if not 1000 <= len(datos) <= MAX_FOTO_BYTES:
+        raise FotoTicketError('La foto del codigo de barras debe pesar menos de 3 MB.')
+    try:
+        from PIL import Image, ImageOps
+        with Image.open(io.BytesIO(datos)) as imagen:
+            if imagen.format not in {'JPEG', 'PNG', 'WEBP'}:
+                raise FotoTicketError('Usa una imagen JPG, PNG o WEBP.')
+            if imagen.width * imagen.height > MAX_PIXELS:
+                raise FotoTicketError('La imagen es demasiado grande.')
+            imagen.load()
+            foto = ImageOps.exif_transpose(imagen).convert('RGB')
+    except FotoTicketError:
+        raise
+    except Exception:
+        raise FotoTicketError('La foto del codigo de barras no se pudo abrir.') from None
+    # Una foto de solo barras puede medir 350 x 140: no exigir la
+    # resolucion minima de un ticket fotografiado completo.
+    if min(foto.size) < 90 or max(foto.size) < 260:
+        raise FotoTicketError(
+            'Acercate al codigo de barras y enfocalo para que ocupe la foto.')
+
+    error_lector = None
+    try:
+        codigos = _folios_codigo_barras(foto, exigir_lector=True)
+    except FotoTicketError as exc:
+        codigos = []
+        error_lector = exc
+    if len(codigos) > 1:
+        raise FotoTicketError(
+            'Se detectaron codigos distintos. Toma una foto de un solo codigo de barras.')
+    if codigos:
+        return {'folio': codigos[0]}
+    folio_ocr = _folio_ocr_bajo_barras(foto)
+    if folio_ocr:
+        return {'folio': folio_ocr}
+    if error_lector is not None:
+        raise error_lector
+    raise FotoTicketError(
+        'No se pudo decodificar el codigo de barras ni confirmar el numero impreso. '
+        'Enfoca las barras y los diez digitos de abajo.')
+
+
+
+def analizar_ticket_foto(foto_base64: str) -> dict[str, str]:
+    """Extrae el folio como cadena y rechaza tickets ilegibles/reimpresiones."""
+    if (not isinstance(foto_base64, str) or not foto_base64
+            or len(foto_base64) > MAX_FOTO_BYTES * 4 // 3 + 16):
+        raise FotoTicketError('Sube una foto JPG, PNG o WEBP del ticket (máximo 3 MB).')
+    try:
+        foto = base64.b64decode(foto_base64, validate=True)
+    except (ValueError, binascii.Error):
+        raise FotoTicketError('La fotografía no se pudo leer. Toma otra foto del ticket.') from None
+    if not 1000 <= len(foto) <= MAX_FOTO_BYTES:
+        raise FotoTicketError('La foto debe ser legible y no superar 3 MB.')
+    try:
+        from PIL import Image, ImageOps
+        with Image.open(io.BytesIO(foto)) as loaded:
+            if loaded.format not in {'JPEG', 'PNG', 'WEBP'}:
+                raise FotoTicketError('Usa una foto JPG, PNG o WEBP.')
+            if loaded.width * loaded.height > MAX_PIXELS:
+                raise FotoTicketError('La foto es demasiado grande. Reduce su tamaño e inténtalo.')
+            loaded.load()
+            im = ImageOps.exif_transpose(loaded).convert('RGB')
+    except FotoTicketError:
+        raise
+    except Exception:
+        raise FotoTicketError('No se pudo abrir la foto. Vuelve a tomarla, por favor.') from None
+    if min(im.width, im.height) < MIN_WIDTH or max(im.width, im.height) < MIN_HEIGHT:
+        raise FotoTicketError('La foto tiene poca resolución. Acércate al ticket e inténtalo otra vez.')
+    try:
+        import pytesseract
+        from PIL import ImageOps, ImageFilter
+        from .ocr_ticket import find_tesseract
+        exe = find_tesseract()
+        if not exe:
+            raise FotoTicketError('La lectura del ticket no está disponible. Comunícate con facturación.')
+        pytesseract.pytesseract.tesseract_cmd = exe
+        original = pytesseract.image_to_string(im, lang='spa+eng', config='--psm 6', timeout=12)
+        contrastada = ImageOps.autocontrast(ImageOps.grayscale(im)).filter(ImageFilter.SHARPEN)
+        alternativa = pytesseract.image_to_string(contrastada, lang='spa+eng', config='--psm 6', timeout=12)
+    except FotoTicketError:
+        raise
+    except Exception:
+        raise FotoTicketError('No se pudo leer el ticket. Intenta otra foto más nítida.') from None
+
+    if _es_reimpresion(original) or _es_reimpresion(alternativa):
+        raise FotoTicketError('Este ticket indica REIMPRESIÓN. No se puede facturar desde el portal.')
+
+    # Un OCR que repite 8 veces un digito equivocado NO confirma el folio.
+    # Decodificar CODE39/CODE128 proporciona el numero sin sustituir cifras.
+    barras = _folios_codigo_barras(im)
+    if len(barras) > 1:
+        raise FotoTicketError(
+            'Se encontraron codigos de barras contradictorios en la foto. '
+            'No se acepto ningun folio.')
+
+    rotulo_papel, compra_papel, reimp_papel = _evidencia_folio_y_compra(
+        im, pytesseract)
+    if reimp_papel:
+        raise FotoTicketError(
+            'Este ticket indica REIMPRESIÓN. No se puede facturar desde el portal.')
+
+    comprobante = _normalizar(original + '\n' + alternativa)
+    rotulo_global = bool(re.search(r'\bF[O0U]L[I1T]O\b', comprobante))
+    compra_global = bool(
+        re.search(r'\bTOTAL\b', comprobante)
+        and re.search(
+            r'\b(?:DISPENSARIO|LITROS|PRODUCTO|PRECIO|OPERACION)\b',
+            comprobante)
+        and re.search(r'(?:[$S]\s*)?\d{1,7}[.,]\s*\d{2}\b',
+                      comprobante))
+
+    if barras:
+        # Un barcode es mas preciso que los digitos OCR; sin embargo,
+        # una lectura etiquetada claramente contradictoria impide
+        # confundir un codigo de otro ticket. FULIO/FULTO no generan
+        # una lectura numerica etiquetada y no bloquean el barcode.
+        impresos = set(_folios_etiquetados(original) +
+                       _folios_etiquetados(alternativa))
+        if impresos and not any(
+            _coincide_codigo_y_ocr(barras[0], impreso)
+            for impreso in impresos
+        ):
+            raise FotoTicketError(
+                'El folio impreso no coincide con el codigo de barras. '
+                'No se acepto ningun numero.')
+
+        # No exigir que Tesseract lea bien TODOS los digitos: el
+        # codigo de barras ya contiene el folio exacto. El OCR solo
+        # debe confirmar la etiqueta FOLIO y los datos de una compra.
+        if not (rotulo_papel or rotulo_global):
+            raise FotoTicketError(
+                'El codigo de barras se leyo, pero el OCR no detecto '
+                'la palabra FOLIO en el papel.')
+        if not (compra_papel or compra_global):
+            raise FotoTicketError(
+                'El codigo de barras se leyo, pero no se confirmaron '
+                'TOTAL y datos de la compra.')
+        return {'folio': barras[0]}
+
+    # Sin codigo decodificable NO usar mayoria de 5/8 pasadas. Requerir
+    # dos impresiones diferentes de exactamente el mismo folio: la linea
+    # FOLIO y los numeros que aparecen debajo del codigo de barras.
+    etiquetados = set(
+        _folios_etiquetados(original) + _folios_etiquetados(alternativa))
+    independientes = set(
+        _numeros_independientes(original) + _numeros_independientes(alternativa))
+    coincidentes = etiquetados & independientes
+    if len(coincidentes) != 1:
+        raise FotoTicketError(
+            'No se pudo confirmar el folio exacto: no se decodifica el codigo de barras ni se obtienen '
+            'dos impresiones identicas del folio. No se acepto ningun numero.')
+
+    if not (compra_papel or compra_global):
+        raise FotoTicketError(
+            'Se leyo el folio, pero no se confirmaron TOTAL y los '
+            'datos de compra.')
+    return {'folio': next(iter(coincidentes))}
+, texto))
+        votos.update(candidatos)
+    if len(votos) == 1 and max(votos.values()) >= 2:
+        return next(iter(votos))
+    return None
+
+
 def analizar_codigo_barras_foto(foto_base64: str) -> dict[str, str]:
     """Lee solo CODE39/CODE128: sin OCR, sin suposiciones ni redondeos.
 
@@ -624,17 +879,25 @@ def analizar_codigo_barras_foto(foto_base64: str) -> dict[str, str]:
         raise FotoTicketError(
             'Acercate al codigo de barras y enfocalo para que ocupe la foto.')
 
-    codigos = _folios_codigo_barras(foto, exigir_lector=True)
-    if not codigos:
-        raise FotoTicketError(
-            'No se pudo decodificar el codigo de barras. '
-            'Acercate, enfocando todas las barras y ambos extremos.')
-    if len(codigos) != 1:
+    error_lector = None
+    try:
+        codigos = _folios_codigo_barras(foto, exigir_lector=True)
+    except FotoTicketError as exc:
+        codigos = []
+        error_lector = exc
+    if len(codigos) > 1:
         raise FotoTicketError(
             'Se detectaron codigos distintos. Toma una foto de un solo codigo de barras.')
-
-    # Cada cifra viene de un decodificador de simbologia, NO de OCR.
-    return {'folio': codigos[0]}
+    if codigos:
+        return {'folio': codigos[0]}
+    folio_ocr = _folio_ocr_bajo_barras(foto)
+    if folio_ocr:
+        return {'folio': folio_ocr}
+    if error_lector is not None:
+        raise error_lector
+    raise FotoTicketError(
+        'No se pudo decodificar el codigo de barras ni confirmar el numero impreso. '
+        'Enfoca las barras y los diez digitos de abajo.')
 
 
 
