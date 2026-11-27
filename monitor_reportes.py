@@ -89,7 +89,7 @@ def clasificar(tipo, estado, seguro, motivo="", riesgo_cfdi=False):
     # La marca persistida de posible CFDI siempre tiene prioridad sobre
     # un estado nominalmente terminado: evitar certificar un SI incierto.
     if bool(riesgo_cfdi):
-        return ("revision", "Resultado sin confirmar", razon)
+        return ("revision", "Resultado sin confirmar", "Timbrado / CFDI no confirmado")
     if e == "ENVIO_SOLICITADO":
         return ("si", "Envío solicitado", "—")
     if e == "YA_FACTURADO":
@@ -155,9 +155,9 @@ def generar_reporte(filas, *, ahora=None, limite_tabla=150):
                 fecha = datetime.fromtimestamp(float(item["creado"] or 0)).strftime("%Y-%m-%d")
                 if fecha in dias:
                     dias[fecha][grupo] += 1
-            if estado == "YA_FACTURADO" and not seguro:
+            if estado == "YA_FACTURADO" and not seguro and grupo == "si":
                 resultados["ya_facturado"] += 1
-            if estado == "ENVIO_SOLICITADO" and not seguro:
+            if estado == "ENVIO_SOLICITADO" and not seguro and grupo == "si":
                 resultados["envio_solicitado"] += 1
         elif tipo == "ALTA":
             altas[grupo] += 1
