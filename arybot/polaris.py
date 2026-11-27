@@ -1451,6 +1451,33 @@ class PolarisBot:
         self.log("SESION: Polaris cerrado. La próxima solicitud lo abrirá desde cero.")
         return True
 
+    def pantalla_libre_para_nueva_solicitud(self):
+        """Comprobación SOLO LECTURA para reanudar tras archivar historial.
+
+        No abre/cierra ventanas ni pulsa Aceptar. Si hay una captura, un
+        envío, un aviso de Polaris o no es posible inspeccionar el escritorio,
+        no autoriza iniciar la siguiente factura.
+        """
+        try:
+            # La VM puede tener Polaris cerrado entre dos solicitudes.
+            main=self._find_title(self.pcfg["ventana_principal_regex"])
+            login=self._find_title(self.pcfg["ventana_login_regex"])
+            if self._invoice_window():
+                return False
+            if main:
+                self._validar_misma_sesion_windows(main)
+                if self._popup_candidates(main):
+                    return False
+                if self._has_unsaved_prompt(main):
+                    return False
+            elif login:
+                self._validar_misma_sesion_windows(login)
+            # No existe una ventana fiscal activa ni un diálogo pendiente.
+            return True
+        except Exception as exc:
+            self.log("No se pudo verificar que Polaris esté libre: "+str(exc))
+            return False
+
     def _invoice_window(self):
         # IMPORTANTE v2.4:
         # "Facturación de Efectivo" es una ventana MDI HIJA de Polaris. No basta

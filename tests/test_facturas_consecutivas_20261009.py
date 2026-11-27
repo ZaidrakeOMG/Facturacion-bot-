@@ -790,3 +790,118 @@ def test_nueva_etapa_incierta_sin_bloqueo_exige_comprobar(tmp_path):
     assert q.store.meta('pendiente_comprobar_polaris')=='1'
     assert q.store.status()['pausada']
     assert q.store.get(viejo['id'])['riesgo_cfdi']==1
+
+
+def test_migracion_auto_procesa_nueva_factura_sin_clic(tmp_path):
+    """Caso real: histórico incierto archivado, nueva solicitud web recibida."""
+    from arybot.cola_operaciones import ColaOperaciones
+    from arybot.cola_modelo import DEFAULTS
+    from arybot.parser import Solicitud
+    store = ColaLocal(tmp_path)
+    anterior, _ = store.enqueue('FACTURA',
+        {'ticket':'5550001','estacion':'ARY IV'}, source='Portal web',
+        safe=False, clave='OLD:5550001')
+    store.finish(anterior['id'],'REVISION_REQUERIDA',
+                 reason='Posible CFDI timbrado o envío pendiente.',hold=True)
+    cfg={'app':{'modo_prueba':False,'ary_nueva_etapa_magenta':True},
+         'gmail':{},'ocr':{},'polaris':{},'cola':dict(DEFAULTS)}
+    bot=Mock()
+    bot.pantalla_libre_para_nueva_solicitud.return_value=True
+    bot.invoice.return_value='ENVIO_SOLICITADO'
+    q=ColaOperaciones(tmp_path,cfg,bot,Mock(),avisos=Mock())
+    assert q.store.list()==[]
+    assert q.store.meta('pendiente_comprobar_polaris')=='1'
+    nueva=Solicitud(estacion='ARY IV', rfc='AAA010101AAA', ticket='0006043150',
+                    fecha_ticket=date.today().strftime('%d/%m/%Y'),
+                    forma_pago='EFECTIVO', correo_destino='cliente@example.com')
+    job,created=q.encolar_factura(nueva,source='Portal web',
+                                source_id='web:nueva',safe=False)
+    assert created
+    assert not q.store.status()['pausada']
+    assert not q._manual_pause
+    assert q.store.meta('pendiente_comprobar_polaris')=='0'
+    bot.pantalla_libre_para_nueva_solicitud.assert_called()
+    assert q.ejecutar_una()
+    bot.invoice.assert_called_once()
+    assert q.store.get(job['id'])['estado']=='ENVIO_SOLICITADO'
+    assert q.store.get(anterior['id'])['archivado']==1
+    assert q.store.get(anterior['id'])['riesgo_cfdi']==1
+
+
+def test_migracion_auto_espera_si_hay_ventana_de_polaris(tmp_path):
+    """No iniciar otra factura encima de un CFDI anterior todavía visible."""
+    from arybot.cola_operaciones import ColaOperaciones
+    from arybot.cola_modelo import DEFAULTS
+    from arybot.parser import Solicitud
+    store=ColaLocal(tmp_path)
+    old,_=store.enqueue('FACTURA', {'ticket':'5550011','estacion':'ARY VI'},
+                         source='Portal web',safe=False)
+    store.finish(old['id'],'REVISION_REQUERIDA',
+                 reason='Posible CFDI timbrado.',hold=True)
+    cfg={'app':{'modo_prueba':False,'ary_nueva_etapa_magenta':True},
+         'gmail':{},'ocr':{},'polaris':{},'cola':dict(DEFAULTS)}
+    bot=Mock()
+    bot.pantalla_libre_para_nueva_solicitud.return_value=False
+    bot.invoice.return_value='ENVIO_SOLICITADO'
+    q=ColaOperaciones(tmp_path,cfg,bot,Mock(),avisos=Mock())
+    job,_=q.encolar_factura(Solicitud(estacion='ARY VI',rfc='AAA010101AAA',
+                        ticket='0006043151',fecha_ticket=date.today().strftime('%d/%m/%Y'),
+                        forma_pago='EFECTIVO',correo_destino='cliente@example.com'),
+                        safe=False)
+    assert q.store.status()['pausada']
+    assert not q.ejecutar_una()
+    bot.invoice.assert_not_called()
+    # Una revisión posterior, aún automática, reanuda cuando Polaris está libre.
+    bot.pantalla_libre_para_nueva_solicitud.return_value=True
+    q._last_auto_probe=0.0
+    assert q._reactivar_automaticamente_tras_migracion()
+    assert not q.store.status()['pausada']
+    assert q.ejecutar_una()
+    assert q.store.get(job['id'])['estado']=='ENVIO_SOLICITADO'
+    bot.invoice.assert_called_once()
+
+
+def test_pausa_del_operador_no_se_reanuda_sola(tmp_path):
+    """La reactivación automática no debe anular el botón de Detener."""
+    from arybot.cola_operaciones import ColaOperaciones
+    from arybot.cola_modelo import DEFAULTS
+    store=ColaLocal(tmp_path)
+    old,_=store.enqueue('FACTURA', {'ticket':'5550021','estacion':'ARY V'},
+                         source='Portal web',safe=False)
+    store.finish(old['id'],'REVISION_REQUERIDA',
+                 reason='Posible CFDI timbrado.',hold=True)
+    cfg={'app':{'modo_prueba':False,'ary_nueva_etapa_magenta':True},
+         'gmail':{},'ocr':{},'polaris':{},'cola':dict(DEFAULTS)}
+    bot=Mock()
+    bot.pantalla_libre_para_nueva_solicitud.return_value=True
+    q=ColaOperaciones(tmp_path,cfg,bot,Mock(),avisos=Mock())
+    job,_=q.store.enqueue('FACTURA', {'ticket':'5550022','estacion':'ARY V'},
+                          source='Portal web',safe=False)
+    q.pausar()
+    assert not q._reactivar_automaticamente_tras_migracion()
+    assert q.store.status()['pausada']
+    assert q.store.get(job['id'])['estado']=='EN_COLA'
+
+
+def test_comprobacion_libre_lee_ventanas_sin_tocarlas():
+    bot=polaris.PolarisBot.__new__(polaris.PolarisBot)
+    bot.pcfg={'ventana_principal_regex':'Polaris',
+              'ventana_login_regex':'Entrada al Sistema'}
+    bot.log=Mock()
+    bot._find_title=Mock(side_effect=lambda rx: 10 if rx=='Polaris' else None)
+    bot._invoice_window=Mock(return_value=None)
+    bot._validar_misma_sesion_windows=Mock()
+    bot._popup_candidates=Mock(return_value=[])
+    bot._has_unsaved_prompt=Mock(return_value=None)
+    assert bot.pantalla_libre_para_nueva_solicitud() is True
+    bot._invoice_window.return_value=25
+    assert bot.pantalla_libre_para_nueva_solicitud() is False
+    bot._invoice_window.return_value=None
+    bot._popup_candidates.return_value=[(1,2,3,4,'Aviso',Mock(),Mock())]
+    assert bot.pantalla_libre_para_nueva_solicitud() is False
+    bot._popup_candidates.return_value=[]
+    bot._has_unsaved_prompt.return_value=42
+    assert bot.pantalla_libre_para_nueva_solicitud() is False
+    bot._has_unsaved_prompt.return_value=None
+    bot._validar_misma_sesion_windows.side_effect=RuntimeError('Otro escritorio')
+    assert bot.pantalla_libre_para_nueva_solicitud() is False
