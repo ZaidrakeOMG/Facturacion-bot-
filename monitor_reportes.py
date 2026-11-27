@@ -86,6 +86,10 @@ def clasificar(tipo, estado, seguro, motivo="", riesgo_cfdi=False):
         return ("alta_revision", "Alta por verificar", razon)
     if t != "FACTURA":
         return ("otro", "Otro trámite", "—")
+    # La marca persistida de posible CFDI siempre tiene prioridad sobre
+    # un estado nominalmente terminado: evitar certificar un SI incierto.
+    if bool(riesgo_cfdi):
+        return ("revision", "Resultado sin confirmar", razon)
     if e == "ENVIO_SOLICITADO":
         return ("si", "Envío solicitado", "—")
     if e == "YA_FACTURADO":
@@ -101,8 +105,8 @@ def clasificar(tipo, estado, seguro, motivo="", riesgo_cfdi=False):
 
 def estacion_segura(value):
     txt = str(value or "").strip()
-    if not txt or len(txt) > 42 or not re.fullmatch(
-        r"[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ0-9 _./-]+", txt
+    if not txt or len(txt) > 64 or not re.fullmatch(
+        r"[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ0-9 _./(),&-]+", txt
     ):
         return "No identificada"
     return txt
@@ -163,7 +167,9 @@ def generar_reporte(filas, *, ahora=None, limite_tabla=150):
                 "tipo": tipo,
                 "estado": estado,
                 "estacion": estacion,
-                "origen": str(item["origen"] or "")[:28],
+                "origen": str(item["origen"] or "")[:28] if str(item["origen"] or "") in (
+                    "Portal web", "Formulario", "Gmail", "Interno", "Manual"
+                ) else "Otro",
                 "modo": "Prueba" if seguro else "Real",
                 "grupo": grupo,
                 "resultado": etiqueta,
