@@ -92,6 +92,18 @@ def summarize(rows):
         stamp = datetime.fromtimestamp(row["creado"])
         real_invoice = kind == "FACTURA" and not safe
         successful = real_invoice and state == "ENVIO_SOLICITADO"
+        # Los dos KPI miden únicamente resultados de facturación del BOT:
+        # - SÍ: Polaris completó el flujo y solicitó el envío.
+        # - NO: operación real fallida antes de confirmar timbrado.
+        # No contar altas, pruebas, pendientes, folios ya facturados antes,
+        # cancelaciones ni posibles CFDI con resultado incierto.
+        if successful:
+            totals["kpi_si"] += 1
+        elif real_invoice and state in {
+                "REVISION_REQUERIDA", "REVISION_CERRADA",
+                "ESPERANDO_DATOS", "REVISION_ENTRADA"
+        } and answer == "NO":
+            totals["kpi_no"] += 1
         totals["solicitudes"] += 1
         if kind == "FACTURA":
             if answer == "NO":
@@ -199,119 +211,118 @@ def attach_navigation(app, sidebar):
 
 
 class Dashboard(ttk.Frame):
+    """Estadísticas simplificadas: dos conteos y una gráfica de barras.
+
+    Consulta la misma base SQLite de solicitudes solo en modo lectura.
+    No contabiliza como fracaso un CFDI de resultado desconocido, ni
+    hace pasar por facturación nueva un folio ya facturado.
+    """
     def __init__(self, parent, app):
-        super().__init__(parent, padding=14)
+        super().__init__(parent, padding=16)
         self.app = app
         self.period = tk.StringVar(value="Hoy")
-        self.status = tk.StringVar(value="Consultando historial local…")
-        self.values = {}
+        self.status = tk.StringVar(value="Consultando resultados de facturación…")
+        self.values = {
+            "kpi_si": tk.StringVar(value="0"),
+            "kpi_no": tk.StringVar(value="0"),
+        }
+        self.chart_values = (0, 0)
         self.cached = None
-        heading = ttk.Frame(self)
-        heading.pack(fill="x")
-        ttk.Label(heading, text="Centro de estadísticas", font=("Segoe UI", 19, "bold")).pack(side="left")
-        ttk.Button(heading, text="Actualizar", command=self.refresh).pack(side="right")
-        select = ttk.Combobox(heading, state="readonly", values=PERIODS,
+
+        head = ttk.Frame(self)
+        head.pack(fill="x", pady=(0, 10))
+        ttk.Label(head, text="Estadísticas de facturación",
+                  font=("Segoe UI", 19, "bold")).pack(side="left")
+        ttk.Button(head, text="Actualizar", command=self.refresh).pack(side="right")
+        period = ttk.Combobox(head, state="readonly", values=PERIODS,
                               textvariable=self.period, width=18)
-        select.pack(side="right", padx=8)
-        select.bind("<<ComboboxSelected>>", lambda _e: self.refresh())
-        ttk.Label(self, text="Por fecha de recepción de la solicitud • Incluye su estado actual",
-                  foreground=MUTED).pack(anchor="w", pady=(3, 12))
+        period.pack(side="right", padx=8)
+        period.bind("<<ComboboxSelected>>", lambda _e: self.refresh())
+        ttk.Label(self, text="Facturas del bot con resultado definitivo, según la fecha de recepción.",
+                  foreground=MUTED).pack(anchor="w", pady=(0, 12))
 
         cards = ttk.Frame(self)
-        cards.pack(fill="x")
-        for col in range(3):
-            cards.columnconfigure(col, weight=1, uniform="kpi")
-        definitions = [
-            ("solicitudes", "Solicitudes recibidas", BLUE),
-            ("procesadas", "SÍ · envío solicitado", GREEN),
-            ("ya_facturado", "SÍ · ya facturada", GREEN),
-            ("no", "NO · no completada", RED),
-            ("inciertas", "Sin confirmación", AMBER),
-            ("pendientes", "Por atender / procesando", BLUE),
-        ]
-        for i, (key, title, color) in enumerate(definitions):
-            card = tk.Frame(cards, bg=WHITE, highlightbackground="#DCE5ED", highlightthickness=1)
-            card.grid(row=i//3, column=i%3, sticky="nsew", padx=4, pady=4)
-            tk.Frame(card, bg=color, height=3).pack(fill="x")
-            tk.Label(card, text=title, bg=WHITE, fg=MUTED, anchor="w",
-                     font=("Segoe UI", 10)).pack(fill="x", padx=12, pady=(7, 0))
-            var = self.values[key] = tk.StringVar(value="—")
-            tk.Label(card, textvariable=var, bg=WHITE, fg=color, anchor="w",
-                     font=("Segoe UI", 24, "bold")).pack(fill="x", padx=12, pady=(0, 5))
-        self.extra = tk.StringVar(value="")
-        ttk.Label(self, textvariable=self.extra, foreground=MUTED, wraplength=760).pack(anchor="w", pady=6)
+        cards.pack(fill="x", pady=(0, 12))
+        for i, (key, label, color) in enumerate((
+                ("kpi_si", "SÍ SE FACTURÓ", GREEN),
+                ("kpi_no", "NO SE FACTURÓ", RED))):
+            cards.columnconfigure(i, weight=1, uniform="resultados")
+            card = tk.Frame(cards, bg=WHITE, highlightbackground="#DBE5EF",
+                            highlightthickness=1)
+            card.grid(row=0, column=i, sticky="nsew", padx=5, pady=5)
+            tk.Frame(card, bg=color, height=4).pack(fill="x")
+            tk.Label(card, text=label, bg=WHITE, fg=MUTED,
+                     font=("Segoe UI", 11, "bold"), anchor="w").pack(
+                         fill="x", padx=18, pady=(12, 2))
+            tk.Label(card, textvariable=self.values[key], bg=WHITE, fg=color,
+                     font=("Segoe UI", 36, "bold"), anchor="w").pack(
+                         fill="x", padx=18, pady=(0, 12))
 
-        sub = ttk.Notebook(self)
-        sub.pack(fill="both", expand=True)
-        self.station_tree = self._table(sub, "Por estación",
-            ("Estación", "Solicitudes", "SÍ nuevas", "SÍ previas", "NO", "Sin confirmar", "Por atender"),
-            (130, 85, 80, 80, 65, 115, 90))
-        self.detail_tree = self._table(sub, "Resultados por solicitud",
-            ("Recepción", "Estación", "Trámite", "Folio", "¿Se facturó?", "Detalle", "Origen"),
-            (120, 85, 75, 95, 110, 290, 85))
-        self.breakdown_tree = self._table(sub, "Estados / pagos / origen",
-            ("Grupo", "Detalle", "Cantidad"), (130, 350, 90))
-        self.daily_tree = self._table(sub, "Facturas por día",
-            ("Fecha recepción", "Envíos solicitados"), (230, 180))
-        ttk.Label(self, textvariable=self.status, foreground=MUTED, wraplength=790).pack(anchor="w", pady=(7, 0))
-        ttk.Label(self, text="SÍ = Polaris terminó el flujo de envío o detectó un folio ya facturado. "
-                  "No verifica UUID del PAC ni recepción del correo. Un timbrado incierto se indica como SIN CONFIRMAR para impedir duplicados.",
-                  foreground=MUTED, wraplength=790).pack(anchor="w", pady=(4, 0))
+        ttk.Label(self, text="Gráfica de resultados",
+                  font=("Segoe UI", 13, "bold")).pack(anchor="w", pady=(2, 5))
+        self.chart = tk.Canvas(self, height=280, bg=WHITE,
+                               highlightbackground="#DBE5EF", highlightthickness=1)
+        self.chart.pack(fill="both", expand=True, pady=(0, 12))
+        self.chart.bind("<Configure>", lambda _event: self._draw_chart())
+
+        ttk.Label(
+            self,
+            text="SÍ: Polaris completó el flujo y solicitó el envío del CFDI. "
+                 "NO: intento real terminado sin confirmar una factura. "
+                 "Las pruebas, altas, solicitudes pendientes, folios previamente facturados "
+                 "y posibles timbrados inciertos no se cuentan en ninguna barra. "
+                 "La confirmación del UUID y la entrega del correo son independientes.",
+            foreground=MUTED, wraplength=900,
+        ).pack(anchor="w", pady=(0, 8))
+        ttk.Label(self, textvariable=self.status, foreground=MUTED,
+                  wraplength=900).pack(anchor="w")
         self.after(50, self.refresh)
         self.after(15000, self._tick)
 
-    def _table(self, notebook, title, columns, widths):
-        panel = ttk.Frame(notebook, padding=6)
-        notebook.add(panel, text=title)
-        tree = ttk.Treeview(panel, columns=columns, show="headings", height=7)
-        scroll = ttk.Scrollbar(panel, orient="vertical", command=tree.yview)
-        horizontal = ttk.Scrollbar(panel, orient="horizontal", command=tree.xview)
-        tree.configure(yscrollcommand=scroll.set, xscrollcommand=horizontal.set)
-        tree.grid(row=0, column=0, sticky="nsew")
-        scroll.grid(row=0, column=1, sticky="ns")
-        horizontal.grid(row=1, column=0, sticky="ew")
-        panel.rowconfigure(0, weight=1)
-        panel.columnconfigure(0, weight=1)
-        for name, width in zip(columns, widths):
-            tree.heading(name, text=name)
-            tree.column(name, width=width, minwidth=60, anchor="w")
-        return tree
-
-    @staticmethod
-    def _replace(tree, rows):
-        tree.delete(*tree.get_children())
-        for row in rows:
-            tree.insert("", "end", values=row)
+    def _draw_chart(self):
+        canvas = self.chart
+        canvas.delete("all")
+        width = max(canvas.winfo_width(), 350)
+        height = max(canvas.winfo_height(), 220)
+        yes, no = self.chart_values
+        maximum = max(yes, no, 1)
+        label_x = 24
+        bar_x = min(170, max(108, width // 3))
+        available = max(60, width - bar_x - 85)
+        for label, value, color, fraction in (
+                ("SÍ", yes, GREEN, .34),
+                ("NO", no, RED, .70)):
+            y = int(height * fraction)
+            canvas.create_text(label_x, y, text=label, anchor="w",
+                               font=("Segoe UI", 13, "bold"), fill=INK)
+            canvas.create_rectangle(bar_x, y - 22, bar_x + available, y + 22,
+                                    fill="#E8EEF4", outline="")
+            if value:
+                canvas.create_rectangle(bar_x, y - 22,
+                                        bar_x + max(3, round(available * value / maximum)),
+                                        y + 22, fill=color, outline="")
+            canvas.create_text(bar_x + available + 15, y, text=str(value),
+                               anchor="w", fill=color,
+                               font=("Segoe UI", 15, "bold"))
 
     def refresh(self):
         try:
             summary = summarize(read_jobs(self.app.cola.store.path, self.period.get()))
         except (sqlite3.Error, OSError, ValueError) as exc:
-            self.status.set("No se pudo actualizar; se conserva la última vista válida. " + str(exc))
+            self.status.set("No se pudo leer el historial guardado: " + str(exc))
             return
         if summary != self.cached:
             self.cached = summary
-            t = summary["totals"]
-            for key, var in self.values.items():
-                var.set(str(t[key]))
-            avg = summary["average"]
-            avg_label = "—" if avg is None else f"{avg/60:.1f} min"
-            self.extra.set(f"Solicitudes de factura: {t['facturas']}   |   Altas confirmadas: {t['altas']}   |   "
-                           f"Duplicadas: {t['duplicadas']}   |   Tiempo medio de envío: {avg_label}")
-            self._replace(self.station_tree, [
-                (s, c["solicitudes"], c["procesadas"], c["ya_facturado"], c["no"], c["inciertas"], c["pendientes"])
-                for s, c in sorted(summary["stations"].items())])
-            self._replace(self.detail_tree, summary["details"][:200])
-            rows = [("Facturación", "SÍ: envío solicitado", t["procesadas"]),
-                    ("Facturación", "SÍ: folio ya facturado", t["ya_facturado"]),
-                    ("Facturación", "NO: no completada", t["no"]),
-                    ("Facturación", "Sin confirmar", t["inciertas"])]
-            for group, key in (("Origen", "sources"), ("Forma de pago", "payments")):
-                rows.extend((group, v, n) for v, n in summary[key].most_common())
-            self._replace(self.breakdown_tree, rows)
-            self._replace(self.daily_tree, sorted(summary["daily"].items(), reverse=True))
-        self.status.set("Actualizado " + datetime.now().strftime("%H:%M:%S") +
-                        " • Refresco automático cada 15 s al abrir Estadísticas • Últimas 200 solicitudes en actividad.")
+            totals = summary["totals"]
+            yes = totals["kpi_si"]
+            no = totals["kpi_no"]
+            self.values["kpi_si"].set(str(yes))
+            self.values["kpi_no"].set(str(no))
+            self.chart_values = (yes, no)
+            self._draw_chart()
+        self.status.set("Datos guardados en SQLite local • Actualizado "
+                        + datetime.now().strftime("%H:%M:%S")
+                        + " • Refresco automático cada 15 segundos.")
 
     def _tick(self):
         if self.app.nb.select() == str(self):
