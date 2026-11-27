@@ -27,11 +27,10 @@ if errorlevel 1 (
 echo ID real de ESTA sesion: %ARY_SID%
 echo.
 echo SESIONES DE WINDOWS:
+REM En algunas versiones de Windows query user muestra las sesiones,
+REM pero devuelve ERRORLEVEL 1. No interpretar ese codigo como error
+REM si el ID del proceso ya se obtuvo; el operador lo validara.
 query user
-if errorlevel 1 (
-  echo ERROR: Windows no pudo enumerar las sesiones.
-  goto :error
-)
 echo.
 echo CONFIRMA en la tabla que el ID %ARY_SID% corresponde a
 echo la sesion RDP ACTIVA de admin y NO a console u otra persona.
