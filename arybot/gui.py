@@ -256,7 +256,14 @@ class App:
         self.q=queue.Queue(); self.ui_events=queue.Queue(); self.worker=None; self._direct_busy=False; self._direct_frozen=[]
         self.diagnostico=Diagnostico(BASE)
         self._install_exception_hooks()
-        self.cfgm=ConfigManager(BASE); self.cfg=self.cfgm.get(); self.db=DB(BASE/"data"/"arybot.sqlite3")
+        self.cfgm=ConfigManager(BASE); self.cfg=self.cfgm.get()
+        # Autorización expresa de producción para esta nueva etapa: una sola
+        # migración y sin reactivar los trabajos recibidos anteriormente.
+        if not self.cfg['app'].get('ary_nueva_etapa_magenta',False):
+            self.cfg['app']['modo_prueba']=False
+            self.cfg['app']['ary_nueva_etapa_magenta']=True
+            self.cfgm.save()
+        self.db=DB(BASE/"data"/"arybot.sqlite3")
         # Esta edición usa exclusivamente la recepción web y manual.
         self.cfg["app"]["gmail_habilitado"]=False
         self.gmail=None
@@ -334,17 +341,20 @@ class App:
         side=tk.Frame(shell,bg=NAVY,width=174); side.pack(side="left",fill="y"); side.pack_propagate(False)
         brand=tk.Frame(side,bg=NAVY); brand.pack(fill="x",padx=15,pady=(20,20))
         tk.Label(brand,text="ARY",font=("Segoe UI",31,"bold"),bg=NAVY,fg=WHITE,anchor="w").pack(fill="x")
-        tk.Frame(brand,bg="#C62836",height=3,width=43).pack(anchor="w",pady=(0,5))
-        tk.Label(brand,text="SUPER SERVICIOS",font=("Segoe UI",8,"bold"),bg=NAVY,fg="#AFC9E3",anchor="w").pack(fill="x")
-        tk.Label(side,text="OPERACIONES",font=("Segoe UI",8,"bold"),bg=NAVY,fg="#91A8BF",anchor="w").pack(fill="x",padx=15,pady=(0,4))
+        tk.Frame(brand,bg="#F75EB3",height=3,width=43).pack(anchor="w",pady=(0,5))
+        tk.Label(brand,text="SUPER SERVICIOS",font=("Segoe UI",8,"bold"),bg=NAVY,fg="#F5C5DF",anchor="w").pack(fill="x")
+        tk.Label(side,text="OPERACIONES",font=("Segoe UI",8,"bold"),bg=NAVY,fg="#E8A9CF",anchor="w").pack(fill="x",padx=15,pady=(0,4))
         nav=tk.Frame(side,bg=NAVY); nav.pack(fill="both",expand=True)
-        tk.Label(side,text="FACTURACIÓN  |  V2",bg=NAVY,fg="#AFC9E3",font=("Segoe UI",8,"bold")).pack(side="bottom",pady=14)
+        tk.Label(side,text="FACTURACIÓN  |  V2",bg=NAVY,fg="#F5C5DF",font=("Segoe UI",8,"bold")).pack(side="bottom",pady=14)
         outer=ttk.Frame(shell,padding=10); outer.pack(side="left",fill="both",expand=True)
         head=ttk.Frame(outer); head.pack(fill="x")
         ttk.Label(head,text="Centro de facturación ARY",font=("Segoe UI",17,"bold")).pack(side="left")
         self.mode_var=tk.BooleanVar(value=bool(self.cfg["app"].get("modo_prueba",True)))
         self.mode_check=ttk.Checkbutton(head,text="MODO SEGURO",variable=self.mode_var,command=self._mode_changed)
         self.mode_check.pack(side="right")
+        self.production_status=ttk.Label(head,text='PRODUCCIÓN' if not self.mode_var.get() else 'PRUEBA',
+                                         foreground=BLUE)
+        self.production_status.pack(side='right',padx=(0,14))
         st=ttk.Frame(outer); st.pack(fill="x",pady=(8,4))
         self.gmail_status=ttk.Label(st,text="Gmail desactivado")  # Referencias antiguas, no visible.
         self.bot_status=ttk.Label(st,text="Recepción: portal web / manual",foreground=BLUE); self.bot_status.pack(side="left",padx=(0,14))
@@ -369,8 +379,13 @@ class App:
         nb.add(self.tab_panel,text="Actividad del bot")
         self.groq_tab=GroqTab(nb,self); nb.add(self.groq_tab,text="Inteligencia artificial")
         self.native_tab=NativeTab(nb,self); nb.add(self.native_tab,text="Motor nativo")
-        self.sql_tab=SqlTab(nb,self); nb.add(self.sql_tab,text="Conexiones SQL")
+        self.sql_tab=SqlTab(nb,self); nb.add(self.sql_tab,text="SQL Server")
         nb.add(self.tab_cfg,text="Configuración")
+        # Los módulos de diagnóstico siguen disponibles internamente, pero
+        # no saturan la navegación de producción.
+        for pestaña in (self.alertas_tab,self.diagnostico_tab,
+                        self.tab_panel,self.groq_tab,self.native_tab):
+            nb.hide(pestaña)
         self._sync_navigation=attach_navigation(self,nav)
         nb.select(self.dashboard_tab)
 
@@ -528,6 +543,8 @@ class App:
             if not messagebox.askyesno("Activar producción","Desactivar MODO SEGURO permite que Polaris presione el Aceptar final y TIMBRE CFDI reales. ¿Confirmas?"):
                 self.mode_var.set(True); return
         self.cfg["app"]["modo_prueba"]=new; self.cfgm.save(); self.log("Modo cambiado a " + ("SEGURO" if new else "PRODUCCIÓN"))
+        if hasattr(self,'production_status'):
+            self.production_status.configure(text='PRUEBA' if new else 'PRODUCCIÓN')
         if not new and hasattr(self,'cola'):
             # Si las solicitudes recibidas esperaban autorización de producción,
             # no exigir al operador otro clic de "reanudar".
