@@ -66,8 +66,8 @@ class Processor:
                 # Gmail no tiene formulario con lista. La clave SAT debe venir
                 # EXPLICITAMENTE en el correo, nunca inferida por el RFC.
                 import re
-                regimen_raw=_field(body,[r'r[eé]gimen\\s+fiscal',r'regimen\\s+fiscal'])
-                reg=re.match(r'^([0-9]{3})(?:\\s|$|\\s*[-—])',regimen_raw)
+                regimen_raw=_field(body,[r'r[eé]gimen\s+fiscal',r'regimen\s+fiscal'])
+                reg=re.match(r'^([0-9]{3})(?:\s|$|\s*[-—])',regimen_raw)
                 if not reg:
                     raise ValueError('Para dar de alta por correo escribe: Régimen fiscal: 601 (usa la clave de tu constancia del SAT).')
                 sol=AltaCliente.crear(estacion,identidad.rfc,identidad.idcif,telefono,recipient,
