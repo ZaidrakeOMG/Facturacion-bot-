@@ -1,0 +1,23 @@
+name: Monitor ARY - pruebas aisladas
+on:
+  push:
+    paths:
+      - 'MONITOR_ARY_WEB.py'
+      - 'monitor_web/**'
+      - 'tests/test_monitor_ary_web.py'
+      - '.github/workflows/monitor-web-tests.yml'
+  workflow_dispatch:
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Validar sintaxis
+        run: python -m py_compile MONITOR_ARY_WEB.py
+      - name: Pruebas de SQLite sin escritura ni datos fiscales
+        run: python -m unittest discover -s tests -p test_monitor_ary_web.py -v
+      - name: Validar JavaScript
+        run: node --check monitor_web/monitor.js
