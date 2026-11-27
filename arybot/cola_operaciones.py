@@ -461,6 +461,41 @@ class ColaOperaciones:
         finally:
             self._consumer.release()
 
+    def retomar_folio_sin_cfdi(self, estacion, ticket, *, confirmado=False):
+        """Recupera solicitud web original después de comprobar NO timbrado.
+
+        Nunca llama invoice(): solo cambia un trabajo anterior a EN_COLA y
+        despierta al único consumidor. No interrumpe otra captura.
+        """
+        if confirmado is not True:
+            raise ColaError('Antes de retomar confirma que consultaste Polaris y no existe CFDI.')
+        if self.cfg.get('app',{}).get('modo_prueba',True) is not False:
+            raise ColaError('Para retomar una factura real, desactiva MODO SEGURO.')
+        if not self._consumer.acquire(blocking=False):
+            raise ColaError('Polaris está trabajando. Inténtalo al terminar la operación.')
+        try:
+            st=self.store.status()
+            if st.get('activa'):
+                raise ColaError('Hay una factura en proceso. Espera que termine.')
+            if self.polaris is None or self.polaris.pantalla_libre_para_nueva_solicitud() is not True:
+                raise ColaError('Polaris tiene una pantalla abierta o no se pudo comprobar '
+                                'que esté libre. No se reactivó el folio.')
+            job=self.store.retomar_folio_sin_cfdi(estacion,ticket,confirmado=True)
+            try:
+                self.store.resume(polaris_comprobado=True)
+                self._manual_pause=False
+                self._operator_pause=False
+            except ColaError as exc:
+                self.log('La solicitud fue recuperada, pero la atención sigue detenida: '+str(exc))
+            self.log('Se recuperó la solicitud original '+job['id']+
+                     ' tras confirmar que el ticket no tiene CFDI en Polaris. '
+                     'No se creó una segunda solicitud.')
+            self._changed(job['id'])
+            self._wake.set()
+            return job
+        finally:
+            self._consumer.release()
+
     def cancelar_pendientes(self, *, confirmado=False):
         if confirmado is not True:
             raise ColaError('Confirma retirar las solicitudes pendientes.')
