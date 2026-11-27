@@ -506,18 +506,50 @@ class PolarisBot:
             time.sleep(.55)
         target_pid=self._pid_window(h)
         fg=win32gui.GetForegroundWindow()
-        fg_pid=self._pid_window(fg)
-        if target_pid and fg_pid != target_pid:
-            # Un clic en la barra superior imita la selección manual de la aplicación.
+        fg_pid=self._pid_window(fg) if fg else None
+        if target_pid and fg_pid != target_pid and fg:
+            # Windows puede negar SetForegroundWindow por su bloqueo de foco.
+            # Un toque de ALT (sin datos fiscales) permite volver a solicitarlo.
+            # No intentarlo si el escritorio de Windows no tiene primer plano.
+            try:
+                pyautogui.press('alt')
+                time.sleep(.12)
+                win32gui.SetForegroundWindow(h)
+                time.sleep(.35)
+                fg=win32gui.GetForegroundWindow()
+                fg_pid=self._pid_window(fg) if fg else None
+            except Exception as exc:
+                self.log('Polaris: recuperación de foco ALT no disponible: '+str(exc))
+        if target_pid and fg_pid != target_pid and fg:
+            # Solo usar el clic de título si el punto pertenece REALMENTE
+            # a Polaris. Nunca hacer clic a ciegas sobre otra aplicación.
             r=self._rect(h)
-            pyautogui.click(r.left+min(max(180,r.width//3),max(20,r.width-30)), r.top+12)
-            time.sleep(.45)
-            fg=win32gui.GetForegroundWindow(); fg_pid=self._pid_window(fg)
+            pt=(r.left+min(max(180,r.width//3),max(20,r.width-30)),r.top+12)
+            try:
+                under=win32gui.WindowFromPoint(pt)
+                if under and self._is_descendant_or_same(h,under):
+                    pyautogui.click(*pt)
+                    time.sleep(.45)
+                    fg=win32gui.GetForegroundWindow()
+                    fg_pid=self._pid_window(fg) if fg else None
+            except Exception as exc:
+                self.log('Polaris: clic de foco seguro no disponible: '+str(exc))
         if target_pid and fg_pid != target_pid:
+            self.log('Polaris sin foco: ventana_activa=' + str(bool(fg)) +
+                     '; pid_polaris=' + str(target_pid) +
+                     '; pid_activo=' + str(fg_pid))
             self._screenshot_error('polaris_no_primer_plano')
+            if not fg:
+                raise PolarisError(
+                    'Windows no tiene ventana en primer plano. Comprueba que la '
+                    'sesión RDP se transfirió realmente a la consola y que la VM '
+                    'conserva una pantalla gráfica INTERACTIVA desbloqueada. '
+                    'No se enviaron clics ni se solicitó timbrado.'
+                )
             raise PolarisError(
-                "Polaris no quedó en primer plano. No se enviarán clics/teclas. "
-                "Revisa permisos de Windows o una ventana que esté robando el foco."
+                'Polaris no quedó en primer plano después de recuperar el foco. '
+                'Revisa sesiones, permisos de Windows y ventanas superpuestas. '
+                'No se enviaron clics de facturación.'
             )
         return h
 
