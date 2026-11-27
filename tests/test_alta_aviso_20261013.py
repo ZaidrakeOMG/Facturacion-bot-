@@ -26,7 +26,7 @@ AVISO = ('El cliente no tiene definido el régimen fiscal por lo que no se puede
 
 
 def solicitud(telefono='', rfc='AAA010101AAA'):
-    return AltaCliente.crear('ARY V', rfc, '00123456789', telefono, 'cliente@example.com')
+    return AltaCliente.crear('ARY V', rfc, '00123456789', telefono, 'cliente@example.com', regimen_fiscal='601')
 
 
 @pytest.mark.parametrize('telefono', ['', '   '])
@@ -47,7 +47,7 @@ def test_telefono_valido_conserva_digitos_y_ceros():
 def entrada():
     return dict(tipo='ALTA', estacion='ARY V', constancia_pdf='BASE64-PDF-MOCK',
                 correo='cliente@example.com', correo_confirmacion='cliente@example.com',
-                confirmado=True, sitio_web='')
+                confirmado=True, sitio_web='', regimen_fiscal='601')
 
 
 @pytest.mark.parametrize('omitido', [True, False])
@@ -98,6 +98,8 @@ class UIAlta:
     def consultar_idcif(self, main, form):
         self.valores.update(nombre='CLIENTE DE PRUEBA', cp='35000')
     def esperar_fiscales(self, main, form, sol): pass
+    def seleccionar_regimen(self, main, form, codigo): pass
+    def verificar_regimen(self, main, form, codigo): pass
     def verificar_contexto(self, main, form, estacion, pid): pass
     def validar_aceptar(self, main, form): pass
     def aceptar(self, main, form): self.aceptados+=1
