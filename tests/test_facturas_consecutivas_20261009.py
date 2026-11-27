@@ -528,6 +528,7 @@ def test_modo_seguro_no_congela_una_emision_pendiente(tmp_path):
                             safe=False, clave='REAL-101')
     test, _ = store.enqueue('FACTURA', {'ticket':'102'}, source='Manual',
                             safe=True, clave='TEST-102')
+    store.resume()
     job = store.claim(production_allowed=False)
     assert job and job['id'] == test['id']
     store.finish(test['id'], 'PRUEBA_CERRADA', reason='Prueba sin emisión')
