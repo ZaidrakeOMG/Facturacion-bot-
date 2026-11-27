@@ -24,7 +24,7 @@ class ColaOperaciones:
         # Se prepara una nueva etapa sólo con una base real del bot.
         # Las pruebas que inyectan un almacén propio no alteran sus registros.
         inicio={'primera_vez':False,'archivadas':0,'requiere_reanudar':False}
-        if store is None:
+        if store is None and cfg.get('app',{}).get('ary_nueva_etapa_magenta',False):
             inicio=self.store.archivar_solicitudes(
                 confirmado=True,marca_inicio='ary_v2_nueva_etapa_magenta_20261127')
             if inicio['primera_vez']:
