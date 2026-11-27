@@ -13,7 +13,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import ipaddress
 import json
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, parse_qs
 import secrets
 import sqlite3
 import time
@@ -104,12 +104,18 @@ def guardar_clave_interactiva(path):
     print("Contrasena local actualizada para usuario Ary. Reinicia SOLO la tarea del monitor.")
 
 
-def instantanea(db_path=DB):
-    """Leer con SQLite mode=ro; no se importa ColaLocal (su constructor escribe)."""
+def instantanea(db_path=DB, periodo="all"):
+    """API de lectura: resumen de resultados sin abrir Polaris ni escribir SQLite."""
+    from monitor_reportes import generar_reporte
+
+    if periodo not in ("7", "30", "all"):
+        raise ValueError("Periodo no admitido.")
     p = Path(db_path)
+    ahora = time.time()
     salida = {
         "disponible": False,
-        "actualizado": int(time.time()),
+        "actualizado": int(ahora),
+        "periodo": periodo,
         "pausada": None,
         "bloqueada": None,
         "activa": "",
@@ -118,12 +124,15 @@ def instantanea(db_path=DB):
         "ultima_actividad": None,
         "trabajos": [],
         "mensaje": "",
+        "reporte": generar_reporte([], ahora=ahora),
     }
     if not p.is_file():
-        salida["mensaje"] = "La base de datos de la cola aun no existe."
+        salida["mensaje"] = "La base de datos de la cola aún no existe."
         return salida
     try:
-        with closing(sqlite3.connect(p.resolve().as_uri() + "?mode=ro", timeout=4, uri=True)) as conn:
+        with closing(sqlite3.connect(
+            p.resolve().as_uri() + "?mode=ro", timeout=4, uri=True
+        )) as conn:
             conn.row_factory = sqlite3.Row
             conn.execute("PRAGMA query_only=ON")
             meta = dict(conn.execute("SELECT clave, valor FROM ajustes"))
@@ -131,15 +140,10 @@ def instantanea(db_path=DB):
                 "SELECT estado, COUNT(*) AS cantidad FROM trabajos "
                 "WHERE archivado=0 GROUP BY estado"
             ).fetchall()
-            items = conn.execute(
-                "SELECT id, tipo, origen, seguro, estado, datos, creado, actualizado, "
-                "iniciado, riesgo_cfdi FROM trabajos WHERE archivado=0 "
-                "ORDER BY CASE WHEN estado='EJECUTANDO' THEN 0 "
-                "WHEN estado IN ('PREPARADA_ALTA','PREPARADA_FACTURA',"
-                "'REVISION_REQUERIDA','ACEPTAR_ALTA') THEN 1 "
-                "WHEN estado='EN_COLA' THEN 2 ELSE 3 END, "
-                "CASE WHEN estado='EN_COLA' THEN creado ELSE -creado END, id LIMIT 100"
-            ).fetchall()
+            active = conn.execute(
+                "SELECT id FROM trabajos WHERE archivado=0 AND estado='EJECUTANDO' "
+                "ORDER BY creado LIMIT 1"
+            ).fetchone()
             notices = conn.execute(
                 "SELECT a.estado, COUNT(*) AS cantidad FROM avisos a "
                 "JOIN trabajos t ON t.id=a.trabajo AND t.archivado=0 "
@@ -148,37 +152,35 @@ def instantanea(db_path=DB):
             last = conn.execute(
                 "SELECT MAX(actualizado) FROM trabajos WHERE archivado=0"
             ).fetchone()[0]
+            consulta = (
+                "SELECT id, tipo, origen, seguro, estado, datos, motivo, creado, "
+                "actualizado, iniciado, riesgo_cfdi FROM trabajos "
+                "WHERE archivado=0"
+            )
+            parametros = []
+            if periodo != "all":
+                consulta += " AND creado>=?"
+                parametros.append(ahora - int(periodo) * 86400)
+            consulta += (
+                " ORDER BY CASE WHEN estado='EJECUTANDO' THEN 0 "
+                "WHEN estado IN ('PREPARADA_ALTA','PREPARADA_FACTURA',"
+                "'REVISION_REQUERIDA','ACEPTAR_ALTA') THEN 1 "
+                "WHEN estado='EN_COLA' THEN 2 ELSE 3 END, "
+                "CASE WHEN estado='EN_COLA' THEN creado ELSE -creado END, id"
+            )
+            reporte = generar_reporte(conn.execute(consulta, parametros), ahora=ahora)
             salida["pausada"] = meta.get("pausada", "1") == "1"
             salida["bloqueada"] = bool(meta.get("bloqueo", ""))
             salida["conteos"] = {r["estado"]: r["cantidad"] for r in counts}
             salida["avisos"] = {r["estado"]: r["cantidad"] for r in notices}
             salida["ultima_actividad"] = last
-            salida["activa"] = next((r["id"][:12] for r in items if r["estado"] == "EJECUTANDO"), "")
-            for r in items:
-                try:
-                    fields = json.loads(r["datos"])
-                    if not isinstance(fields, dict):
-                        fields = {}
-                except (TypeError, ValueError):
-                    fields = {}
-                ticket = str(fields.get("ticket") or "")
-                salida["trabajos"].append({
-                    "id": r["id"][:12].upper(),
-                    "tipo": r["tipo"],
-                    "estacion": str(fields.get("estacion") or "—")[:48],
-                    "origen": r["origen"][:32],
-                    "modo": "Prueba" if r["seguro"] else "Real",
-                    "estado": r["estado"],
-                    "folio": ("••••" + ticket[-4:]) if ticket else "",
-                    "riesgo_cfdi": bool(r["riesgo_cfdi"]),
-                    "creado": r["creado"],
-                    "actualizado": r["actualizado"],
-                })
+            salida["activa"] = active["id"][:12] if active else ""
+            salida["trabajos"] = reporte["trabajos"]
+            salida["reporte"] = reporte
             salida["disponible"] = True
-    except (sqlite3.Error, OSError, ValueError):
+    except (sqlite3.Error, OSError, ValueError, TypeError):
         salida["mensaje"] = "No fue posible leer la cola en este momento."
     return salida
-
 
 class Handler(BaseHTTPRequestHandler):
     server_version = "ARY-Monitor"
@@ -220,8 +222,14 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             return
         if ruta == "/api/estado":
-            body = json.dumps(instantanea(self.server.base / "data" / "cola_operaciones.sqlite3"),
-                              ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+            params = parse_qs(urlsplit(self.path).query, keep_blank_values=True)
+            periodos = params.get("periodo", ["30"])
+            if set(params) - {"periodo"} or len(periodos) != 1 or periodos[0] not in ("7", "30", "all"):
+                return self._error(400, "Periodo de consulta no permitido.")
+            body = json.dumps(
+                instantanea(self.server.base / "data" / "cola_operaciones.sqlite3", periodo=periodos[0]),
+                ensure_ascii=False, separators=(",", ":")
+            ).encode("utf-8")
             return self._responder(200, body, "application/json; charset=utf-8")
         assets = {
             "/": ("index.html", "text/html; charset=utf-8"),
