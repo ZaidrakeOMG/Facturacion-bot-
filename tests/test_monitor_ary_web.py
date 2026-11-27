@@ -22,13 +22,21 @@ class MonitorSoloLecturaTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             path = Path(d) / "clave.txt"
             preparar_clave(path)
-            with patch("getpass.getpass", side_effect=["2903*+", "2903*+"]):
+            with patch("getpass.getpass", side_effect=["TEST-ONLY-SECRET-DO-NOT-USE", "TEST-ONLY-SECRET-DO-NOT-USE"]):
                 guardar_clave_interactiva(path)
             stored = obtener_clave(path)
             self.assertTrue(stored.startswith("pbkdf2_sha256$"))
-            self.assertNotIn("2903*+", stored)
-            self.assertTrue(verificar_clave("2903*+", stored))
+            self.assertNotIn("TEST-ONLY-SECRET-DO-NOT-USE", stored)
+            self.assertTrue(verificar_clave("TEST-ONLY-SECRET-DO-NOT-USE", stored))
             self.assertFalse(verificar_clave("incorrecta", stored))
+
+    def test_router_accepts_query_parameters_without_exposing_other_paths(self):
+        # URL de navegador con campana de origen no debe romper la portada.
+        # Solo se separa la ruta; la autentificacion se mantiene obligatoria.
+        from urllib.parse import urlsplit
+        self.assertEqual(urlsplit("/?utm_source=chatgpt.com").path, "/")
+        self.assertEqual(urlsplit("/api/estado?refresh=1").path, "/api/estado")
+        self.assertEqual(urlsplit("/no-existe?x=1").path, "/no-existe")
 
     def test_lectura_sin_mutaciones_y_sin_datos_fiscales(self):
         with tempfile.TemporaryDirectory() as d:
