@@ -31,11 +31,13 @@ class ColaTab(ttk.Frame):
         vs=ttk.Scrollbar(jobs,orient='vertical',command=self.tree.yview);self.tree.configure(yscrollcommand=vs.set)
         vs.pack(side='right',fill='y');self.tree.pack(fill='both',expand=True)
         acts=ttk.Frame(jobs);acts.pack(fill='x',pady=8)
-        for txt,fn in [('Ver detalle',self.detail),('Revisar alta seleccionada',self.open_alta),
-                       ('Resolver bloqueo confirmado',self.release),('Cerrar incidencias anteriores',self.release_all),
-                       ('Retirar solicitud sin iniciar',self.cancel),('Retirar solicitudes sin iniciar',self.cancel_all)]:
+        for txt,fn in [('Ver detalle',self.detail),('Borrar seleccionada',self.archive_one),
+                       ('Borrar todas',self.archive_all),('Revisar alta',self.open_alta),
+                       ('Resolver bloqueo comprobado',self.release)]:
             ttk.Button(acts,text=txt,command=fn).pack(side='left',padx=(0,7))
-        ttk.Label(jobs,text='SÍ = Polaris confirmó el flujo de factura. NO = todavía no hay una factura confirmada; pulsa Ver detalle para conocer el motivo. Los casos inciertos requieren verificar Polaris antes de volver a emitir.',
+        ttk.Label(jobs,text='Borrar retira la solicitud de esta lista y cancela las que aún no comenzaron. '
+                    'Conserva el registro y el motivo en SQLite para auditoría y estadísticas. '
+                    'No cancela una factura ni borra un CFDI de Polaris.',
                   wraplength=850).pack(anchor='w')
         mail_enabled=app.cfg.get('app',{}).get('gmail_habilitado',True)
         self.enabled=tk.BooleanVar(value=self.options['avisar_cliente'] and mail_enabled)
@@ -190,6 +192,85 @@ class ColaTab(ttk.Frame):
         try:self.cola.cancelar(job['id'])
         except Exception as exc:messagebox.showwarning('Cola',str(exc),parent=self)
         self.refresh()
+
+    def _puede_archivar(self):
+        # Solo el candado del consumidor indica que el bot está capturando AHORA.
+        # Una EJECUTANDO huérfana en SQLite no debe impedir la limpieza tras
+        # comprobar la pantalla de Polaris y confirmar con el operador.
+        if self.cola._consumer.locked():
+            self.status.set('Polaris está capturando. No se puede borrar mientras '
+                            'una factura se está procesando. Espera a que termine.')
+            return False
+        return True
+
+    def archive_one(self):
+        if not self._puede_archivar():return
+        job=self.selected()
+        if not job:return
+        codigo=tracking(job['id'])
+        uncertain=job['estado'] in ('EJECUTANDO','PREPARADA_FACTURA',
+                                    'PREPARADA_ALTA','ACEPTAR_ALTA') or (
+                    self.cola.store.status().get('bloqueo')==job['id'])
+        message=(
+            '¿Quitar '+codigo+' de la lista?\n\n'
+            'Si todavía no se ha iniciado, se CANCELARÁ y no será procesada. '
+            'Si ya terminó, solo se archivará.\n\n'
+            'IMPORTANTE: la operación y sus datos quedan en SQLite. '
+            'Esto NO cancela facturas ni borra CFDI en Polaris.\n\n'
+        )
+        if uncertain:
+            message+=(
+                'Esta solicitud está atorada o tiene una ventana reservada. '
+                'Antes de confirmar, comprueba en Polaris que no existe un '
+                'timbrado, envío o alta todavía ejecutándose y cierra la '
+                'pantalla pendiente manualmente. El resultado podría ser incierto.\n\n')
+        message+='¿Confirmas que verificaste Polaris y deseas quitarla de la lista?'
+        if not messagebox.askyesno('Borrar solicitud',message,parent=self,default='no'):return
+        try:
+            resultado=self.cola.archivar_solicitudes(job['id'],confirmado=True)
+        except Exception as exc:
+            messagebox.showwarning('Borrar solicitud',str(exc),parent=self)
+            self.refresh();return
+        self.refresh()
+        if resultado['requiere_reanudar']:
+            messagebox.showinfo('Solicitud borrada de la lista',
+                'Se archivó la solicitud.\n\nEl registro de un posible CFDI '
+                'incierto quedó protegido. Verifica que Polaris está libre '
+                'y pulsa Reanudar atención automática cuando corresponda.',
+                parent=self)
+
+    def archive_all(self):
+        if not self._puede_archivar():return
+        visibles=self.cola.store.list(100000)
+        if not visibles:
+            messagebox.showinfo('Limpiar lista','No hay solicitudes visibles para borrar.',parent=self)
+            return
+        pendientes=sum(r['estado']=='EN_COLA' for r in visibles)
+        atascadas=sum(r['estado'] in ('EJECUTANDO','PREPARADA_FACTURA',
+                       'PREPARADA_ALTA','PRUEBA_PENDIENTE','ACEPTAR_ALTA') for r in visibles)
+        pregunta=(f'¿Borrar de la lista las {len(visibles)} solicitudes visibles?\n\n'
+                  f'Solicitudes todavía pendientes que se cancelarán: {pendientes}.\n'
+                  f'Solicitudes atoradas o preparadas: {atascadas}.\n\n'
+                  'Esto NO elimina facturas de Polaris ni los registros de SQLite. '
+                  'El historial seguirá disponible para las estadísticas y para '
+                  'impedir el reenvío de un ticket incierto.\n\n'
+                  'CONFIRMACIÓN: revisé que Polaris no tiene una emisión o alta '
+                  'en curso y quiero limpiar esta lista.')
+        if not messagebox.askyesno('Borrar todas las solicitudes',pregunta,
+                                   parent=self,default='no'):return
+        try:
+            resultado=self.cola.archivar_solicitudes(confirmado=True)
+        except Exception as exc:
+            messagebox.showwarning('Borrar todas',str(exc),parent=self)
+            self.refresh();return
+        self.refresh()
+        aviso=(f"Se quitaron {resultado['archivadas']} solicitudes de la pantalla.\n"
+               f"Pendientes canceladas: {resultado['canceladas']}.\n"
+               f"Casos inciertos protegidos: {resultado['riesgos_protegidos']}.\n\n"
+               'Los datos permanecen guardados en SQLite.')
+        if resultado['requiere_reanudar']:
+            aviso+='\n\nRevisa Polaris y reanuda la atención automática.'
+        messagebox.showinfo('Lista limpiada',aviso,parent=self)
 
     def detail(self):
         if not self._can_dialog():return

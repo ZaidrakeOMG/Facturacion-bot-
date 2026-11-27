@@ -15,7 +15,8 @@ CREATE TABLE IF NOT EXISTS trabajos (
  origen TEXT NOT NULL, seguro INTEGER NOT NULL, estado TEXT NOT NULL,
  datos TEXT NOT NULL, correo TEXT NOT NULL DEFAULT '', motivo TEXT NOT NULL DEFAULT '',
  creado REAL NOT NULL, actualizado REAL NOT NULL, iniciado REAL, terminado REAL,
- resultado TEXT NOT NULL DEFAULT '{}', minutos INTEGER NOT NULL DEFAULT 5);
+ resultado TEXT NOT NULL DEFAULT '{}', minutos INTEGER NOT NULL DEFAULT 5,
+ archivado INTEGER NOT NULL DEFAULT 0, riesgo_cfdi INTEGER NOT NULL DEFAULT 0);
 CREATE INDEX IF NOT EXISTS ix_cola_estado ON trabajos(estado,creado);
 CREATE INDEX IF NOT EXISTS ix_cola_clave ON trabajos(clave);
 CREATE TABLE IF NOT EXISTS ajustes (clave TEXT PRIMARY KEY, valor TEXT);
@@ -35,6 +36,11 @@ class ColaLocal:
             cols={r[1] for r in conn.execute('PRAGMA table_info(avisos)')}
             if 'not_before' not in cols:
                 conn.execute('ALTER TABLE avisos ADD COLUMN not_before REAL NOT NULL DEFAULT 0')
+            trabajos={r[1] for r in conn.execute('PRAGMA table_info(trabajos)')}
+            if 'archivado' not in trabajos:
+                conn.execute('ALTER TABLE trabajos ADD COLUMN archivado INTEGER NOT NULL DEFAULT 0')
+            if 'riesgo_cfdi' not in trabajos:
+                conn.execute('ALTER TABLE trabajos ADD COLUMN riesgo_cfdi INTEGER NOT NULL DEFAULT 0')
 
     @contextmanager
     def connect(self, write=False):
@@ -60,8 +66,11 @@ class ColaLocal:
     def source(self, source_id):
         with self.connect() as c:return self.unpack(c.execute('SELECT * FROM trabajos WHERE fuente_id=?',(source_id,)).fetchone())
 
-    def list(self, limit=200):
-        with self.connect() as c:return [self.unpack(r) for r in c.execute("""SELECT * FROM trabajos
+    def list(self, limit=200, *, incluir_archivadas=False):
+        """La tabla normal es limpia; los registros archivados siguen para auditoría."""
+        where="1=1" if incluir_archivadas else "archivado=0"
+        with self.connect() as c:return [self.unpack(r) for r in c.execute(f"""SELECT * FROM trabajos
+            WHERE {where}
             ORDER BY CASE WHEN estado='EJECUTANDO' THEN 0
                           WHEN estado IN ('PREPARADA_ALTA','PREPARADA_FACTURA','REVISION_REQUERIDA','PRUEBA_PENDIENTE','ACEPTAR_ALTA') THEN 1
                           WHEN estado='EN_COLA' THEN 2 ELSE 3 END,
@@ -128,6 +137,14 @@ class ColaLocal:
                 old=c.execute('SELECT * FROM trabajos WHERE fuente_id=?',(source_id,)).fetchone()
                 if old:return self.unpack(old),False
             if clave:
+                # Archivar NO concede permiso para volver a timbrar un ticket
+                # cuyo resultado pudo haber sido incierto.
+                if kind == 'FACTURA' and c.execute(
+                        'SELECT 1 FROM trabajos WHERE clave=? AND riesgo_cfdi=1 LIMIT 1',
+                        (clave,)).fetchone():
+                    raise SolicitudDuplicada(
+                        'Este ticket tiene una operación archivada cuyo timbrado no se confirmó. '
+                        'Verifica el folio en Polaris antes de iniciar otra factura.')
                 # Si el mismo ticket quedó a mitad de un envío, debe revisarse
                 # antes de permitir otra solicitud con el mismo folio.
                 if kind == 'FACTURA':
@@ -293,6 +310,95 @@ class ColaLocal:
             else:
                 self._set(c,'pausada','0')
                 self._set(c,'motivo_pausa','')
+
+    def archivar_solicitudes(self, ident=None, *, confirmado=False):
+        """Quita solicitudes de la vista de forma transaccional y SIN borrar historia.
+
+        ident=None archiva todo lo visible; de otro modo solo el ID seleccionado.
+        Las EN_COLA se cancelan antes de ocultarlas. Una EJECUTANDO solo se
+        trata como atascada cuando el coordinador verifica que NO hay consumidor
+        ejecutando (bajo su lock). En ese caso no se afirma que no haya CFDI.
+        """
+        if confirmado is not True:
+            raise ColaError('Confirma primero que verificaste Polaris y que puedes retirar la solicitud.')
+        with self.connect(True) as c:
+            if ident is None:
+                rows=c.execute("SELECT * FROM trabajos WHERE archivado=0 ORDER BY creado,id").fetchall()
+            else:
+                rows=c.execute("SELECT * FROM trabajos WHERE id=? AND archivado=0",(ident,)).fetchall()
+                if not rows:
+                    raise ColaError('La solicitud ya no aparece en la lista o no existe.')
+            block=c.execute("SELECT valor FROM ajustes WHERE clave='bloqueo'").fetchone()
+            block=block[0] if block else ''
+            count=0; stale=0; canceladas=0; riesgos=0; erased_block=False
+            now=time.time()
+            for row in rows:
+                previous=row['estado']
+                reason=row['motivo'] or ''
+                norm=unicodedata.normalize('NFKD',reason).casefold()
+                norm=''.join(x for x in norm if not unicodedata.combining(x))
+                uncertain=bool(row['tipo']=='FACTURA' and not row['seguro'] and (
+                    row['id']==block or previous=='EJECUTANDO' or
+                    any(token in norm for token in (
+                        'posible cfdi','timbrado inciert','envio inciert',
+                        'timbrad','no se confirmo el cierre','correo pendiente',
+                        'operacion o captura pendiente'))
+                ))
+                result=json.loads(row['resultado'] or '{}')
+                if not isinstance(result,dict):result={}
+                result['archivo_operador']={
+                    'estado_anterior':previous,
+                    'motivo_anterior':reason,
+                    'fecha':now,
+                    'resultado_no_verificado':uncertain,
+                }
+                new_state=previous
+                new_reason=reason
+                terminado=None
+                if previous=='EN_COLA':
+                    new_state='CANCELADA'
+                    new_reason='Retirada por el operador ANTES de comenzar; no se emitió CFDI.'
+                    terminado=now
+                    canceladas+=1
+                elif previous in ('EJECUTANDO','PREPARADA_FACTURA','PREPARADA_ALTA',
+                                  'PRUEBA_PENDIENTE','ACEPTAR_ALTA'):
+                    # Al salir de una ejecución interrumpida NO convertirla
+                    # erróneamente en éxito ni reintentarla.
+                    new_state='REVISION_CERRADA'
+                    new_reason=('Posible CFDI timbrado o alta guardada. ' if uncertain else
+                                'Captura retirada sin aceptar. ') + (
+                                'Operador archivó la solicitud tras revisar Polaris. '
+                                'No se reintentará automáticamente.')
+                    terminado=now
+                    stale+=1
+                risk=int(bool(row['riesgo_cfdi']) or uncertain)
+                risks_delta=risk and not row['riesgo_cfdi']
+                if risks_delta:riesgos+=1
+                c.execute(
+                    """UPDATE trabajos SET estado=?, motivo=?, resultado=?, archivado=1,
+                       riesgo_cfdi=?, actualizado=?, terminado=COALESCE(?,terminado)
+                       WHERE id=? AND archivado=0""",
+                    (new_state,new_reason,json.dumps(result,ensure_ascii=False),
+                     risk,now,terminado,row['id']))
+                # La solicitud retirada no debe disparar avisos futuros.
+                # Los ENVÍOS ENVIANDO/ENVIADOS se conservan porque pudieron
+                # salir de Gmail y no deben alterarse ni repetirse.
+                c.execute(
+                    """UPDATE avisos SET estado='SUPERADA',detalle=?,actualizado=?
+                       WHERE trabajo=? AND estado='PENDIENTE'""",
+                    ('Solicitud retirada de la pantalla por el operador.',now,row['id']))
+                if row['id']==block:erased_block=True
+                count+=1
+            if erased_block:
+                self._set(c,'bloqueo','')
+                # No liberar una pausa manual por accidente; el operador
+                # puede reanudar tras verificar que Polaris está libre.
+                self._set(c,'pausada','1')
+                self._set(c,'motivo_pausa',
+                          'Se archivó una operación bloqueada. Comprueba que Polaris está libre y reanuda.')
+            return {'archivadas':count,'canceladas':canceladas,
+                    'atascadas':stale,'riesgos_protegidos':riesgos,
+                    'requiere_reanudar':erased_block}
 
     def cancel_pending(self):
         """Withdraw waiting jobs atomically, preserving history and active work."""

@@ -340,6 +340,42 @@ class ColaOperaciones:
         self._wake.set()
         return result
 
+    def archivar_solicitudes(self, ident=None, *, confirmado=False):
+        """Retira de la lista sin borrar comprobantes, avisos ni fuente de datos.
+
+        El mismo candado que protege la captura de Polaris impide archivar una
+        operación REAL mientras la está ejecutando el bot. Una EJECUTANDO
+        huérfana (ej. caída de la VM) se permite tras confirmación, dejando
+        constancia de resultado incierto y bloqueando nuevas emisiones del
+        mismo ticket.
+        """
+        if confirmado is not True:
+            raise ColaError('Confirma que revisaste Polaris antes de borrar solicitudes.')
+        if not self._consumer.acquire(blocking=False):
+            raise ColaError('Polaris está capturando una factura. Espera o cierra el bot '
+                            'de manera controlada antes de borrar una solicitud atorada.')
+        try:
+            resultado=self.store.archivar_solicitudes(ident,confirmado=True)
+            if resultado['requiere_reanudar']:
+                # Una solicitud nueva del portal no debe reanudar por accidente
+                # después de retirar un bloqueo fiscal. Requiere clic explícito.
+                self._manual_pause=True
+            if self.alta is not None and (
+                    resultado['atascadas'] or resultado['requiere_reanudar']):
+                try:self.alta.liberar()
+                except Exception:self.log('Una alta retirada podría conservar su ventana: revisa Polaris.')
+            self.log(
+                'Historial oculto de la lista: '+str(resultado['archivadas'])+
+                ' solicitud(es); '+str(resultado['canceladas'])+
+                ' pendiente(s) cancelada(s). Los registros siguen en SQLite.'
+            )
+            try:self.on_event('cola','')
+            except Exception:self.log('Se guardó la limpieza, pero no se actualizó la vista automáticamente.')
+            self._wake.set()
+            return resultado
+        finally:
+            self._consumer.release()
+
     def cancelar_pendientes(self, *, confirmado=False):
         if confirmado is not True:
             raise ColaError('Confirma retirar las solicitudes pendientes.')
