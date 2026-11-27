@@ -138,7 +138,10 @@ def leer_alta(subject, text, sender):
     cif = _field(text,[r'id\s*cif',r'idcfi',r'idcif'])
     phone = _field(text,[r'tel[eé]fono',r'telefono\s*1',r'celular'])
     email = _field(text,[r'correo(?:\s+electr[oó]nico)?',r'email',r'e-mail']) or sender
-    return AltaCliente.crear(st,rfc,cif,phone,email)
+    raw=_field(text,[r'r[eé]gimen\s+fiscal',r'regimen\s+fiscal'])
+    match=re.match(r'^([0-9]{3})(?:\s|$)',raw)
+    return AltaCliente.crear(st,rfc,cif,phone,email,
+                             regimen_fiscal=match.group(1) if match else '')
 
 
 def titulo_tipo(kind):
