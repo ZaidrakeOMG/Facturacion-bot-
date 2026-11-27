@@ -167,14 +167,17 @@ class ColaLocal:
                 old=c.execute('SELECT * FROM trabajos WHERE fuente_id=?',(source_id,)).fetchone()
                 if old:return self.unpack(old),False
             if clave:
-                # Archivar NO concede permiso para volver a timbrar un ticket
-                # cuyo resultado pudo haber sido incierto.
+                # Una revisión ARCHIVADA es historial, no una solicitud activa.
+                # No retener indefinidamente una factura nueva por riesgo_cfdi
+                # de un trabajo anterior ya retirado de la pantalla. Polaris
+                # sigue comprobando el ticket antes de emitir su CFDI.
+                # Las incidencias NO archivadas conservan la protección.
                 if kind == 'FACTURA' and c.execute(
-                        'SELECT 1 FROM trabajos WHERE clave=? AND riesgo_cfdi=1 LIMIT 1',
+                        'SELECT 1 FROM trabajos WHERE clave=? AND riesgo_cfdi=1 AND archivado=0 LIMIT 1',
                         (clave,)).fetchone():
                     raise SolicitudDuplicada(
-                        'Este ticket tiene una operación archivada cuyo timbrado no se confirmó. '
-                        'Verifica el folio en Polaris antes de iniciar otra factura.')
+                        'Este ticket tiene una operación ACTIVA cuyo timbrado no se confirmó. '
+                        'Revisa Polaris antes de intentar otra factura.')
                 # Si el mismo ticket quedó a mitad de un envío, debe revisarse
                 # antes de permitir otra solicitud con el mismo folio.
                 if kind == 'FACTURA':
