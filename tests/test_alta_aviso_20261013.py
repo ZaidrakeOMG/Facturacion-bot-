@@ -229,18 +229,20 @@ def test_cuatro_altas_reales_terminan_sin_segundo_clic_manual(tmp_path):
     assert not q.store.status()['bloqueo'] and not q.ejecutar_una()
 
 
-def test_cola_segura_prepara_sin_aceptar(tmp_path):
+def test_cola_segura_no_registra_y_continua_sin_bloqueo(tmp_path):
     alta=Mock()
     alta.preparar.return_value={'estado':'PREPARADA_SIN_GUARDAR'}
     q,bot=cola(tmp_path,seguro=True,alta=alta)
     job=q.encolar_alta(solicitud(),safe=True)[0]
     q.iniciar_cola()
     assert q.ejecutar_una()
-    assert q.store.get(job['id'])['estado']=='PREPARADA_ALTA'
-    assert q.store.status()['bloqueo']
+    assert q.store.get(job['id'])['estado']=='PRUEBA_CERRADA'
+    assert not q.store.status()['bloqueo']
     alta.registrar.assert_not_called()
     alta.aceptar.assert_not_called()
-    bot.cerrar_polaris_tras_solicitud.assert_not_called()
+    alta.liberar.assert_called_once()
+    bot.cerrar_polaris_tras_solicitud.assert_called_once()
+    assert not q.store.status()['pausada']
 
 
 def test_guardado_alta_incierto_pausa_cola_y_no_cierra_polaris(tmp_path):
