@@ -694,3 +694,26 @@ def test_archivar_migra_base_sqlite_antigua_sin_perder_registros(tmp_path):
     store.archivar_solicitudes('ANTIGUO-001', confirmado=True)
     assert store.list() == []
     assert store.get('ANTIGUO-001')['archivado'] == 1
+
+
+def test_archivar_bloqueo_no_reanuda_al_llegar_nueva_solicitud(tmp_path):
+    """No reactivar Polaris desde el portal hasta una confirmación posterior."""
+    from arybot.cola_operaciones import ColaOperaciones
+    from arybot.cola_modelo import DEFAULTS
+    cfg = {'app': {'modo_prueba': False}, 'gmail': {}, 'ocr': {},
+           'polaris': {}, 'cola': dict(DEFAULTS)}
+    bot = Mock()
+    q = ColaOperaciones(tmp_path, cfg, bot, Mock(), avisos=Mock())
+    bloqueo, _ = q.store.enqueue('FACTURA', {'ticket':'36001'},
+                                 source='Portal web',safe=False,clave='ARY-V:36001')
+    q.store.finish(bloqueo['id'], 'REVISION_REQUERIDA',
+                   reason='Posible CFDI timbrado o envío pendiente.',hold=True)
+    q.archivar_solicitudes(bloqueo['id'], confirmado=True)
+    assert q._manual_pause
+    assert q.store.status()['pausada']
+    nuevo, _ = q.store.enqueue('FACTURA', {'ticket':'36002'},
+                               source='Portal web', safe=False, clave='ARY-V:36002')
+    assert q.store.get(nuevo['id'])['estado'] == 'EN_COLA'
+    assert q.store.status()['pausada']
+    assert not q.ejecutar_una()
+    bot.invoice.assert_not_called()
