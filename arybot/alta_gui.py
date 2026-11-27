@@ -8,6 +8,7 @@ from pathlib import Path
 import base64
 from .constancia_fiscal import leer_constancia_pdf_base64
 from .cliente_model import AltaCliente,AltaClienteError
+from .regimen_fiscal import opciones_regimen
 from .alta_clientes import AltaClientes
 from .parser import STATIONS
 
@@ -21,6 +22,7 @@ class AltaClientesTab(ttk.Frame):
         self.job_id=None;self._last_state=None
         self.station=tk.StringVar(value=app.test_station.get())
         self.rfc=tk.StringVar();self.idcif=tk.StringVar();self.pdf_path=tk.StringVar();self.phone=tk.StringVar();self.email=tk.StringVar()
+        self.regimen=tk.StringVar(value='')
         self.reviewed=tk.BooleanVar(value=False)
         self.status=tk.StringVar(value='Listo: Clientes de Efectivo. La prueba no pulsa Aceptar.')
         self.nombre=tk.StringVar();self.cp=tk.StringVar();self.numero=tk.StringVar()
@@ -73,6 +75,10 @@ class AltaClientesTab(ttk.Frame):
                                filedialog.askopenfilename(title='Constancia de Situación Fiscal del SAT',
                                                           filetypes=[('Archivos PDF','*.pdf')])
                                or self.pdf_path.get())).grid(row=i,column=2,sticky='w')
+        ttk.Label(body,text='Régimen fiscal del SAT').grid(row=8,column=0,sticky='e',padx=8,pady=5)
+        self.regimen_combo=ttk.Combobox(body,textvariable=self.regimen,values=[
+            item['texto'] for item in opciones_regimen()],state='readonly',width=65)
+        self.regimen_combo.grid(row=8,column=1,columnspan=2,sticky='ew',padx=(0,20))
         ttk.Label(body,text='Se leerán RFC, razón social, calle e idCIF del PDF digital original del SAT. No se escriben manualmente.',
                   wraplength=880,foreground='#526173').grid(row=9,column=0,columnspan=3,sticky='w',pady=(6,9))
         bar=ttk.Frame(body);bar.grid(row=10,column=0,columnspan=3,sticky='w')
@@ -108,16 +114,20 @@ class AltaClientesTab(ttk.Frame):
                 return AltaCliente.crear(d['estacion'],d['rfc'],d['idcif'],
                     d.get('telefono',''),d['correo'],
                     razon_social=d.get('razon_social',''),
-                    calle_constancia=d.get('calle_constancia',''))
+                    calle_constancia=d.get('calle_constancia',''),
+                    regimen_fiscal=d.get('regimen_fiscal',''))
         path=Path(self.pdf_path.get().strip())
         if not path.is_file():
             raise AltaClienteError('Adjunta la Constancia de Situación Fiscal original del SAT en PDF.')
         identidad=leer_constancia_pdf_base64(
             base64.b64encode(path.read_bytes()).decode('ascii'),alta=True)
         self.rfc.set(identidad.rfc);self.idcif.set(identidad.idcif)
+        codigo=self.regimen.get().split(' — ',1)[0].strip()
+        if not codigo:
+            raise AltaClienteError('Selecciona el régimen fiscal según la constancia del SAT.')
         return AltaCliente.crear(self.station.get(),identidad.rfc,identidad.idcif,
             self.phone.get(),self.email.get(),razon_social=identidad.razon_social,
-            calle_constancia=identidad.calle)
+            calle_constancia=identidad.calle, regimen_fiscal=codigo)
 
     def _freeze(self):
         # Solo se bloquean los campos de ESTA solicitud, nunca la recepción Gmail.
@@ -136,6 +146,7 @@ class AltaClientesTab(ttk.Frame):
         self.btn_release.configure(state='normal' if self.holding and not self.busy else 'disabled')
         for entry in self.entries: entry.configure(state='disabled' if self.busy or self.holding else 'normal')
         self.context.configure(state='disabled' if self.busy or self.holding else 'readonly')
+        self.regimen_combo.configure(state='disabled' if self.busy or self.holding else 'readonly')
         self.chk.configure(state='disabled' if self.busy else 'normal')
 
     def _ready(self):
@@ -212,6 +223,9 @@ class AltaClientesTab(ttk.Frame):
         self.job_id=job['id'];self._last_state=None
         d=job['datos'];self.station.set(d.get('estacion',''));self.rfc.set(d.get('rfc',''))
         self.idcif.set(d.get('idcif',''));self.phone.set(d.get('telefono',''));self.email.set(d.get('correo',''))
+        codigo=d.get('regimen_fiscal','')
+        opciones=[v for v in self.regimen_combo['values'] if str(v).startswith(codigo+' — ')] if codigo else []
+        self.regimen.set(opciones[0] if opciones else '')
         self.reviewed.set(False);self.nombre.set('');self.cp.set('');self.numero.set('')
         self.busy=job['estado'] in {'EN_COLA','EJECUTANDO','ACEPTAR_ALTA'}
         self.holding=job['estado'] in {'PREPARADA_ALTA','REVISION_REQUERIDA'}
