@@ -349,7 +349,7 @@ class App:
         self.gmail_status=ttk.Label(st,text="Gmail desactivado")  # Referencias antiguas, no visible.
         self.bot_status=ttk.Label(st,text="Recepción: portal web / manual",foreground=BLUE); self.bot_status.pack(side="left",padx=(0,14))
         self.polaris_status=ttk.Label(st,text="Polaris: comprobando..."); self.polaris_status.pack(side="left")
-        self.estado_vm_var=tk.StringVar(value="Comprobando Polaris y cola...")
+        self.estado_vm_var=tk.StringVar(value="Comprobando Polaris y atención automática...")
         state_label=ttk.Label(outer,textvariable=self.estado_vm_var,foreground=MUTED,wraplength=750)
         state_label.pack(fill="x",pady=(0,8))
         outer.bind("<Configure>",lambda e: state_label.configure(wraplength=max(300,e.width-22)) if e.widget is outer else None,add="+")
@@ -378,7 +378,7 @@ class App:
         ttk.Label(self.tab_panel,text="Registro de actividad",font=("Segoe UI",18,"bold")).pack(anchor="w")
         ttk.Label(self.tab_panel,text="Eventos de Polaris, solicitudes web y diagnósticos locales.",foreground=MUTED).pack(anchor="w",pady=(3,10))
         bar=ttk.Frame(self.tab_panel); bar.pack(fill="x")
-        ttk.Button(bar,text="Ver cola de trabajo",command=lambda:self.nb.select(self.cola_tab)).pack(side="left")
+        ttk.Button(bar,text="Ver resultados",command=lambda:self.nb.select(self.cola_tab)).pack(side="left")
         ttk.Button(bar,text="Ver estadísticas",command=lambda:self.nb.select(self.dashboard_tab)).pack(side="left",padx=8)
         self.btn_start=ttk.Button(bar,text="Recepción antigua desactivada",state="disabled")
         self.btn_stop=ttk.Button(bar,text="Recepción antigua desactivada",state="disabled")
@@ -810,9 +810,9 @@ class App:
         if not self._exigir_polaris_vm():return False
         st=self.cola.store.status()
         if st.get('bloqueo'):
-            msg=('COLA EN REVISIÓN: '+str(st.get('motivo',''))+
-                 ' Ve a Cola y avisos, selecciona la prueba/captura pendiente y usa Liberar revisión '+
-                 'después de revisar Polaris. No se añadió otra prueba.')
+            msg=('ATENCIÓN DETENIDA: '+str(st.get('motivo',''))+
+                 ' En Resultados y avisos puedes resolver el bloqueo después de comprobar Polaris. '+
+                 'No se envió otra solicitud.')
             self.direct_status.set(msg);self.log(msg)
             return False
         if self.cola.ocupada:
