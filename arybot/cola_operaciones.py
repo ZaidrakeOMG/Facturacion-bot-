@@ -356,7 +356,12 @@ class ColaOperaciones:
                             'de manera controlada antes de borrar una solicitud atorada.')
         try:
             resultado=self.store.archivar_solicitudes(ident,confirmado=True)
-            if self.alta is not None and resultado['atascadas']:
+            if resultado['requiere_reanudar']:
+                # Una solicitud nueva del portal no debe reanudar por accidente
+                # después de retirar un bloqueo fiscal. Requiere clic explícito.
+                self._manual_pause=True
+            if self.alta is not None and (
+                    resultado['atascadas'] or resultado['requiere_reanudar']):
                 try:self.alta.liberar()
                 except Exception:self.log('Una alta retirada podría conservar su ventana: revisa Polaris.')
             self.log(
