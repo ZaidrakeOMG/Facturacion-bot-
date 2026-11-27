@@ -1,6 +1,7 @@
 """Validación y respuestas del portal. No conecta a Polaris ni captura tarjetas."""
 from __future__ import annotations
 from .cliente_model import AltaCliente
+from .regimen_fiscal import opciones_regimen
 from .coincidencia_fiscal import CODIGO_VERIFICACION_FISCAL, MENSAJE_VERIFICACION_FISCAL
 from .constancia_fiscal import leer_constancia_pdf_base64, ConstanciaError
 from .cliente_facturacion import (CODIGO_SIN_REGIMEN, MENSAJE_SIN_REGIMEN,
@@ -36,7 +37,7 @@ def validar_entrada(body, *, vision=False):
     campos_portal = {
         'tipo', 'estacion', 'constancia_pdf', 'correo', 'correo_confirmacion',
         'confirmado', 'sitio_web', 'telefono', 'ticket', 'fecha_ticket',
-        'forma_pago', 'uso_cfdi', 'foto_ticket', 'modo_ticket'
+        'forma_pago', 'uso_cfdi', 'foto_ticket', 'modo_ticket', 'regimen_fiscal'
     }
     if len(body) > len(campos_portal) or any(not isinstance(k, str) for k in body):
         raise EntradaPortalError('El formulario contiene una estructura no admitida.')
@@ -66,10 +67,11 @@ def validar_entrada(body, *, vision=False):
     allowed = {'tipo', 'estacion', 'constancia_pdf', 'correo', 'correo_confirmacion', 'confirmado', 'sitio_web'}
     try:
         if kind == 'ALTA':
-            allowed |= {'telefono'}
+            allowed |= {'telefono', 'regimen_fiscal'}
             sol = AltaCliente.crear(station, rfc, identidad.idcif,
                                     texto(body, 'telefono', max_len=24, opcional=True), email,
-                                    razon_social=identidad.razon_social, calle_constancia=identidad.calle)
+                                    razon_social=identidad.razon_social, calle_constancia=identidad.calle,
+                                    regimen_fiscal=texto(body, 'regimen_fiscal', max_len=3))
             data = datos_alta(sol)
         else:
             allowed |= {'ticket', 'fecha_ticket', 'forma_pago', 'uso_cfdi', 'foto_ticket', 'modo_ticket'}
@@ -127,6 +129,7 @@ def catalogos():
                        for name, info in STATIONS.items()],
         'formas_pago': [{'valor': key, 'texto': label} for key, label in PAGOS.items()],
         'usos_cfdi': [{'valor': key, 'texto': key + ' — ' + desc} for key, desc in USO_CFDI.items()],
+        'regimenes_fiscales': opciones_regimen(),
     }
 
 
