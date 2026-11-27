@@ -936,6 +936,7 @@ def test_portal_reenvio_identico_devuelve_referencia_original(monkeypatch,tmp_pa
     api._body=lambda env:{}
     api._mac=lambda purpose,value:'x'*64
     api._sign=lambda purpose,value:'firma-original'
+    api.clock=lambda:0
     api.limits=Mock()
     api.limits.aceptar.return_value=True
     api.lock=threading.RLock()
