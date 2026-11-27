@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>ARY | Centro de monitoreo</title>
+<link rel="stylesheet" href="/monitor.css">
+<script defer src="/monitor.js"></script>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="identity">
+      <div class="mark">A<span>R</span>Y</div>
+      <div><div class="kicker">SISTEMAS INTERNOS</div><div class="brand">Centro de monitoreo</div></div>
+    </div>
+    <div class="top-right">
+      <div id="conexion" class="connection"><span class="dot"></span><span id="conexion-texto">Conectando…</span></div>
+      <button id="actualizar" class="refresh" type="button" aria-label="Actualizar ahora">↻ <span>Actualizar</span></button>
+    </div>
+  </header>
+  <main>
+    <div class="intro">
+      <div><p class="eyebrow">OPERACIÓN · FACTURACIÓN AUTOMÁTICA</p>
+      <h1>Vista general <span>de operaciones.</span></h1>
+      <p class="subtitle">Seguimiento de solicitudes recibidas por ARY, directamente desde la cola local de la VM.</p></div>
+      <div class="refresh-info"><span>Actualización automática cada 10 s</span><small id="actualizado">Sin información todavía</small></div>
+    </div>
+
+    <div id="alerta" class="alert" hidden role="alert"></div>
+    <section class="cards" aria-label="Resumen de la cola">
+      <article class="stat"><span class="stat-name">En espera</span><strong id="cuenta-cola">—</strong><span class="stat-foot"><span class="pin blue"></span> Solicitudes en cola</span></article>
+      <article class="stat"><span class="stat-name">En ejecución</span><strong id="cuenta-ejecutando">—</strong><span class="stat-foot"><span class="pin violet"></span> Atendiéndose en Polaris</span></article>
+      <article class="stat"><span class="stat-name">Trámites finalizados</span><strong id="cuenta-finalizadas">—</strong><span class="stat-foot"><span class="pin green"></span> Según estado registrado</span></article>
+      <article class="stat"><span class="stat-name">Requieren atención</span><strong id="cuenta-revision">—</strong><span class="stat-foot"><span class="pin orange"></span> Revisión / bloqueo</span></article>
+    </section>
+
+    <section class="status-grid" aria-label="Estado del sistema">
+      <div class="panel system-panel">
+        <div class="section-head"><div><p class="eyebrow">SISTEMA</p><h2>Estado de la cola</h2></div><span class="icon">◎</span></div>
+        <div class="status-rows">
+          <div><span>Cola</span><strong id="pausada">—</strong></div>
+          <div><span>Bloqueo fiscal / captura</span><strong id="bloqueada">—</strong></div>
+          <div><span>Trabajo activo</span><strong id="activa">—</strong></div>
+          <div><span>Último movimiento registrado</span><strong id="actividad">—</strong></div>
+        </div>
+        <div class="disclaimer">El estado de SQLite no confirma por sí solo que la ventana de Polaris o el proceso del bot estén activos. Este panel no ejecuta facturas.</div>
+      </div>
+      <div class="panel notices-panel">
+        <div class="section-head"><div><p class="eyebrow">COMUNICACIONES</p><h2>Avisos por correo</h2></div><span class="icon">✉</span></div>
+        <div class="notice-grid">
+          <div><strong id="aviso-pendiente">—</strong><span>Pendientes</span></div>
+          <div><strong id="aviso-enviando">—</strong><span>Enviando</span></div>
+          <div><strong id="aviso-error">—</strong><span>Errores / inciertos</span></div>
+        </div>
+        <p class="subtle">El aviso enviado no garantiza que el destinatario haya recibido el CFDI.</p>
+      </div>
+    </section>
+
+    <section class="panel list-panel" aria-label="Solicitudes recientes">
+      <div class="list-header">
+        <div><p class="eyebrow">TRAZABILIDAD</p><h2>Solicitudes recientes</h2><p class="subtle">Últimos 100 registros no archivados. Datos personales ocultos.</p></div>
+        <div id="total-tabla" class="count-chip">— registros</div>
+      </div>
+      <nav class="filters" aria-label="Filtrar solicitudes">
+        <button class="filter active" data-filter="todas" aria-pressed="true">Todas</button>
+        <button class="filter" data-filter="pendientes" aria-pressed="false">Pendientes</button>
+        <button class="filter" data-filter="revisar" aria-pressed="false">Para revisar</button>
+        <button class="filter" data-filter="terminadas" aria-pressed="false">Terminadas</button>
+      </nav>
+      <div class="table-wrap">
+        <table><thead><tr><th>Referencia</th><th>Estación</th><th>Trámite</th><th>Modo</th><th>Estado</th><th>Actualización</th></tr></thead>
+          <tbody id="filas"><tr><td colspan="6" class="empty">Consultando la cola…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+    <footer>ARY Super Servicios · Uso interno · Acceso limitado a red privada · Solo lectura</footer>
+  </main>
+</div>
+</body>
+</html>
