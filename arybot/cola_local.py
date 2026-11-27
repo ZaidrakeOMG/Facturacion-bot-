@@ -368,7 +368,7 @@ class ColaLocal:
                     new_reason=('Posible CFDI timbrado o alta guardada. ' if uncertain else
                                 'Captura retirada sin aceptar. ') + (
                                 'Operador archivó la solicitud tras revisar Polaris. '
-                                'No se reintentará automáticamente.') 
+                                'No se reintentará automáticamente.')
                     terminado=now
                     stale+=1
                 risk=int(bool(row['riesgo_cfdi']) or uncertain)
@@ -380,6 +380,13 @@ class ColaLocal:
                        WHERE id=? AND archivado=0""",
                     (new_state,new_reason,json.dumps(result,ensure_ascii=False),
                      risk,now,terminado,row['id']))
+                # La solicitud retirada no debe disparar avisos futuros.
+                # Los ENVÍOS ENVIANDO/ENVIADOS se conservan porque pudieron
+                # salir de Gmail y no deben alterarse ni repetirse.
+                c.execute(
+                    """UPDATE avisos SET estado='SUPERADA',detalle=?,actualizado=?
+                       WHERE trabajo=? AND estado='PENDIENTE'""",
+                    ('Solicitud retirada de la pantalla por el operador.',now,row['id']))
                 if row['id']==block:erased_block=True
                 count+=1
             if erased_block:
