@@ -316,12 +316,26 @@ class PortalWSGI:
         kind, sol, data = validar_entrada(body, vision=True) if vision else validar_entrada(body)
         source_id = 'web:' + self._mac('request', session['sid'] + ':' + request_id)
         with self.lock:
-            # Primero recuperar un envío de resultado incierto; no se repite en Polaris.
+            # Reenvíos de trabajos vigentes usan la MISMA referencia; no crean
+            # una segunda solicitud mientras la primera está en proceso.
             old = self.cola.store.source(source_id)
             if old:
                 if old['tipo'] != kind or old['datos'] != data:
                     raise HttpError(409, 'Esta solicitud ya se envió con otros datos. Revisa su seguimiento antes de iniciar otra.')
-                return 200, self._response_job(old, incluir_perfil_local=True), 'application/json; charset=utf-8', headers
+                if (kind == 'FACTURA' and old['archivado']
+                        and old['estado'] in ('CANCELADA', 'REVISION_CERRADA',
+                                             'REVISION_REQUERIDA', 'ESPERANDO_DATOS')):
+                    # No devolver eternamente un error de una operación archivada
+                    # cuando el navegador reenvía el mismo request_id.
+                    # El ID de reintento es estable: no multiplica operaciones
+                    # por doble clic, pérdida de red ni recarga de página.
+                    source_id = 'web:' + self._mac(
+                        'retry-archived', session['sid'] + ':' + request_id)
+                    retry = self.cola.store.source(source_id)
+                    if retry:
+                        return 200, self._response_job(retry, incluir_perfil_local=True), 'application/json; charset=utf-8', headers
+                else:
+                    return 200, self._response_job(old, incluir_perfil_local=True), 'application/json; charset=utf-8', headers
             expected_mode = environ.get('HTTP_X_ARY_MODE', '')
             actual_mode = 'seguro' if self.modo_seguro() else 'real'
             if expected_mode != actual_mode:
