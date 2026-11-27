@@ -90,7 +90,8 @@ class ColaLocal:
                 (clave,kind,int(bool(safe)),*sorted(blockers)))
             for row in rows:
                 original=self.unpack(row)
-                if original['datos']==data:
+                from .dispositivo_origen import datos_equivalentes
+                if datos_equivalentes(original['datos'],data):
                     return original
         return None
 
