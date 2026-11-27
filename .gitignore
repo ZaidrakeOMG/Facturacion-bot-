@@ -20,3 +20,5 @@ __pycache__/
 *.sqlite-journal
 *.sqlite-wal
 *.sqlite-shm
+data/monitor_web_clave.txt
+data/cola_operaciones.sqlite3
