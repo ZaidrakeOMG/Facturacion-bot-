@@ -17,9 +17,10 @@ class SqlTab(ttk.Frame):
         self.events=queue.Queue()
         self.busy=False
         saved=sql.load_settings(self.base)
-        self.server=tk.StringVar(value=saved.server or DEFAULT_SQL_SERVER)
-        self.port=tk.StringVar(value=str(saved.port))
-        self.user=tk.StringVar(value=saved.user if saved.server else "sa")
+        # Objetivo confirmado por el operador para la nueva etapa.
+        self.server=tk.StringVar(value=DEFAULT_SQL_SERVER)
+        self.port=tk.StringVar(value=str(saved.port if saved.server==DEFAULT_SQL_SERVER else 1433))
+        self.user=tk.StringVar(value="sa")
         self.password=tk.StringVar(value="")
         self.status=tk.StringVar(value="SQL Server preparado. Pulsa Conectar para comprobar la VM.")
         self.detail=tk.StringVar(value="Conexión: pendiente • Base del bot: pendiente")
@@ -60,9 +61,12 @@ class SqlTab(ttk.Frame):
     def _auto_test(self,event=None):
         if self.busy or self.auto_tested:return
         saved=sql.load_settings(self.base)
-        if not saved.server or not sql.get_password(saved):return
+        if saved.server!=self.server.get() or saved.user.casefold()!=self.user.get().casefold():
+            return
+        password=sql.get_password(saved)
+        if not password:return
         self.auto_tested=True
-        self._launch(saved,sql.get_password(saved))
+        self._launch(saved,password)
 
     def connect_sql(self):
         if self.busy:return
