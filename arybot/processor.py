@@ -63,9 +63,17 @@ class Processor:
             if kind=='ALTA':
                 estacion=normalize_station(_field(body,[r'estaci[oó]n',r'sucursal'])) or detect_station(b['subject'])
                 telefono=_field(body,[r'tel[eé]fono',r'celular'])
+                # Gmail no tiene formulario con lista. La clave SAT debe venir
+                # EXPLICITAMENTE en el correo, nunca inferida por el RFC.
+                import re
+                regimen_raw=_field(body,[r'r[eé]gimen\\s+fiscal',r'regimen\\s+fiscal'])
+                reg=re.match(r'^([0-9]{3})(?:\\s|$|\\s*[-—])',regimen_raw)
+                if not reg:
+                    raise ValueError('Para dar de alta por correo escribe: Régimen fiscal: 601 (usa la clave de tu constancia del SAT).')
                 sol=AltaCliente.crear(estacion,identidad.rfc,identidad.idcif,telefono,recipient,
                                       razon_social=identidad.razon_social,
-                                      calle_constancia=identidad.calle)
+                                      calle_constancia=identidad.calle,
+                                      regimen_fiscal=reg.group(1))
                 job,_=self.cola.encolar_alta(sol,source='Gmail',source_id=source_id,safe=safe,correo=recipient)
                 data=job['datos']
             else:
