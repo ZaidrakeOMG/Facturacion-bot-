@@ -28,6 +28,44 @@ ESTADOS_TERMINALES = {'ENVIO_SOLICITADO','YA_FACTURADO','ALTA_CONFIRMADA','CANCE
 BLOQUEAN_CLAVE = {'EN_COLA','EJECUTANDO'}
 BLOQUEAN_CLAVE_ALTA = {'EN_COLA','EJECUTANDO','PREPARADA_ALTA','ACEPTAR_ALTA'}
 
+def resultado_facturacion(job):
+    """Resultado legible para el operador; no reemplaza el estado auditable.
+
+    SÍ significa que Polaris confirmó un folio ya facturado o cerró el flujo
+    de emisión y solicitó el envío; no garantiza recepción del correo/PAC.
+    Si hay un timbrado incierto NO se afirma que el ticket no fue facturado.
+    """
+    estado = str(job.get('estado') or '')
+    tipo = str(job.get('tipo') or '')
+    motivo = str(job.get('motivo') or '').strip()
+    if tipo != 'FACTURA':
+        if estado == 'ALTA_CONFIRMADA':
+            return '—', 'Alta de cliente confirmada.'
+        if estado in ('EN_COLA', 'EJECUTANDO'):
+            return '—', 'Registro en atención automática.'
+        return '—', motivo or 'Trámite de alta; no corresponde a factura.'
+    if estado == 'YA_FACTURADO':
+        return 'SÍ', 'El folio ya estaba facturado; no se emitió otro CFDI.'
+    if estado == 'ENVIO_SOLICITADO' and not job.get('seguro'):
+        return 'SÍ', 'Polaris cerró el flujo y solicitó XML/PDF por correo; no se verifica aquí entrega ni UUID del PAC.'
+    if estado in ('EN_COLA', 'EJECUTANDO'):
+        return '—', ('Procesando la factura en Polaris.' if estado == 'EJECUTANDO'
+                     else 'Solicitud recibida; será atendida automáticamente.')
+    if bool(job.get('seguro')):
+        return 'NO', 'Operación de prueba: no se autorizó emitir CFDI. ' + motivo
+    import unicodedata
+    sin_acentos = unicodedata.normalize('NFKD', motivo)
+    sin_acentos = ''.join(c for c in sin_acentos if not unicodedata.combining(c)).casefold()
+    indicadores = ('posible cfdi', 'timbrado inciert', 'envio inciert',
+                   'correo pendiente', 'posible factura', 'sin confirmar el cierre',
+                   'cerró con una operación', 'cerro con una operacion')
+    if estado in ('REVISION_REQUERIDA', 'REVISION_CERRADA') and any(
+            termino in sin_acentos for termino in indicadores):
+        return 'SIN CONFIRMAR', (motivo or 'Polaris no confirmó el resultado.') + (
+            ' Comprueba el folio en Polaris antes de intentar emitirlo otra vez.')
+    return 'NO', motivo or 'La factura no se completó; el bot continúa con la siguiente solicitud.'
+
+
 class ColaError(RuntimeError): pass
 class SolicitudDuplicada(ColaError): pass
 
