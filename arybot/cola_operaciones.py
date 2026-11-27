@@ -21,12 +21,22 @@ class ColaOperaciones:
         self.on_event=on_event or (lambda *_:None)
         self.store=store or ColaLocal(base)
         recovered=self.store.recover()
+        # Se prepara una nueva etapa sólo con una base real del bot.
+        # Las pruebas que inyectan un almacén propio no alteran sus registros.
+        inicio={'primera_vez':False,'archivadas':0,'requiere_reanudar':False}
+        if store is None:
+            inicio=self.store.archivar_solicitudes(
+                confirmado=True,marca_inicio='ary_v2_nueva_etapa_magenta_20261127')
+            if inicio['primera_vez']:
+                log('Nueva etapa: se archivaron '+str(inicio['archivadas'])+
+                    ' solicitudes antiguas; no se borró el historial SQLite.')
+                recovered=[]  # No reenviar avisos de solicitudes archivadas
         self.avisos=avisos or AvisosCliente(base,cfg,self.store,log,on_event=self.on_event)
         self._stop=threading.Event();self._wake=threading.Event();self._consumer=threading.Lock()
         self._lifecycle=threading.RLock();self.thread=None
         # La pausa manual pertenece únicamente a esta ejecución del programa.
         # No se hereda de cierres anteriores ni de cuadros de diálogo.
-        self._manual_pause=False
+        self._manual_pause=bool(self.store.meta('pendiente_comprobar_polaris')=='1')
         for job in recovered:self._notice(job,'revision')
         # Recupera un acuse que no alcanzó a persistirse después de encolar; UNIQUE evita duplicarlo.
         for job in self.store.list(10000):
@@ -144,9 +154,10 @@ class ColaOperaciones:
         self.thread.start()
         self._wake.set()
 
-    def iniciar_cola(self):
+    def iniciar_cola(self, *, polaris_comprobado=False):
+        self.store.resume(polaris_comprobado=polaris_comprobado)
         self._manual_pause=False
-        self.store.resume();self._wake.set();self.on_event('cola','')
+        self._wake.set();self.on_event('cola','')
 
     def pausar(self):
         self._manual_pause=True
