@@ -1086,3 +1086,20 @@ def test_retomar_folio_rechaza_modo_seguro_y_polaris_ocupado(tmp_path):
     finally:q._consumer.release()
     assert store.get(old['id'])['archivado']==1
     bot.invoice.assert_not_called()
+
+
+def test_archivo_no_marca_timbrado_no_intentado_como_incierto(tmp_path):
+    """Un fallo antes de Aceptar no crea una falsa marca de CFDI incierto."""
+    from arybot.cola_local import ColaLocal
+    store=ColaLocal(tmp_path)
+    job=_factura_web_guardada(store,'7000030',estado='REVISION_REQUERIDA',
+            motivo='Error antes del timbrado: no se pudo abrir facturación.')
+    store.archivar_solicitudes(job['id'],confirmado=True)
+    assert store.get(job['id'])['riesgo_cfdi']==0
+    assert store.get(job['id'])['archivado']==1
+    assert not store.status()['bloqueo']
+    # El mismo ticket puede volver a consultarse: Polaris determina después
+    # si existe un CFDI. La gestión de fechas sigue vigente.
+    new,_=store.enqueue('FACTURA',job['datos'],source='Portal web',safe=False,
+                        clave=job['clave'])
+    assert new['id']!=job['id']
