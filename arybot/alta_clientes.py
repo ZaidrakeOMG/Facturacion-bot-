@@ -24,6 +24,7 @@ import time
 import uuid
 
 from .cliente_model import AltaCliente, AltaClienteError
+from .regimen_fiscal import texto_regimen, normalizar_regimen
 from . import polaris as pmod
 from .alta_texto import TextoWindows, TextoControlError, normalizar_campo
 
@@ -101,6 +102,8 @@ class AltaClientes:
 
     def preparar(self, solicitud: AltaCliente):
         sol=solicitud.validar()
+        if not sol.regimen_fiscal:
+            raise AltaClienteError('Falta seleccionar el régimen fiscal de la Constancia SAT antes del alta.')
         with self._exclusive():
             if self.pendiente:
                 raise AltaClienteError('Ya hay una preparación pendiente. Revísala antes de iniciar otra.')
@@ -128,6 +131,7 @@ class AltaClientes:
             self.ui.consultar_idcif(main,form)
             self._paso('ALTA EFECTIVO 5/7: esperando nombre y C. P. de la lupa (C. P. debajo del RFC).')
             self.ui.esperar_fiscales(main,form,sol)
+            self.ui.seleccionar_regimen(main,form,sol.regimen_fiscal)
             self._paso('ALTA EFECTIVO 6/7: capturando Teléfono 1 y Correo Electrónico.')
             # Si se omite el teléfono, no se inventa ni se pega un sustituto.
             # _validar_captura exige que el campo de Polaris también esté vacío.
@@ -135,6 +139,7 @@ class AltaClientes:
                 self.ui.escribir(main,form,'telefono',sol.telefono)
             self.ui.escribir(main,form,'correo',sol.correo)
             vals=self.ui.snapshot(main,form)
+            self.ui.verificar_regimen(main,form,sol.regimen_fiscal)
             self._validar_captura(sol,vals)
             self.ui.exigir_nuevo(main,form)
             self.pendiente=AltaPreparada(sol,form,main,self.bot._pid(main),vals,self.reloj(),uuid.uuid4().hex)
@@ -193,6 +198,7 @@ class AltaClientes:
             self.diario.revisar(sol)
             self.ui.verificar_contexto(p.principal,p.formulario,sol.estacion,p.pid)
             vals=self.ui.snapshot(p.principal,p.formulario)
+            self.ui.verificar_regimen(p.principal,p.formulario,sol.regimen_fiscal)
             self._validar_captura(sol,vals)
             if vals!=p.valores:
                 raise AltaClienteError('La pantalla cambió después de la preparación. No se presiona Aceptar.')
@@ -843,6 +849,87 @@ class PantallaAlta:
                 return
             time.sleep(.2)
         raise AltaClienteError('Nuevo no cambió el formulario a Insert Record. No se sobrescribió ningún cliente.')
+
+    def _regimen_control(self,main,form):
+        """Identificar el ComboBox fiscal en la franja inferior derecha del alta.
+
+        Se selecciona por clase de control y posición; nunca se hace clic
+        sobre coordenadas estimadas si no se puede verificar el control.
+        """
+        self._guard(main,form)
+        rect=self.bot._rect(form)
+        candidates=[]
+        def inspect(h,_):
+            try:
+                if not self.bot._window_exists_visible(h) or not self.wg.IsWindowEnabled(h):
+                    return
+                cls=self.bot._class_name(h).upper()
+                if 'COMBO' not in cls and 'LOOKUP' not in cls:
+                    return
+                r=self.bot._rect(h)
+                x=(r.left+r.right-2*rect.left)/(2*rect.width)
+                y=(r.top+r.bottom-2*rect.top)/(2*rect.height)
+                if .48<=x<=.96 and .70<=y<=.92 and r.width>=140 and 15<=r.height<=55:
+                    candidates.append((h,r))
+            except Exception:
+                pass
+        self.wg.EnumChildWindows(form,inspect,None)
+        if len(candidates)!=1:
+            raise ControlAltaNoIdentificado(
+                'No se identificó de forma única el selector Régimen Fiscal en Polaris. '
+                'Revisa la pantalla; no se guardará un régimen incorrecto.')
+        return candidates[0][0]
+
+    def _regimen_actual(self,h):
+        candidates=[]
+        try:
+            value=(self.wg.GetWindowText(h) or '').strip()
+            if value: candidates.append(value)
+        except Exception: pass
+        try:
+            wrapper=pmod.Desktop(backend='win32').window(handle=h).wrapper_object()
+            for value in wrapper.texts():
+                if value: candidates.append(str(value).strip())
+        except Exception: pass
+        return candidates[0] if candidates else ''
+
+    def verificar_regimen(self,main,form,clave):
+        h=self._regimen_control(main,form)
+        actual=self._regimen_actual(h)
+        expected=normalizar_regimen(texto_regimen(clave))
+        normal=normalizar_regimen(actual)
+        if not normal or not (normal==expected or normal.endswith(expected)):
+            raise AltaClienteError(
+                'El Régimen Fiscal de Polaris no coincide con el seleccionado en la solicitud. '
+                'No se pulsará Aceptar. Verifica el valor en la pantalla.')
+        return True
+
+    def seleccionar_regimen(self,main,form,clave):
+        """Seleccionar un valor real del combo y confirmar su texto visible."""
+        from .regimen_fiscal import REGIMENES
+        if clave not in REGIMENES:
+            raise AltaClienteError('Régimen fiscal no válido.')
+        self.exigir_nuevo(main,form)
+        h=self._regimen_control(main,form)
+        objetivo=normalizar_regimen(texto_regimen(clave))
+        actual=normalizar_regimen(self._regimen_actual(h))
+        if actual==objetivo or actual.endswith(objetivo):
+            return self.verificar_regimen(main,form,clave)
+        try:
+            w=pmod.Desktop(backend='win32').window(handle=h).wrapper_object()
+            opciones=list(w.item_texts())
+            similares=[item for item in opciones if
+                       normalizar_regimen(item)==objetivo or
+                       normalizar_regimen(item).endswith(objetivo)]
+            if len(similares)!=1:
+                raise ValueError('No se encontró la opción exacta en el combo.')
+            w.select(similares[0])
+        except Exception as exc:
+            raise AltaClienteError(
+                'No se pudo seleccionar automáticamente el Régimen Fiscal '+clave+
+                ' en Polaris. Revísalo manualmente; NO se guardó el alta.') from exc
+        self.verificar_regimen(main,form,clave)
+        self.exigir_nuevo(main,form)
 
     def consultar_idcif(self,main,form):
         self._guard(main,form)
