@@ -42,6 +42,7 @@ def documento_pdf(*, nombre='SERVICIOS ESPECIALIZADOS PENOLES SA DE CV',
 def cuerpo(*, tipo='FACTURA', pdf=None):
     values={'tipo':tipo,'estacion':'ARY V','constancia_pdf':b64encode(pdf or documento_pdf()).decode('ascii'),
             'correo':'cliente@example.com','correo_confirmacion':'cliente@example.com','sitio_web':'','confirmado':True}
+    if tipo=='ALTA': values['regimen_fiscal']='601'
     if tipo=='FACTURA':
         values.update(ticket='123',foto_ticket='JPEG-simulado',fecha_ticket=date.today().isoformat(),forma_pago='EFECTIVO',uso_cfdi='G03')
     return values
