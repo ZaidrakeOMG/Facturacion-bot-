@@ -138,6 +138,34 @@ def normalize_ticket_date(value: str) -> str:
     return parsed.isoformat()
 
 
+def fecha_facturable_portal(value: str, *, hoy: date | None = None) -> str:
+    """Comprueba el margen seguro cuando solo se conoce el día del ticket.
+
+    Polaris limita a 72 horas, pero el formulario público solo transmite
+    una FECHA (sin hora de compra). Aceptar el día de hace tres fechas
+    podría superar las 72 horas dependiendo de la hora de la operación.
+    Por eso el autoservicio acepta hoy y dos días anteriores, dentro
+    del mismo mes. No se manipula ni sustituye la fecha original.
+    """
+    from datetime import timedelta
+    iso=normalize_ticket_date(value)
+    if not iso:
+        raise ValueError('Falta la fecha del ticket.')
+    referencia=hoy or date.today()
+    compra=date.fromisoformat(iso)
+    if compra.year!=referencia.year or compra.month!=referencia.month:
+        raise ValueError('El portal solo permite tickets del mes actual.')
+    if compra>referencia:
+        raise ValueError('La fecha del ticket no puede ser futura.')
+    if compra<referencia-timedelta(days=2):
+        raise ValueError(
+            'La factura debe solicitarse dentro de las 72 horas. '
+            'Como el portal no conoce la hora de la compra, solo admite hoy '
+            'y los dos días anteriores para evitar el rechazo de Polaris. '
+            'Si tu ticket es de hace tres días, consulta a Facturación.')
+    return iso
+
+
 def ticket_date_display(value: str) -> str:
     iso=normalize_ticket_date(value)
     if not iso:

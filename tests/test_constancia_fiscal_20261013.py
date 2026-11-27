@@ -494,13 +494,14 @@ def test_factura_solo_rfc_pdf_sin_nombre_acepta_alta_no(tmp_path):
         validar_entrada(cuerpo(tipo='ALTA', pdf=doc))
 
 
-def test_portal_rechaza_fecha_mas_antigua_que_tres_dias():
+def test_portal_rechaza_fecha_de_tres_dias_sin_hora_de_compra():
     from datetime import timedelta
     formulario = cuerpo()
-    formulario['fecha_ticket'] = (date.today() - timedelta(days=4)).isoformat()
-    with pytest.raises(EntradaPortalError, match='72 horas'):
-        validar_entrada(formulario)
-    formulario['fecha_ticket'] = (date.today() - timedelta(days=3)).isoformat()
+    for dias in (4,3):
+        formulario['fecha_ticket'] = (date.today() - timedelta(days=dias)).isoformat()
+        with pytest.raises(EntradaPortalError, match='72 horas'):
+            validar_entrada(formulario)
+    formulario['fecha_ticket'] = date.today().isoformat()
     assert validar_entrada(formulario)[0] == 'FACTURA'
 
 

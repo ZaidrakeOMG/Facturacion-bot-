@@ -2561,6 +2561,14 @@ class PolarisBot:
         from .native_controls import preflight
         preflight(self,test_mode)
         self._guardia_campos_solicitud(sol,test_mode)
+        # Al procesar una solicitud antigua, volver a comprobar su fecha:
+        # pudo ser válida al recibirse, pero haber vencido esperando turno.
+        # Se valida ANTES de abrir Polaris para no tocar un CFDI vencido.
+        from .parser import fecha_facturable_portal
+        try:
+            fecha_facturable_portal(sol.fecha_ticket)
+        except ValueError as exc:
+            raise PolarisError('No se facturó: '+str(exc)+' Polaris no se abrió.') from exc
         from .factura_final import validar_correo
         if not isinstance(test_mode, bool):
             raise PolarisError("El modo debe ser explícitamente seguro o producción.")
@@ -2601,6 +2609,12 @@ class PolarisBot:
             self._add_ticket(inv,sol.ticket)
             self._verificar_captura(inv,sol)
             self._guardia_antes_aceptar(sol)
+            # El día pudo cambiar durante una operación larga. Revisar otra
+            # vez justo antes del Aceptar final (también en prueba segura).
+            try:
+                fecha_facturable_portal(sol.fecha_ticket)
+            except ValueError as exc:
+                raise PolarisError('No se facturó: ticket fuera de plazo. '+str(exc)) from exc
 
             if test_mode:
                 self.log("MODO SEGURO: folio agregado correctamente. NO se presionó el Aceptar final y NO se timbró.")

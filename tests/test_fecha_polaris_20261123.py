@@ -38,3 +38,24 @@ def test_calendario_de_polaris_mes_que_no_empieza_en_domingo():
 def test_fecha_ticket_25_noviembre():
     from arybot.polaris import PolarisBot
     assert PolarisBot._calendar_day_cell(2026,11,25)==(3,4)
+
+
+def test_plazo_fiscal_72h_sin_hora_no_acepta_fecha_de_tres_dias():
+    """Nov 27: Nov 25-27 seguros; Nov 24 puede haber vencido por la hora."""
+    import pytest
+    from arybot.parser import fecha_facturable_portal
+    hoy=date(2026,11,27)
+    for d in ("2026-11-27", "2026-11-26", "2026-11-25"):
+        assert fecha_facturable_portal(d,hoy=hoy)==d
+    for d in ("2026-11-24", "2026-11-23", "2026-10-31"):
+        with pytest.raises(ValueError):
+            fecha_facturable_portal(d,hoy=hoy)
+
+
+def test_plazo_mismo_mes_y_tres_fechas_contando_hoy():
+    import pytest
+    from arybot.parser import fecha_facturable_portal
+    hoy=date(2026,11,2)
+    assert fecha_facturable_portal("2026-11-01",hoy=hoy)=="2026-11-01"
+    with pytest.raises(ValueError,match='mes actual'):
+        fecha_facturable_portal("2026-10-31",hoy=hoy)
