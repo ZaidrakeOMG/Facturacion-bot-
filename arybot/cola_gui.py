@@ -97,11 +97,17 @@ class ColaTab(ttk.Frame):
         if not self._can_dialog():return
         rows=[r for r in self.cola.store.list(10000) if r['estado']=='EN_COLA']
         real=sum(not r['seguro'] for r in rows)
+        comprobar=self.cola.store.meta('pendiente_comprobar_polaris')=='1'
+        if comprobar and not messagebox.askyesno('Comprobar Polaris antes de emitir',
+            'Había una factura o un envío anterior sin confirmar. '
+            'Confirma que revisaste el folio y que Polaris está cerrado o libre. '
+            'Este botón NO reenvía la factura anterior. ¿Reanudar solo solicitudes NUEVAS?',
+            parent=self,default='no'):return
         if real and not messagebox.askyesno('Reanudar atención automática',
             f'Hay {real} solicitud(es) de emisión pendientes. Se procesarán una por una y podrán timbrarse. '
             'Asegúrate de que Polaris no tenga documentos o avisos abiertos y deja libre el teclado y ratón. ¿Continuar?',parent=self,default='no'):return
-        try:self.cola.iniciar_cola()
-        except Exception as exc:messagebox.showwarning('Cola',str(exc),parent=self)
+        try:self.cola.iniciar_cola(polaris_comprobado=comprobar)
+        except Exception as exc:messagebox.showwarning('Atención automática',str(exc),parent=self)
         self.refresh()
 
     def pause(self):self.cola.pausar();self.refresh()
@@ -355,8 +361,11 @@ class ColaTab(ttk.Frame):
         modo_seguro=bool(self.app.cfg.get('app',{}).get('modo_prueba',True))
         emision_pendiente=any(r['estado']=='EN_COLA' and not r['seguro'] for r in rows)
         if state['pausada']:
-            causa=state['motivo'] or 'Revisa Polaris antes de reanudar.'
-            estado='ATENCIÓN DETENIDA: '+causa
+            if self.cola.store.meta('pendiente_comprobar_polaris')=='1':
+                estado='NUEVA ETAPA: lista limpia. Comprueba Polaris y pulsa Reanudar atención automática.'
+            else:
+                causa=state['motivo'] or 'Revisa Polaris antes de reanudar.'
+                estado='ATENCIÓN DETENIDA: '+causa
         elif state['activa']:
             estado='Polaris procesando una solicitud; al terminar continuará con la siguiente.'
         elif modo_seguro and emision_pendiente:
@@ -374,7 +383,7 @@ class ColaTab(ttk.Frame):
             tabla.append((r['id'],(tracking(r['id']),r['tipo'],r['datos'].get('estacion',''),
                 r['datos'].get('ticket') or r['datos'].get('rfc',''),visible)))
         self._sync(self.tree,tabla)
-        notices=self.cola.store.notices()
+        notices=self.cola.store.notices(only_visible=True)
         self._sync(self.mailtree,[(r['id'],(datetime.fromtimestamp(r['creado']).strftime('%d/%m %H:%M:%S'),r['evento'],r['correo'],r['estado'])) for r in notices])
 
     def _tick(self):

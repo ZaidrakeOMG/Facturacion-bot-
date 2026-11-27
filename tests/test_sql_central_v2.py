@@ -74,3 +74,36 @@ def test_save_admin_diagnostic_in_local_vault_only(tmp_path, monkeypatch):
         sql.synchronize(settings, "fake-secret", tmp_path/"missing.db")
     assert "TrustServerCertificate=no;" in sql.connection_string(settings, "fake-secret")
 
+
+
+def test_prueba_sql_servidor_por_lan_sin_modificar_bd(monkeypatch):
+    """Solo consulta master: ni sa ni la IP terminan guardados en Git."""
+    import sys
+    from types import SimpleNamespace
+    seen=[]
+    class Conn:
+        def __init__(self,conn_string):
+            seen.append(conn_string)
+        def cursor(self):
+            return self
+        def execute(self,query,*params):
+            assert query.strip().upper().startswith('SELECT')
+            return self
+        def fetchone(self):
+            if len(seen)==1 and not hasattr(self,'_first'):
+                self._first=True
+                return ['SQL-ARY','16.0']
+            return [1]
+        def close(self):
+            pass
+    mock=SimpleNamespace(
+        drivers=lambda:['ODBC Driver 18 for SQL Server'],
+        connect=lambda sql_text,**kwargs: Conn(sql_text),
+        Error=Exception)
+    monkeypatch.setitem(sys.modules,'pyodbc',mock)
+    result=sql.probar_sql_servidor(sql.Settings("10.20.20.155",1433,"sa"),"testing-only")
+    assert result['servidor']=='SQL-ARY'
+    assert result['bot_database']
+    assert 'DATABASE=master' in seen[0]
+    assert 'SERVER=tcp:10.20.20.155,1433' in seen[0]
+    assert 'PWD={testing-only}' in seen[0]

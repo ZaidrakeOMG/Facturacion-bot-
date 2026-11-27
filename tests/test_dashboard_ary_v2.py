@@ -124,3 +124,18 @@ def test_los_dos_resultados_no_inventan_cfdi_ya_existentes():
     totals = summarize(rows)["totals"]
     assert totals["kpi_si"] == 0
     assert totals["kpi_no"] == 2
+
+
+def test_estadisticas_nueva_etapa_ocultan_solicitudes_archivadas(tmp_path):
+    from arybot.cola_local import ColaLocal
+    store=ColaLocal(tmp_path)
+    old,_=store.enqueue('FACTURA',{'ticket':'10001','estacion':'ARY I'},
+                        source='Portal web',safe=False)
+    store.finish(old['id'],'ENVIO_SOLICITADO',reason='Flujo completado')
+    store.archivar_solicitudes(old['id'],confirmado=True)
+    new,_=store.enqueue('FACTURA',{'ticket':'10002','estacion':'ARY II'},
+                        source='Portal web',safe=False)
+    hoy=read_jobs(store.path,'Hoy')
+    assert [job['id'] for job in hoy]==[new['id']]
+    historial=read_jobs(store.path,'Todo el historial')
+    assert {job['id'] for job in historial}=={old['id'],new['id']}

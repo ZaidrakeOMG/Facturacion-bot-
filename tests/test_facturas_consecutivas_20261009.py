@@ -717,3 +717,76 @@ def test_archivar_bloqueo_no_reanuda_al_llegar_nueva_solicitud(tmp_path):
     assert q.store.status()['pausada']
     assert not q.ejecutar_una()
     bot.invoice.assert_not_called()
+
+
+def test_primera_instalacion_magenta_lista_blanca_y_sin_reintentos(tmp_path):
+    """La actualización archiva solicitudes antiguas una sola vez y no timbra."""
+    from arybot.cola_operaciones import ColaOperaciones
+    from arybot.cola_modelo import DEFAULTS
+    store=ColaLocal(tmp_path)
+    anterior,_=store.enqueue('FACTURA', {'ticket':'40101','estacion':'ARY VI'},
+                             source='Portal web',source_id='web:antiguo',safe=False)
+    antiguo_ok,_=store.enqueue('FACTURA', {'ticket':'40102','estacion':'ARY VI'},
+                               source='Portal web',safe=False)
+    store.finish(antiguo_ok['id'],'ENVIO_SOLICITADO',reason='Factura emitida')
+    cfg={'app':{'modo_prueba':False,'ary_nueva_etapa_magenta':True},
+         'gmail':{},'ocr':{},'polaris':{},'cola':dict(DEFAULTS)}
+    bot=Mock()
+    q=ColaOperaciones(tmp_path,cfg,bot,Mock(),avisos=Mock())
+    assert q.store.list()==[]
+    assert q.store.get(anterior['id'])['estado']=='CANCELADA'
+    assert q.store.get(antiguo_ok['id'])['estado']=='ENVIO_SOLICITADO'
+    assert all(row['archivado']==1 for row in q.store.list(incluir_archivadas=True))
+    assert q.store.meta('ary_v2_nueva_etapa_magenta_20261127')=='1'
+    assert q.store.source('web:antiguo')['id']==anterior['id']
+    nuevo,_=q.store.enqueue('FACTURA', {'ticket':'40103','estacion':'ARY VI'},
+                            source='Portal web',safe=False)
+    q2=ColaOperaciones(tmp_path,cfg,bot,Mock(),avisos=Mock())
+    assert [r['id'] for r in q2.store.list()]==[nuevo['id']]
+    assert len(q2.store.list(incluir_archivadas=True))==3
+    bot.invoice.assert_not_called()
+
+
+def test_nueva_etapa_fiscal_incierto_no_auto_reanuda(tmp_path):
+    """Al limpiar un CFDI posiblemente timbrado, sigue bloqueado contra duplicado."""
+    from arybot.cola_operaciones import ColaOperaciones
+    from arybot.cola_modelo import DEFAULTS
+    store=ColaLocal(tmp_path)
+    viejo,_=store.enqueue('FACTURA',{'ticket':'40201','estacion':'ARY V'},
+                          source='Portal web',safe=False,clave='ARY_V:40201')
+    store.finish(viejo['id'],'REVISION_REQUERIDA',
+                 reason='Posible CFDI timbrado o envío pendiente.',hold=True)
+    cfg={'app':{'modo_prueba':False,'ary_nueva_etapa_magenta':True},
+         'gmail':{},'ocr':{},'polaris':{},'cola':dict(DEFAULTS)}
+    bot=Mock()
+    q=ColaOperaciones(tmp_path,cfg,bot,Mock(),avisos=Mock())
+    assert q.store.list()==[]
+    assert q._manual_pause
+    assert q.store.meta('pendiente_comprobar_polaris')=='1'
+    assert q.store.get(viejo['id'])['riesgo_cfdi']==1
+    with pytest.raises(ColaError,match='Confirma'):
+        q.iniciar_cola()
+    with pytest.raises(SolicitudDuplicada):
+        q.store.enqueue('FACTURA', {'ticket':'40201','estacion':'ARY V'},
+                        source='Portal web',safe=False,clave='ARY_V:40201')
+    q.iniciar_cola(polaris_comprobado=True)
+    assert not q.store.status()['pausada']
+    bot.invoice.assert_not_called()
+
+
+def test_nueva_etapa_incierta_sin_bloqueo_exige_comprobar(tmp_path):
+    from arybot.cola_operaciones import ColaOperaciones
+    from arybot.cola_modelo import DEFAULTS
+    store=ColaLocal(tmp_path)
+    viejo,_=store.enqueue('FACTURA', {'ticket':'40301','estacion':'ARY VI'},
+                          source='Portal web',safe=False,clave='ARY_VI:40301')
+    store.finish(viejo['id'],'REVISION_REQUERIDA',
+                 reason='Posible CFDI timbrado; no se confirmó cierre.',hold=False)
+    assert not store.status()['bloqueo']
+    cfg={'app':{'modo_prueba':False,'ary_nueva_etapa_magenta':True},
+         'gmail':{},'ocr':{},'polaris':{},'cola':dict(DEFAULTS)}
+    q=ColaOperaciones(tmp_path,cfg,Mock(),Mock(),avisos=Mock())
+    assert q.store.list()==[]
+    assert q.store.meta('pendiente_comprobar_polaris')=='1'
+    assert q.store.status()['pausada']
+    assert q.store.get(viejo['id'])['riesgo_cfdi']==1
