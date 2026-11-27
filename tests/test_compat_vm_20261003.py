@@ -177,7 +177,7 @@ def test_gui_no_silent_return_without_module(tmp_path):
 def test_gui_pending_review_not_overridden(tmp_path):
     a=app_fragment(tmp_path);a.cola.store.status=lambda:{'bloqueo':'previous','motivo':'Alta preparada'}
     assert not a._preparar_prueba_vm()
-    assert 'Liberar revisión' in a.direct_status.set.call_args.args[0]
+    assert 'ATENCIÓN DETENIDA' in a.direct_status.set.call_args.args[0]
     a.cfgm.save.assert_not_called()
 
 
