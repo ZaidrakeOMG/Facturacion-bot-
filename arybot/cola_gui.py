@@ -264,16 +264,20 @@ class ColaTab(ttk.Frame):
 
     def refresh(self):
         state=self.cola.store.status();c=state['conteos']
+        rows=self.cola.store.list()
         pendientes=c.get('EN_COLA',0)
+        modo_seguro=bool(self.app.cfg.get('app',{}).get('modo_prueba',True))
+        emision_pendiente=any(r['estado']=='EN_COLA' and not r['seguro'] for r in rows)
         if state['pausada']:
             causa=state['motivo'] or 'Revisa Polaris antes de reanudar.'
             estado='ATENCIÓN DETENIDA: '+causa
         elif state['activa']:
             estado='Polaris procesando una solicitud; al terminar continuará con la siguiente.'
+        elif modo_seguro and emision_pendiente:
+            estado='NO SE PUEDE FACTURAR: MODO SEGURO activado. Autoriza emisión para atender los tickets pendientes.'
         else:
             estado='Atención automática activa.'
         self.status.set(f'{estado} | Solicitudes por atender: {pendientes}')
-        rows=self.cola.store.list()
         tabla=[]
         for r in rows:
             resultado,motivo=resultado_facturacion(r)
