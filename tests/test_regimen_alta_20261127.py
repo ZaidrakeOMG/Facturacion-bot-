@@ -93,3 +93,34 @@ def test_polaris_rechaza_regimen_desconocido_antes_de_aceptar():
     ui=PantallaAlta.__new__(PantallaAlta)
     with pytest.raises(AltaClienteError, match='no válido'):
         ui.seleccionar_regimen(1,2,'000')
+
+
+def test_polaris_selecciona_por_nombre_exacto_y_no_por_indice(monkeypatch):
+    from types import SimpleNamespace
+    from arybot import alta_clientes
+    combo=Mock()
+    combo.item_texts.return_value=[
+        'PERSONAS MORALES CON FINES NO LUCRATIVOS',
+        'GENERAL DE LEY PERSONAS MORALES',
+        'SUELDOS Y SALARIOS E INGRESOS ASIMILADOS A SALARIOS',
+    ]
+    desktop=SimpleNamespace(window=lambda **kw:
+                            SimpleNamespace(wrapper_object=lambda:combo))
+    monkeypatch.setattr(alta_clientes.pmod,'Desktop',lambda **kw:desktop,raising=False)
+    ui=PantallaAlta.__new__(PantallaAlta)
+    ui.exigir_nuevo=Mock()
+    ui._regimen_control=Mock(return_value=11)
+    ui._regimen_actual=Mock(return_value='PERSONAS MORALES CON FINES NO LUCRATIVOS')
+    ui.verificar_regimen=Mock(return_value=True)
+    ui.seleccionar_regimen(1,2,'601')
+    combo.select.assert_called_once_with('GENERAL DE LEY PERSONAS MORALES')
+    ui.verificar_regimen.assert_called_once_with(1,2,'601')
+
+
+def test_alta_por_correo_acepta_codigo_fiscal_explicito():
+    from arybot.cola_modelo import leer_alta
+    sol=leer_alta('ALTA DE CLIENTE',
+        'Estación: ARY IV\nRFC: AAA010101AAA\nidCIF: 00123456789\n'
+        'Régimen fiscal: 601 — General de Ley Personas Morales\n'
+        'Correo: cliente@example.com','cliente@example.com')
+    assert sol.regimen_fiscal=='601'
