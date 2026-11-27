@@ -29,6 +29,8 @@ def test_real_invoices_only():
     result = summarize(rows)
     assert result["totals"]["solicitudes"] == 9
     assert result["totals"]["procesadas"] == 1
+    assert result["totals"]["kpi_si"] == 1
+    assert result["totals"]["kpi_no"] == 1
     assert result["totals"]["pruebas"] == 2
     assert result["totals"]["ya_facturado"] == 1
     assert result["totals"]["revision"] == 2
@@ -89,3 +91,36 @@ def test_panel_no_muestra_estado_tecnico_en_filas():
     assert summary['details'][0][4] == 'NO'
     assert summary['details'][1][4] == 'SÍ'
     assert all('REVISION_REQUERIDA' not in d[5] for d in summary['details'])
+
+
+def test_dos_kpi_excluyen_pendientes_pruebas_y_factura_incierta():
+    rows = [
+        make_row("ENVIO_SOLICITADO"),
+        make_row("ENVIO_SOLICITADO", safe=1),
+        make_row("YA_FACTURADO"),
+        make_row("EN_COLA"),
+        make_row("EJECUTANDO"),
+        make_row("PRUEBA_CERRADA", safe=1),
+        make_row("REVISION_REQUERIDA", safe=0),
+        make_row("ALTA_CONFIRMADA", kind="ALTA"),
+        make_row("DUPLICADA"),
+    ]
+    rows.append(dict(make_row("REVISION_REQUERIDA"), id="incierta",
+                     motivo="Posible CFDI timbrado o correo pendiente."))
+    s = summarize(rows)
+    assert s["totals"]["kpi_si"] == 1
+    assert s["totals"]["kpi_no"] == 1
+    assert s["totals"]["inciertas"] == 1
+
+
+def test_los_dos_resultados_no_inventan_cfdi_ya_existentes():
+    rows = [
+        make_row("YA_FACTURADO"),
+        make_row("REVISION_CERRADA", safe=0),
+        make_row("ESPERANDO_DATOS", safe=0),
+        make_row("REVISION_REQUERIDA", safe=1),
+        make_row("CANCELADA", safe=0),
+    ]
+    totals = summarize(rows)["totals"]
+    assert totals["kpi_si"] == 0
+    assert totals["kpi_no"] == 2
