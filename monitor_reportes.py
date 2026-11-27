@@ -125,6 +125,7 @@ def generar_reporte(filas, *, ahora=None, limite_tabla=150):
     ahora = float(time.time() if ahora is None else ahora)
     resultados = Counter()
     altas = Counter()
+    dispositivos = defaultdict(Counter)
     motivos_no = Counter()
     motivos_revision = Counter()
     estaciones = defaultdict(Counter)
@@ -142,9 +143,15 @@ def generar_reporte(filas, *, ahora=None, limite_tabla=150):
         estado = str(item["estado"] or "").upper()
         seguro = bool(item["seguro"])
         riesgo = bool(item["riesgo_cfdi"])
+        dispositivo = campos.get("dispositivo_origen", "no_identificado")
+        if item["origen"] != "Portal web" or dispositivo not in ("telefono", "computadora", "tableta"):
+            dispositivo = "no_identificado"
         grupo, etiqueta, razon = clasificar(tipo, estado, seguro, item["motivo"], riesgo)
         if tipo == "FACTURA":
             resultados[grupo] += 1
+            if grupo != "prueba":
+                dispositivos[dispositivo]["total"] += 1
+                dispositivos[dispositivo][grupo] += 1
             if grupo != "prueba":
                 estaciones[estacion][grupo] += 1
             if grupo == "no":
@@ -172,6 +179,7 @@ def generar_reporte(filas, *, ahora=None, limite_tabla=150):
                 ) else "Otro",
                 "modo": "Prueba" if seguro else "Real",
                 "grupo": grupo,
+                "dispositivo": dispositivo if item["origen"] == "Portal web" else "no_identificado",
                 "resultado": etiqueta,
                 "motivo": razon,
                 "riesgo_cfdi": riesgo,
@@ -184,6 +192,12 @@ def generar_reporte(filas, *, ahora=None, limite_tabla=150):
             "si", "no", "pendiente", "revision", "prueba",
             "ya_facturado", "envio_solicitado"
         )},
+        "dispositivos": {
+            categoria: {clave: int(dispositivos[categoria][clave]) for clave in (
+                "total", "si", "no", "pendiente", "revision"
+            )}
+            for categoria in ("telefono", "computadora", "tableta", "no_identificado")
+        },
         "altas": {k: int(altas[k]) for k in (
             "alta_si", "alta_no", "alta_pendiente", "alta_revision", "prueba"
         )},
