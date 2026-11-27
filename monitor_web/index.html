@@ -1,82 +1,207 @@
 <!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="robots" content="noindex,nofollow">
-<title>ARY | Centro de monitoreo</title>
-<link rel="stylesheet" href="/monitor.css">
-<script defer src="/monitor.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#580c3d">
+  <title>ARY Gasolineras · Centro de Control</title>
+  <link rel="stylesheet" href="/monitor.css">
+  <script src="/monitor.js" defer></script>
 </head>
 <body>
-<div class="app">
-  <header class="top">
-    <div class="identity">
-      <div class="mark">A<span>R</span>Y</div>
-      <div><div class="kicker">SISTEMAS INTERNOS</div><div class="brand">Centro de monitoreo</div></div>
-    </div>
-    <div class="top-right">
-      <div id="conexion" class="connection"><span class="dot"></span><span id="conexion-texto">Conectando…</span></div>
-      <button id="actualizar" class="refresh" type="button" aria-label="Actualizar ahora">↻ <span>Actualizar</span></button>
-    </div>
-  </header>
-  <main>
-    <div class="intro">
-      <div><p class="eyebrow">OPERACIÓN · FACTURACIÓN AUTOMÁTICA</p>
-      <h1>Vista general <span>de operaciones.</span></h1>
-      <p class="subtitle">Seguimiento de solicitudes recibidas por ARY, directamente desde la cola local de la VM.</p></div>
-      <div class="refresh-info"><span>Actualización automática cada 10 s</span><small id="actualizado">Sin información todavía</small></div>
-    </div>
-
-    <div id="alerta" class="alert" hidden role="alert"></div>
-    <section class="cards" aria-label="Resumen de la cola">
-      <article class="stat"><span class="stat-name">En espera</span><strong id="cuenta-cola">—</strong><span class="stat-foot"><span class="pin blue"></span> Solicitudes en cola</span></article>
-      <article class="stat"><span class="stat-name">En ejecución</span><strong id="cuenta-ejecutando">—</strong><span class="stat-foot"><span class="pin violet"></span> Atendiéndose en Polaris</span></article>
-      <article class="stat"><span class="stat-name">Trámites finalizados</span><strong id="cuenta-finalizadas">—</strong><span class="stat-foot"><span class="pin green"></span> Según estado registrado</span></article>
-      <article class="stat"><span class="stat-name">Requieren atención</span><strong id="cuenta-revision">—</strong><span class="stat-foot"><span class="pin orange"></span> Revisión / bloqueo</span></article>
-    </section>
-
-    <section class="status-grid" aria-label="Estado del sistema">
-      <div class="panel system-panel">
-        <div class="section-head"><div><p class="eyebrow">SISTEMA</p><h2>Estado de la cola</h2></div><span class="icon">◎</span></div>
-        <div class="status-rows">
-          <div><span>Cola</span><strong id="pausada">—</strong></div>
-          <div><span>Bloqueo fiscal / captura</span><strong id="bloqueada">—</strong></div>
-          <div><span>Trabajo activo</span><strong id="activa">—</strong></div>
-          <div><span>Último movimiento registrado</span><strong id="actividad">—</strong></div>
+  <div class="ambient ambient-one" aria-hidden="true"></div>
+  <div class="ambient ambient-two" aria-hidden="true"></div>
+  <div class="shell" id="shell">
+    <aside class="sidebar" id="sidebar" aria-label="Navegación del monitor">
+      <div class="sidebar-head">
+        <div class="brand-sign" aria-hidden="true">
+          <span>ARY</span>
+          <svg viewBox="0 0 28 34" fill="none" width="21" height="25" aria-hidden="true"><path d="M14 1C11 8 3 15 3 22a11 11 0 0 0 22 0C25 15 17 8 14 1Z" fill="#FFC064"/><path d="M14 16c-1 3-6 7-6 10a6 6 0 0 0 12 0c0-3-5-7-6-10Z" fill="#FFF1C8"/></svg>
         </div>
-        <div class="disclaimer">El estado de SQLite no confirma por sí solo que la ventana de Polaris o el proceso del bot estén activos. Este panel no ejecuta facturas.</div>
+        <div class="brand-sub">GASOLINERAS</div>
+        <button class="sidebar-collapse icon-btn" id="btn-collapse" type="button" aria-label="Contraer o expandir menú" title="Contraer menú">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m14 6-6 6 6 6"/></svg>
+        </button>
       </div>
-      <div class="panel notices-panel">
-        <div class="section-head"><div><p class="eyebrow">COMUNICACIONES</p><h2>Avisos por correo</h2></div><span class="icon">✉</span></div>
-        <div class="notice-grid">
-          <div><strong id="aviso-pendiente">—</strong><span>Pendientes</span></div>
-          <div><strong id="aviso-enviando">—</strong><span>Enviando</span></div>
-          <div><strong id="aviso-error">—</strong><span>Errores / inciertos</span></div>
-        </div>
-        <p class="subtle">El aviso enviado no garantiza que el destinatario haya recibido el CFDI.</p>
-      </div>
-    </section>
-
-    <section class="panel list-panel" aria-label="Solicitudes recientes">
-      <div class="list-header">
-        <div><p class="eyebrow">TRAZABILIDAD</p><h2>Solicitudes recientes</h2><p class="subtle">Últimos 100 registros no archivados. Datos personales ocultos.</p></div>
-        <div id="total-tabla" class="count-chip">— registros</div>
-      </div>
-      <nav class="filters" aria-label="Filtrar solicitudes">
-        <button class="filter active" data-filter="todas" aria-pressed="true">Todas</button>
-        <button class="filter" data-filter="pendientes" aria-pressed="false">Pendientes</button>
-        <button class="filter" data-filter="revisar" aria-pressed="false">Para revisar</button>
-        <button class="filter" data-filter="terminadas" aria-pressed="false">Terminadas</button>
+      <div class="menu-subtitle">PLATAFORMA INTERNA</div>
+      <nav class="nav" aria-label="Secciones">
+        <button class="nav-link active" type="button" data-view="resumen" aria-current="page">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="8" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="15" width="7" height="6" rx="2"/></svg></span>
+          <span class="nav-title">Dashboard</span><span class="nav-selected"></span>
+        </button>
+        <button class="nav-link" type="button" data-view="solicitudes">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3h10l3 3v15H4V3h3Z"/><path d="M8 10h8M8 14h8M8 18h5"/></svg></span>
+          <span class="nav-title">Solicitudes</span>
+        </button>
+        <button class="nav-link" type="button" data-view="incidencias">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 3 10 18H2L12 3Z"/><path d="M12 9v5m0 3v1"/></svg></span>
+          <span class="nav-title">Incidencias</span>
+          <span class="nav-count" id="menu-incidencias">0</span>
+        </button>
+        <div class="nav-separator"></div>
+        <span class="nav-label">OPERACIÓN</span>
+        <button class="nav-link" type="button" data-view="operacion">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg></span>
+          <span class="nav-title">Cola y sistema</span>
+        </button>
       </nav>
-      <div class="table-wrap">
-        <table><thead><tr><th>Referencia</th><th>Estación</th><th>Trámite</th><th>Modo</th><th>Estado</th><th>Actualización</th></tr></thead>
-          <tbody id="filas"><tr><td colspan="6" class="empty">Consultando la cola…</td></tr></tbody>
-        </table>
+      <div class="sidebar-bottom">
+        <div class="sidebar-system"><span class="status-light" id="side-dot"></span><div><strong>ARY Monitor</strong><small>Solo lectura · Conexión LAN</small></div></div>
+        <div class="sidebar-foot">GASOLINERAS ARY · 2026</div>
       </div>
-    </section>
-    <footer>ARY Super Servicios · Uso interno · Acceso limitado a red privada · Solo lectura</footer>
-  </main>
-</div>
+    </aside>
+    <button class="backdrop" id="backdrop" type="button" aria-label="Cerrar menú"></button>
+
+    <div class="workspace">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="icon-btn menu-mobile" id="btn-menu" type="button" aria-label="Abrir menú" aria-controls="sidebar" aria-expanded="false">
+            <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+          <span class="breadcrumb">ARY <span>/</span> <strong id="breadcrumb">Dashboard</strong></span>
+        </div>
+        <div class="topbar-right">
+          <div class="connection" id="conexion"><span class="connection-dot"></span><span id="conexion-texto">Conectando…</span></div>
+          <div class="avatar" title="Monitor de solo lectura">A</div>
+        </div>
+      </header>
+
+      <main class="main">
+        <section class="page-heading">
+          <div>
+            <p class="eyebrow"><span class="eyebrow-line"></span> CENTRO DE CONTROL · FACTURACIÓN</p>
+            <h1 id="vista-titulo">Panel de <em>resultados.</em></h1>
+            <p class="subtitle" id="vista-subtitulo">Una lectura clara de las solicitudes que atiende ARY Facturación Bot.</p>
+          </div>
+          <div class="heading-actions">
+            <label class="select-wrap" for="selector-periodo"><span>PERIODO</span>
+              <select id="selector-periodo" aria-label="Periodo estadístico">
+                <option value="7">Últimos 7 días</option>
+                <option value="30" selected>Últimos 30 días</option>
+                <option value="all">Todo el historial visible</option>
+              </select>
+            </label>
+            <button id="btn-refresh" class="refresh-btn" type="button">
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 11a8 8 0 1 0-3 7M20 4v7h-7"/></svg>
+              <span>Actualizar</span>
+            </button>
+          </div>
+        </section>
+
+        <div class="alert" id="alerta" hidden role="alert"></div>
+
+        <section class="view active" id="vista-resumen" aria-label="Panel de resultados">
+          <div class="intro-ribbon"><span class="ribbon-symbol">✦</span><div><strong>Visión general de facturación</strong><span>Resultados reales registrados en la cola. Las pruebas y altas no se cuentan como facturas.</span></div><span class="ribbon-pill" id="fecha-resumen">Sin datos</span></div>
+          <div class="metrics">
+            <article class="metric"><div class="metric-top"><span>Facturas · total</span><span class="metric-icon magenta">▣</span></div><strong id="k-total" data-count="0">—</strong><small>Solicitudes reales del periodo</small><span class="metric-accent"></span></article>
+            <article class="metric"><div class="metric-top"><span>Con factura · Sí</span><span class="metric-icon emerald">✓</span></div><strong id="k-si" data-count="0">—</strong><small>Envío solicitado o ya facturada</small><span class="metric-accent green"></span></article>
+            <article class="metric"><div class="metric-top"><span>No completadas</span><span class="metric-icon coral">×</span></div><strong id="k-no" data-count="0">—</strong><small>Sin emisión, según el registro</small><span class="metric-accent red"></span></article>
+            <article class="metric"><div class="metric-top"><span>Pendientes</span><span class="metric-icon amber">◷</span></div><strong id="k-pend" data-count="0">—</strong><small>En cola o en ejecución</small><span class="metric-accent yellow"></span></article>
+            <article class="metric"><div class="metric-top"><span>Sin confirmar</span><span class="metric-icon lavender">!</span></div><strong id="k-revision" data-count="0">—</strong><small>Requieren verificar en Polaris</small><span class="metric-accent lavender"></span></article>
+          </div>
+
+          <div class="analytics-row">
+            <article class="panel distribution">
+              <div class="panel-title"><div><p class="section-tag">ESTADÍSTICAS</p><h2>Resultado de facturación</h2><span class="panel-help">Distribución de solicitudes reales del periodo.</span></div><span class="panel-deco">01</span></div>
+              <div class="donut-layout">
+                <div class="donut-visual" role="img" aria-label="Distribución de facturación: Sí, No, Pendientes y Sin confirmar" id="donut-access">
+                  <svg class="donut" viewBox="0 0 120 120" aria-hidden="true">
+                    <circle class="donut-track" cx="60" cy="60" r="47" fill="none" stroke-width="13"/>
+                    <circle id="donut-si" class="donut-arc" cx="60" cy="60" r="47" pathLength="100" fill="none" stroke-width="13" stroke-dasharray="0 100"/>
+                    <circle id="donut-no" class="donut-arc" cx="60" cy="60" r="47" pathLength="100" fill="none" stroke-width="13" stroke-dasharray="0 100"/>
+                    <circle id="donut-pend" class="donut-arc" cx="60" cy="60" r="47" pathLength="100" fill="none" stroke-width="13" stroke-dasharray="0 100"/>
+                    <circle id="donut-revision" class="donut-arc" cx="60" cy="60" r="47" pathLength="100" fill="none" stroke-width="13" stroke-dasharray="0 100"/>
+                  </svg>
+                  <div class="donut-center"><strong id="donut-total">—</strong><span>FACTURAS</span></div>
+                </div>
+                <div class="legend">
+                  <div><span><i class="legend-dot green"></i> Con factura</span><strong id="legend-si">—</strong></div>
+                  <div><span><i class="legend-dot red"></i> No completadas</span><strong id="legend-no">—</strong></div>
+                  <div><span><i class="legend-dot yellow"></i> Pendientes</span><strong id="legend-pend">—</strong></div>
+                  <div><span><i class="legend-dot lilac"></i> Sin confirmar</span><strong id="legend-revision">—</strong></div>
+                  <p>Una solicitud de envío no garantiza la entrega del CFDI ni su UUID. «Ya facturado» no implica una nueva emisión.</p>
+                </div>
+              </div>
+            </article>
+            <article class="panel trend-panel">
+              <div class="panel-title"><div><p class="section-tag">TENDENCIA</p><h2>Movimiento reciente</h2><span class="panel-help">Facturas reales registradas en los últimos 7 días.</span></div><span class="panel-deco">02</span></div>
+              <div class="trend-key"><span><i class="legend-dot green"></i> Con factura</span><span><i class="legend-dot red"></i> No completadas</span></div>
+              <div class="trend-wrap"><svg id="grafica-tendencia" viewBox="0 0 620 200" role="img" aria-label="Gráfica de tendencias durante 7 días"><text x="310" y="96" class="chart-empty" text-anchor="middle">Consultando datos…</text></svg></div>
+              <div class="trend-footer">Las fechas se agrupan por registro de solicitud, no por fecha del timbrado.</div>
+            </article>
+          </div>
+
+          <div class="analytics-row lower">
+            <article class="panel reason-panel">
+              <div class="panel-title"><div><p class="section-tag">DIAGNÓSTICO</p><h2>¿Por qué no se completó?</h2><span class="panel-help">Motivos agrupados para proteger datos del cliente.</span></div><button class="link-soft" data-goto="incidencias" type="button">Ver incidencias →</button></div>
+              <div id="motivos-no" class="bars"><div class="empty">Consultando motivos…</div></div>
+            </article>
+            <article class="panel station-panel">
+              <div class="panel-title"><div><p class="section-tag">ESTACIONES</p><h2>Resultados por estación</h2><span class="panel-help">Comparativa por punto de servicio.</span></div><span class="panel-deco">03</span></div>
+              <div id="grafica-estaciones" class="stations"><div class="empty">Consultando estaciones…</div></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="view" id="vista-solicitudes" aria-label="Tabla de solicitudes" hidden>
+          <article class="panel table-panel">
+            <div class="table-head"><div><p class="section-tag">HISTORIAL</p><h2>Detalle de solicitudes</h2><span class="panel-help">Hasta 150 registros recientes del periodo. Sin RFC, correo ni datos fiscales.</span></div><span class="pill neutral" id="total-tabla">— registros</span></div>
+            <div class="table-tools">
+              <label class="search-box"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg><input id="busqueda" type="search" autocomplete="off" placeholder="Buscar referencia, estación o motivo…" aria-label="Buscar en solicitudes"></label>
+              <select id="filtro-resultado" class="filter-select" aria-label="Filtrar por resultado">
+                <option value="todos">Todos los resultados</option>
+                <option value="si">Con factura</option>
+                <option value="no">No completadas</option>
+                <option value="pendiente">Pendientes</option>
+                <option value="revision">Sin confirmar</option>
+                <option value="alta">Altas de cliente</option>
+                <option value="prueba">Pruebas</option>
+              </select>
+            </div>
+            <div class="table-scroll"><table><thead><tr><th>Referencia</th><th>Estación</th><th>Trámite</th><th>Modo</th><th>Resultado</th><th>Motivo / diagnóstico</th><th>Actualización</th></tr></thead><tbody id="filas"><tr><td colspan="7" class="empty">Consultando la cola…</td></tr></tbody></table></div>
+            <div class="table-foot"><span id="tabla-nota">Los registros archivados no se incluyen en este monitor.</span><button class="link-soft" type="button" data-goto="resumen">Volver al resumen ↗</button></div>
+          </article>
+        </section>
+
+        <section class="view" id="vista-incidencias" aria-label="Incidencias y causas" hidden>
+          <div class="incident-hero"><div><p class="section-tag">CONTROL Y DIAGNÓSTICO</p><h2>El porqué detrás de cada resultado.</h2><p>Separamos «No completada» de «Sin confirmar» para no afirmar que una factura falló si Polaris pudo haberla timbrado.</p></div><div class="incident-hero-icon" aria-hidden="true">!</div></div>
+          <div class="analytics-row">
+            <article class="panel reason-panel"><div class="panel-title"><div><p class="section-tag">RESULTADO NO</p><h2>Solicitudes no completadas</h2><span class="panel-help">Casos cancelados, duplicados o con datos insuficientes.</span></div></div><div id="motivos-no-detalle" class="bars"></div></article>
+            <article class="panel reason-panel"><div class="panel-title"><div><p class="section-tag">RESULTADO INCIERTO</p><h2>Requieren verificación</h2><span class="panel-help">No repetir una factura sin revisar Polaris.</span></div></div><div id="motivos-revision" class="bars"></div></article>
+          </div>
+          <div class="disclaimer large"><strong>Precaución con CFDI:</strong> «Envío solicitado» no garantiza timbrado SAT o entrega del correo. Un trabajo en revisión, incluso cerrado, puede tener resultado incierto. La clasificación no autoriza duplicar tickets.</div>
+        </section>
+
+        <section class="view" id="vista-operacion" aria-label="Operación y avisos" hidden>
+          <div class="operations-grid">
+            <article class="panel op-panel">
+              <div class="panel-title"><div><p class="section-tag">ESTADO TÉCNICO</p><h2>Cola de operaciones</h2><span class="panel-help">Estado persistido en SQLite; no es monitoreo del escritorio de Windows.</span></div><span class="pulse-icon" aria-hidden="true"></span></div>
+              <div class="state-list">
+                <div><span>Cola configurada</span><strong id="estado-cola">—</strong></div>
+                <div><span>Bloqueo fiscal / captura</span><strong id="estado-bloqueo">—</strong></div>
+                <div><span>Trabajo en ejecución</span><strong id="estado-activa">—</strong></div>
+                <div><span>Último cambio guardado</span><strong id="estado-actividad">—</strong></div>
+              </div>
+              <div class="disclaimer"><strong>Importante:</strong> la cola puede quedar habilitada aunque Polaris esté cerrado. Este panel no interactúa con la pantalla ni reinicia procesos.</div>
+            </article>
+            <article class="panel op-panel">
+              <div class="panel-title"><div><p class="section-tag">COMUNICACIÓN</p><h2>Estado de los avisos</h2><span class="panel-help">Conteo de avisos de solicitudes visibles.</span></div><span class="mail-icon" aria-hidden="true">✉</span></div>
+              <div class="mail-metrics">
+                <div><strong id="aviso-pendiente">—</strong><span>Pendientes</span></div><div><strong id="aviso-enviando">—</strong><span>Enviando</span></div><div><strong id="aviso-enviado">—</strong><span>Enviados</span></div><div><strong id="aviso-error">—</strong><span>Error / incierto</span></div>
+              </div>
+              <div class="disclaimer">Un aviso enviado por correo no verifica que el CFDI haya sido recibido.</div>
+            </article>
+          </div>
+          <article class="panel operation-summary">
+            <div class="panel-title"><div><p class="section-tag">CONTEO GLOBAL</p><h2>Trámites en esta VM</h2><span class="panel-help">Estados actuales de la cola, independientemente del periodo elegido.</span></div></div>
+            <div class="op-quick"><div><span>Esperando atención</span><strong id="cola-global">—</strong></div><div><span>Procesando ahora</span><strong id="ejecutando-global">—</strong></div><div><span>Altas confirmadas en el periodo</span><strong id="altas-ok">—</strong></div><div><span>Pruebas de facturación en el periodo</span><strong id="pruebas-total">—</strong></div></div>
+          </article>
+        </section>
+
+        <footer class="footer"><span>© ARY GASOLINERAS · CENTRO DE CONTROL</span><span>Actualiza cada 10 s · <strong id="ultima-lectura">Aún sin lectura</strong></span></footer>
+      </main>
+    </div>
+  </div>
 </body>
 </html>
