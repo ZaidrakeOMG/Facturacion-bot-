@@ -3,6 +3,7 @@ from __future__ import annotations
 import tkinter as tk
 from tkinter import ttk,messagebox
 from datetime import datetime
+from .parser import STATIONS
 from .cola_modelo import ajustes_cola,tracking,texto_cliente,ESTADOS_REVISION,ESTADOS_TERMINALES,resultado_facturacion
 
 class ColaTab(ttk.Frame):
@@ -35,6 +36,12 @@ class ColaTab(ttk.Frame):
                        ('Borrar todas',self.archive_all),('Revisar alta',self.open_alta),
                        ('Resolver bloqueo comprobado',self.release)]:
             ttk.Button(acts,text=txt,command=fn).pack(side='left',padx=(0,7))
+        recovery=ttk.Frame(jobs)
+        recovery.pack(fill='x',pady=(1,8))
+        ttk.Button(recovery,text='Retomar folio comprobado SIN factura',
+                   command=self.recover_archived_ticket).pack(side='left')
+        ttk.Label(recovery,text='Solo para folios anteriores que verificaste en Polaris.',
+                  foreground='#765368').pack(side='left',padx=(10,0))
         ttk.Label(jobs,text='Borrar retira la solicitud de esta lista y cancela las que aún no comenzaron. '
                     'Conserva el registro y el motivo en SQLite para auditoría y estadísticas. '
                     'No cancela una factura ni borra un CFDI de Polaris.',
@@ -277,6 +284,65 @@ class ColaTab(ttk.Frame):
         if resultado['requiere_reanudar']:
             aviso+='\n\nRevisa Polaris y reanuda la atención automática.'
         messagebox.showinfo('Lista limpiada',aviso,parent=self)
+
+    def recover_archived_ticket(self):
+        """Pide la estación/folio porque la solicitud vieja está archivada."""
+        if not self._can_dialog():return
+        window=tk.Toplevel(self)
+        window.title('Retomar solicitud anterior sin CFDI')
+        window.geometry('470x282')
+        window.resizable(False,False)
+        window.transient(self.winfo_toplevel())
+        content=ttk.Frame(window,padding=18)
+        content.pack(fill='both',expand=True)
+        ttk.Label(content,text='Recuperar el ticket original',
+                  font=('Segoe UI',13,'bold')).pack(anchor='w')
+        ttk.Label(content,text='Confirma primero en Polaris que este ticket NO tiene '
+                  'una factura emitida. Se usará la solicitud guardada: no tendrás '
+                  'que ingresar nuevamente los datos fiscales.',wraplength=420).pack(
+                  anchor='w',pady=(7,14))
+        stations=list(STATIONS)
+        station=tk.StringVar(value='ARY IV' if 'ARY IV' in stations else stations[0])
+        folio=tk.StringVar()
+        form=ttk.Frame(content)
+        form.pack(fill='x')
+        ttk.Label(form,text='Estación').grid(row=0,column=0,sticky='w',padx=(0,12),pady=5)
+        ttk.Combobox(form,textvariable=station,values=stations,state='readonly',
+                     width=28).grid(row=0,column=1,sticky='w',pady=5)
+        ttk.Label(form,text='Folio').grid(row=1,column=0,sticky='w',padx=(0,12),pady=5)
+        entry=ttk.Entry(form,textvariable=folio,width=30)
+        entry.grid(row=1,column=1,sticky='w',pady=5)
+        def save():
+            ticket=folio.get().strip()
+            if not ticket.isdecimal() or not ticket:
+                messagebox.showwarning('Revisa el folio',
+                    'Introduce el folio numérico del ticket.',parent=window)
+                return
+            if not messagebox.askyesno('Confirmar sin CFDI',
+                'He consultado en Polaris el folio '+ticket+' de '+station.get()+
+                ' y verifiqué que NO existe un CFDI emitido ni un envío en curso.\n\n'
+                'Retomaré la misma solicitud guardada y el bot la procesará '
+                'automáticamente cuando Polaris esté libre. ¿Confirmas?',
+                parent=window,default='no'):
+                return
+            try:
+                job=self.cola.retomar_folio_sin_cfdi(station.get(),ticket,confirmado=True)
+            except Exception as exc:
+                messagebox.showwarning('No se pudo retomar',str(exc),parent=window)
+                self.refresh()
+                return
+            window.destroy()
+            self.refresh()
+            messagebox.showinfo('Folio recuperado',
+                'Solicitud '+tracking(job['id'])+' recuperada. '
+                'No se creó otra solicitud. El bot la atenderá automáticamente '
+                'si está en PRODUCCIÓN y Polaris está libre.',parent=self)
+        row=ttk.Frame(content)
+        row.pack(fill='x',pady=(13,0))
+        ttk.Button(row,text='Confirmar y retomar',command=save).pack(side='left')
+        ttk.Button(row,text='Cancelar',command=window.destroy).pack(side='left',padx=10)
+        window.grab_set()
+        entry.focus_set()
 
     def detail(self):
         if not self._can_dialog():return
