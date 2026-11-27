@@ -175,7 +175,6 @@ class ColaLocal:
             if comprobar and comprobar[0]=='1':
                 if not polaris_comprobado:
                     raise ColaError('Confirma que no hay ninguna factura o envío anterior abierto en Polaris.')
-                self._set(c,'pendiente_comprobar_polaris','0')
             # Un cierre incierto del envío deja Polaris reservado hasta que
             # el operador revise el CFDI y LIBERE ese trabajo explícitamente.
             block=c.execute("SELECT valor FROM ajustes WHERE clave='bloqueo'").fetchone()
@@ -186,6 +185,8 @@ class ColaLocal:
                                 'antes de continuar con otro cliente.')
             if c.execute("SELECT 1 FROM trabajos WHERE estado IN ('PREPARADA_ALTA','PREPARADA_FACTURA','PRUEBA_PENDIENTE','ACEPTAR_ALTA') LIMIT 1").fetchone():
                 raise ColaError('Hay una captura interactiva pendiente en Polaris. Resuélvala antes de continuar.')
+            if comprobar and comprobar[0]=='1':
+                self._set(c,'pendiente_comprobar_polaris','0')
             self._set(c,'pausada','0');self._set(c,'motivo_pausa','');self._set(c,'bloqueo','')
 
     def claim(self, production_allowed=True):
@@ -405,14 +406,13 @@ class ColaLocal:
             if erased_block:
                 self._set(c,'bloqueo','')
                 self._set(c,'pausada','1')
+                self._set(c,'pendiente_comprobar_polaris','1')
                 self._set(c,'motivo_pausa',
                           'Se archivó una operación bloqueada. Comprueba que Polaris está libre y reanuda.')
             if marca_inicio:
-                # Un arranque nuevo solo limpia el historial UNA vez, en la
-                # misma transacción que marca el cambio de versión.
+                # Un arranque nuevo limpia el historial UNA vez, en la
+                # misma transacción que marca la nueva etapa.
                 self._set(c,marca_inicio,'1')
-                if erased_block:
-                    self._set(c,'pendiente_comprobar_polaris','1')
             return {'archivadas':count,'canceladas':canceladas,
                     'atascadas':stale,'riesgos_protegidos':riesgos,
                     'requiere_reanudar':erased_block,
