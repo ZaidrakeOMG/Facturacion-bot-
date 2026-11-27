@@ -344,7 +344,7 @@ class ColaLocal:
                     raise ColaError('La solicitud ya no aparece en la lista o no existe.')
             block=c.execute("SELECT valor FROM ajustes WHERE clave='bloqueo'").fetchone()
             block=block[0] if block else ''
-            count=0; stale=0; canceladas=0; riesgos=0; erased_block=False
+            count=0; stale=0; canceladas=0; riesgos=0; erased_block=False; cualquier_riesgo=False
             now=time.time()
             for row in rows:
                 previous=row['estado']
@@ -386,6 +386,7 @@ class ColaLocal:
                     terminado=now
                     stale+=1
                 risk=int(bool(row['riesgo_cfdi']) or uncertain)
+                cualquier_riesgo = cualquier_riesgo or bool(risk)
                 risks_delta=risk and not row['riesgo_cfdi']
                 if risks_delta:riesgos+=1
                 c.execute(
@@ -403,19 +404,21 @@ class ColaLocal:
                     ('Solicitud retirada de la pantalla por el operador.',now,row['id']))
                 if row['id']==block:erased_block=True
                 count+=1
+            requiere_reanudar=bool(erased_block or stale or cualquier_riesgo)
             if erased_block:
                 self._set(c,'bloqueo','')
+            if requiere_reanudar:
                 self._set(c,'pausada','1')
                 self._set(c,'pendiente_comprobar_polaris','1')
                 self._set(c,'motivo_pausa',
-                          'Se archivó una operación bloqueada. Comprueba que Polaris está libre y reanuda.')
+                          'Había una operación sin confirmar. Comprueba que Polaris está libre y reanuda.')
             if marca_inicio:
                 # Un arranque nuevo limpia el historial UNA vez, en la
                 # misma transacción que marca la nueva etapa.
                 self._set(c,marca_inicio,'1')
             return {'archivadas':count,'canceladas':canceladas,
                     'atascadas':stale,'riesgos_protegidos':riesgos,
-                    'requiere_reanudar':erased_block,
+                    'requiere_reanudar':requiere_reanudar,
                     'primera_vez':bool(marca_inicio)}
 
     def cancel_pending(self):
