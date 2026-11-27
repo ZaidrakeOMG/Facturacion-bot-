@@ -6,6 +6,7 @@ import sqlite3
 import tkinter as tk
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta
+from .cola_modelo import resultado_facturacion
 from tkinter import ttk
 
 NAVY = "#10243B"
@@ -56,7 +57,7 @@ def read_jobs(path, period, now=None):
     with sqlite3.connect(uri, uri=True, timeout=.25) as conn:
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA query_only=ON")
-        sql = """SELECT id,tipo,origen,seguro,estado,datos,creado,iniciado,terminado
+        sql = """SELECT id,tipo,origen,seguro,estado,datos,creado,iniciado,terminado,motivo
                  FROM trabajos WHERE tipo IN ('FACTURA','ALTA')"""
         params = ()
         if start is not None:
@@ -85,11 +86,20 @@ def summarize(rows):
         state = row["estado"]
         kind = row["tipo"]
         safe = bool(row["seguro"])
+        answer, detail = resultado_facturacion({"tipo":kind, "estado":state, "seguro":safe,
+                                                "motivo":row.get("motivo", "")})
         station = str(data.get("estacion") or "Sin estación")
         stamp = datetime.fromtimestamp(row["creado"])
         real_invoice = kind == "FACTURA" and not safe
         successful = real_invoice and state == "ENVIO_SOLICITADO"
         totals["solicitudes"] += 1
+        if kind == "FACTURA":
+            if answer == "NO":
+                totals["no"] += 1
+                stations[station]["no"] += 1
+            elif answer == "SIN CONFIRMAR":
+                totals["inciertas"] += 1
+                stations[station]["inciertas"] += 1
         states[state] += 1
         sources[row["origen"]] += 1
         stations[station]["solicitudes"] += 1
@@ -120,8 +130,8 @@ def summarize(rows):
         if kind == "ALTA" and not safe and state == "ALTA_CONFIRMADA":
             totals["altas"] += 1
         details.append((stamp.strftime("%d/%m/%Y %H:%M"), station, kind,
-                        str(data.get("ticket") or "—"), "Prueba" if safe else "Real",
-                        STATES.get(state, state), str(row["origen"])))
+                        str(data.get("ticket") or "—"), answer,
+                        " ".join(detail.split())[:180], str(row["origen"])))
     return dict(totals=totals, stations=stations, sources=sources, states=states,
                 payments=payments, daily=daily, details=details,
                 average=sum(durations)/len(durations) if durations else None)
@@ -212,12 +222,12 @@ class Dashboard(ttk.Frame):
         for col in range(3):
             cards.columnconfigure(col, weight=1, uniform="kpi")
         definitions = [
-            ("solicitudes", "Solicitudes totales", BLUE),
-            ("procesadas", "Facturas procesadas (real)", GREEN),
-            ("pendientes", "En cola / ejecución", AMBER),
-            ("revision", "Requieren revisión", RED),
-            ("ya_facturado", "Folios ya facturados", BLUE),
-            ("altas", "Altas confirmadas (real)", GREEN),
+            ("solicitudes", "Solicitudes recibidas", BLUE),
+            ("procesadas", "SÍ · envío solicitado", GREEN),
+            ("ya_facturado", "SÍ · ya facturada", GREEN),
+            ("no", "NO · no completada", RED),
+            ("inciertas", "Sin confirmación", AMBER),
+            ("pendientes", "Por atender / procesando", BLUE),
         ]
         for i, (key, title, color) in enumerate(definitions):
             card = tk.Frame(cards, bg=WHITE, highlightbackground="#DCE5ED", highlightthickness=1)
@@ -234,18 +244,18 @@ class Dashboard(ttk.Frame):
         sub = ttk.Notebook(self)
         sub.pack(fill="both", expand=True)
         self.station_tree = self._table(sub, "Por estación",
-            ("Estación", "Solicitudes", "Procesadas", "Ya fact.", "Pendientes", "Revisión"),
-            (145, 90, 90, 75, 90, 80))
-        self.detail_tree = self._table(sub, "Actividad reciente",
-            ("Recepción", "Estación", "Tipo", "Folio", "Modo", "Estado", "Origen"),
-            (120, 85, 70, 95, 65, 185, 90))
+            ("Estación", "Solicitudes", "SÍ nuevas", "SÍ previas", "NO", "Sin confirmar", "Por atender"),
+            (130, 85, 80, 80, 65, 115, 90))
+        self.detail_tree = self._table(sub, "Resultados por solicitud",
+            ("Recepción", "Estación", "Trámite", "Folio", "¿Se facturó?", "Detalle", "Origen"),
+            (120, 85, 75, 95, 110, 290, 85))
         self.breakdown_tree = self._table(sub, "Estados / pagos / origen",
             ("Grupo", "Detalle", "Cantidad"), (130, 350, 90))
         self.daily_tree = self._table(sub, "Facturas por día",
-            ("Fecha recepción", "Procesadas (real)"), (230, 180))
+            ("Fecha recepción", "Envíos solicitados"), (230, 180))
         ttk.Label(self, textvariable=self.status, foreground=MUTED, wraplength=790).pack(anchor="w", pady=(7, 0))
-        ttk.Label(self, text="Procesada = Polaris solicitó envío; no confirma UUID del PAC ni entrega del correo. "
-                  "Las pruebas y folios previamente facturados no cuentan como nuevas facturas.",
+        ttk.Label(self, text="SÍ = Polaris terminó el flujo de envío o detectó un folio ya facturado. "
+                  "No verifica UUID del PAC ni recepción del correo. Un timbrado incierto se indica como SIN CONFIRMAR para impedir duplicados.",
                   foreground=MUTED, wraplength=790).pack(anchor="w", pady=(4, 0))
         self.after(50, self.refresh)
         self.after(15000, self._tick)
@@ -286,16 +296,18 @@ class Dashboard(ttk.Frame):
                 var.set(str(t[key]))
             avg = summary["average"]
             avg_label = "—" if avg is None else f"{avg/60:.1f} min"
-            self.extra.set(f"Solicitudes de factura: {t['facturas']}   |   Modo prueba: {t['pruebas']}   |   "
-                           f"Duplicadas: {t['duplicadas']}   |   Tiempo medio facturas procesadas: {avg_label}")
+            self.extra.set(f"Solicitudes de factura: {t['facturas']}   |   Altas confirmadas: {t['altas']}   |   "
+                           f"Duplicadas: {t['duplicadas']}   |   Tiempo medio de envío: {avg_label}")
             self._replace(self.station_tree, [
-                (s, c["solicitudes"], c["procesadas"], c["ya_facturado"], c["pendientes"], c["revision"])
+                (s, c["solicitudes"], c["procesadas"], c["ya_facturado"], c["no"], c["inciertas"], c["pendientes"])
                 for s, c in sorted(summary["stations"].items())])
             self._replace(self.detail_tree, summary["details"][:200])
-            rows = []
-            for group, key in (("Estado", "states"), ("Origen", "sources"), ("Pago (real)", "payments")):
-                rows.extend((group, STATES.get(v, v) if key == "states" else v, n)
-                            for v, n in summary[key].most_common())
+            rows = [("Facturación", "SÍ: envío solicitado", t["procesadas"]),
+                    ("Facturación", "SÍ: folio ya facturado", t["ya_facturado"]),
+                    ("Facturación", "NO: no completada", t["no"]),
+                    ("Facturación", "Sin confirmar", t["inciertas"])]
+            for group, key in (("Origen", "sources"), ("Forma de pago", "payments")):
+                rows.extend((group, v, n) for v, n in summary[key].most_common())
             self._replace(self.breakdown_tree, rows)
             self._replace(self.daily_tree, sorted(summary["daily"].items(), reverse=True))
         self.status.set("Actualizado " + datetime.now().strftime("%H:%M:%S") +
