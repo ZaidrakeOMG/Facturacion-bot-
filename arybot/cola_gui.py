@@ -43,7 +43,7 @@ class ColaTab(ttk.Frame):
         self.fact=tk.IntVar(value=self.options['minutos_factura']);self.alta=tk.IntVar(value=self.options['minutos_alta'])
         self.margin=tk.IntVar(value=self.options['margen_minutos'])
         ttk.Checkbutton(opts,text='Enviar avisos al cliente: recepción, proceso, resultado o revisión',variable=self.enabled,state='normal' if mail_enabled else 'disabled').grid(row=0,column=0,columnspan=3,sticky='w',pady=5)
-        ttk.Checkbutton(opts,text='Enviar avisos REALES también en MODO SEGURO (identificados como PRUEBA)',variable=self.in_safe,state='normal' if mail_enabled else 'disabled').grid(row=1,column=0,columnspan=3,sticky='w',pady=5)
+        ttk.Checkbutton(opts,text='Enviar avisos identificados como PRUEBA durante las pruebas',variable=self.in_safe,state='normal' if mail_enabled else 'disabled').grid(row=1,column=0,columnspan=3,sticky='w',pady=5)
         for r,label,var in [(2,'Minutos base por factura',self.fact),(3,'Minutos base por alta',self.alta),(4,'Margen adicional (minutos)',self.margin)]:
             ttk.Label(opts,text=label).grid(row=r,column=0,sticky='e',pady=6,padx=8)
             ttk.Spinbox(opts,from_=1,to=240,textvariable=var,width=7).grid(row=r,column=1,sticky='w')
@@ -63,7 +63,7 @@ class ColaTab(ttk.Frame):
         ms.pack(side='right',fill='y');self.mailtree.pack(fill='both',expand=True)
         mb=ttk.Frame(mails);mb.pack(fill='x',pady=8)
         ttk.Button(mb,text='Ver mensaje',command=self.mail_detail).pack(side='left',padx=6)
-        ttk.Button(mb,text='Reenviar aviso seleccionado (REAL)',command=self.retry_mail,state='normal' if mail_enabled else 'disabled').pack(side='left',padx=6)
+        ttk.Button(mb,text='Reenviar aviso seleccionado',command=self.retry_mail,state='normal' if mail_enabled else 'disabled').pack(side='left',padx=6)
         ttk.Label(mails,text='Historial de avisos. En esta edición Gmail está desactivado; Polaris conserva su propio envío de factura.',wraplength=870).pack(anchor='w')
         self._poll=self.after(500,self._tick);self.bind('<Destroy>',self._destroy,add='+')
         self.refresh()
@@ -137,12 +137,12 @@ class ColaTab(ttk.Frame):
                 parent=self)
             return
         mensaje = (
-            f'Se cerrarán {n} solicitud(es) en REVISION_REQUERIDA.\n'
-            f'Se conservarán {excluidas} revisión(es) protegida(s) por posible '
+            f'Se cerrarán {n} incidencias antiguas no protegidas.\n'
+            f'Se conservarán {excluidas} caso(s) sin confirmar por posible '
             'timbrado, correo, alta o cierre incierto.\n\n'
             'CONFIRMACIÓN: revisé que las solicitudes a cerrar NO tienen '
             'documentos timbrados, envíos ni guardados pendientes en Polaris.\n\n'
-            'Esto solo cambia su estado local a REVISION_CERRADA. '
+            'Esto solo cierra su seguimiento interno. '
             'No borra registros, no toca Polaris, no emite facturas, '
             'no envía avisos y no repite trámites.\n\n'
             '¿Confirmas liberar las revisiones indicadas?'
@@ -244,7 +244,7 @@ class ColaTab(ttk.Frame):
         if not self._can_dialog():return
         row=self._mail()
         if not row:return
-        if not messagebox.askyesno('Reenviar aviso REAL',
+        if not messagebox.askyesno('Reenviar aviso',
             'Revisa Gmail Enviados: el intento anterior pudo haberse recibido.\n\nPara: '+row['correo']+'\nAsunto: '+row['asunto']+
             '\n\nEsto SOLO reenvía el aviso, nunca registra clientes ni vuelve a facturar. ¿Confirmas?',parent=self,default='no'):return
         try:self.cola.avisos.reenviar(row['id'])
