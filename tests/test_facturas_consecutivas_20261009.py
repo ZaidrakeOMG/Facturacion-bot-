@@ -1092,8 +1092,9 @@ def test_archivo_no_marca_timbrado_no_intentado_como_incierto(tmp_path):
     """Un fallo antes de Aceptar no crea una falsa marca de CFDI incierto."""
     from arybot.cola_local import ColaLocal
     store=ColaLocal(tmp_path)
-    job=_factura_web_guardada(store,'7000030',estado='REVISION_REQUERIDA',
-            motivo='Error antes del timbrado: no se pudo abrir facturación.')
+    job=_factura_web_guardada(store,'7000030',estado='EN_COLA')
+    store.finish(job['id'],'REVISION_REQUERIDA',
+                 reason='Error antes del timbrado: no se pudo abrir facturación.',hold=False)
     store.archivar_solicitudes(job['id'],confirmado=True)
     assert store.get(job['id'])['riesgo_cfdi']==0
     assert store.get(job['id'])['archivado']==1
