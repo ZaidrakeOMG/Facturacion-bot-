@@ -225,6 +225,11 @@ class PortalWSGI:
             return session
         return None
 
+    def _request_sources(self, session, request_id):
+        legacy='web:'+self._mac('request',session['sid']+':'+request_id)
+        owner=self._mac('request-owner',session['sid'])
+        return 'web:'+owner+':'+legacy[4:], legacy
+
     def _response_job(self, job, *, incluir_perfil_local=False):
         result = estado_publico(job)
         result['seguimiento'] = self._sign('tracking', {'id': job['id'], 'iat': int(self.clock())})
@@ -293,9 +298,9 @@ class PortalWSGI:
             request_id = body.get('request_id', '')
             if not isinstance(request_id, str) or not re.fullmatch('[0-9a-f]{32}', request_id):
                 raise HttpError(400, 'Identificador inválido.')
-            source_id = 'web:' + self._mac('request', session['sid'] + ':' + request_id)
+            source_id, legacy = self._request_sources(session,request_id)
             with self.lock:
-                job = self.cola.store.source(source_id)
+                job = self.cola.store.source(source_id) or self.cola.store.source(legacy)
             if not job:
                 raise HttpError(404, 'No se encontró una solicitud registrada para este envío.')
             return 200, self._response_job(job, incluir_perfil_local=True), 'application/json; charset=utf-8', headers
@@ -314,10 +319,10 @@ class PortalWSGI:
             raise HttpError(400, 'Falta el identificador único del formulario.')
         vision = piloto_habilitado()
         kind, sol, data = validar_entrada(body, vision=True) if vision else validar_entrada(body)
-        source_id = 'web:' + self._mac('request', session['sid'] + ':' + request_id)
+        source_id, legacy = self._request_sources(session,request_id)
         with self.lock:
             # Primero recuperar un envío de resultado incierto; no se repite en Polaris.
-            old = self.cola.store.source(source_id)
+            old = self.cola.store.source(source_id) or self.cola.store.source(legacy)
             if old:
                 if old['tipo'] != kind or old['datos'] != data:
                     raise HttpError(409, 'Esta solicitud ya se envió con otros datos. Revisa su seguimiento antes de iniciar otra.')
@@ -337,10 +342,10 @@ class PortalWSGI:
                 raise HttpError(503, 'La cola está llena. No se registró esta solicitud.')
             safe = self.modo_seguro()
             if kind == 'ALTA':
-                job, _ = self.cola.encolar_alta(sol, source='Portal web', source_id=source_id, safe=safe)
+                job, new = self.cola.encolar_alta(sol, source='Portal web', source_id=source_id, safe=safe)
             else:
-                job, _ = self.cola.encolar_factura(sol, source='Portal web', source_id=source_id, safe=safe)
-        return 201, self._response_job(job, incluir_perfil_local=True), 'application/json; charset=utf-8', headers
+                job, new = self.cola.encolar_factura(sol, source='Portal web', source_id=source_id, safe=safe)
+        return (201 if new else 200), self._response_job(job, incluir_perfil_local=True), 'application/json; charset=utf-8', headers
 
     def __call__(self, environ, start_response):
         headers = []
@@ -349,7 +354,7 @@ class PortalWSGI:
         except EntradaPortalError as exc:
             code, data, content_type = 400, {'error': str(exc)}, 'application/json; charset=utf-8'
         except SolicitudDuplicada:
-            code, data, content_type = 409, {'error': 'Ese ticket/RFC ya tiene una solicitud ACTIVA en la estación. Espera a que termine y luego podrás volver a consultarlo.'}, 'application/json; charset=utf-8'
+            code, data, content_type = 409, {'error': 'Ya existe una solicitud de este folio/RFC en la estación, activa o pendiente de revisión. Consulta su referencia anterior. Si fue retirada o falló antes del timbrado, puedes iniciar una nueva solicitud; no se procesará dos veces simultáneamente.'}, 'application/json; charset=utf-8'
         except HttpError as exc:
             code, data, content_type = exc.code, {'error': exc.message}, 'application/json; charset=utf-8'
         except Exception:

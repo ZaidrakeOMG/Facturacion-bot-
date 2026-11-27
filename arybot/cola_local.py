@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS trabajos (
  resultado TEXT NOT NULL DEFAULT '{}', minutos INTEGER NOT NULL DEFAULT 5);
 CREATE INDEX IF NOT EXISTS ix_cola_estado ON trabajos(estado,creado);
 CREATE INDEX IF NOT EXISTS ix_cola_clave ON trabajos(clave);
+CREATE TABLE IF NOT EXISTS portal_alias (fuente_id TEXT PRIMARY KEY, trabajo TEXT NOT NULL REFERENCES trabajos(id));
 CREATE TABLE IF NOT EXISTS ajustes (clave TEXT PRIMARY KEY, valor TEXT);
 CREATE TABLE IF NOT EXISTS avisos (
  id TEXT PRIMARY KEY, trabajo TEXT NOT NULL, evento TEXT NOT NULL, correo TEXT NOT NULL,
@@ -57,8 +58,23 @@ class ColaLocal:
     def get(self, ident):
         with self.connect() as c:return self.unpack(c.execute('SELECT * FROM trabajos WHERE id=?',(ident,)).fetchone())
 
+    @staticmethod
+    def _source_row(c, source_id):
+        row=c.execute('SELECT * FROM trabajos WHERE fuente_id=?',(source_id,)).fetchone()
+        if row is None:
+            row=c.execute('SELECT t.* FROM portal_alias a JOIN trabajos t ON t.id=a.trabajo WHERE a.fuente_id=?',(source_id,)).fetchone()
+        return row
+
     def source(self, source_id):
-        with self.connect() as c:return self.unpack(c.execute('SELECT * FROM trabajos WHERE fuente_id=?',(source_id,)).fetchone())
+        with self.connect() as c:return self.unpack(self._source_row(c,source_id))
+
+    @staticmethod
+    def _portal_owner(source_id):
+        # Only server-generated, HMAC-scoped source IDs can share tracking.
+        parts=str(source_id or '').split(':')
+        if len(parts)==3 and parts[0]=='web' and all(len(v)==64 and all(ch in '0123456789abcdef' for ch in v) for v in parts[1:]):
+            return parts[1]
+        return None
 
     def list(self, limit=200):
         with self.connect() as c:return [self.unpack(r) for r in c.execute("""SELECT * FROM trabajos
@@ -125,7 +141,7 @@ class ColaLocal:
         now=time.time();ident=uuid.uuid4().hex
         with self.connect(True) as c:
             if source_id:
-                old=c.execute('SELECT * FROM trabajos WHERE fuente_id=?',(source_id,)).fetchone()
+                old=self._source_row(c,source_id)
                 if old:return self.unpack(old),False
             if clave:
                 # Si el mismo ticket quedó a mitad de un envío, debe revisarse
@@ -143,9 +159,19 @@ class ColaLocal:
                 # a Polaris (que determina si el ticket ya fue procesado).
                 blockers = BLOQUEAN_CLAVE_ALTA if kind == 'ALTA' else BLOQUEAN_CLAVE
                 marks=','.join('?' for _ in blockers)
-                old=c.execute(f'SELECT id FROM trabajos WHERE clave=? AND estado IN ({marks}) LIMIT 1',
+                old=c.execute(f'SELECT * FROM trabajos WHERE clave=? AND estado IN ({marks}) LIMIT 1',
                               (clave,*sorted(blockers))).fetchone()
-                if old:raise SolicitudDuplicada('Ya existe una solicitud ACTIVA para ese folio/RFC y estación. Espera a que termine antes de enviar otra.')
+                if old:
+                    owner=self._portal_owner(source_id)
+                    if (owner and source=='Portal web' and old['origen']==source
+                            and owner==self._portal_owner(old['fuente_id'])
+                            and old['tipo']==kind and bool(old['seguro'])==bool(safe)
+                            and json.loads(old['datos'])==data and old['correo']==correo):
+                        # Same browser session and same validated request: recover
+                        # tracking, not another operation on the fiscal ticket.
+                        c.execute('INSERT INTO portal_alias(fuente_id,trabajo) VALUES(?,?)',(source_id,old['id']))
+                        return self.unpack(old),False
+                    raise SolicitudDuplicada('Ya existe una solicitud ACTIVA para ese folio/RFC y estación. Espera a que termine antes de enviar otra.')
             c.execute('INSERT INTO trabajos(id,fuente_id,clave,tipo,origen,seguro,estado,datos,correo,motivo,creado,actualizado,minutos) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)',
                       (ident,source_id,clave,kind,source,int(safe),state,json.dumps(data,ensure_ascii=False),correo,reason,now,now,int(minutes)))
         return self.get(ident),True

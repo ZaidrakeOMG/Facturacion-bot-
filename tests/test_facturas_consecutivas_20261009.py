@@ -536,3 +536,26 @@ def test_modo_seguro_no_congela_una_emision_pendiente(tmp_path):
     assert not store.status()['pausada']
     job = store.claim(production_allowed=True)
     assert job and job['id'] == real['id']
+
+
+def test_reenvio_web_misma_sesion_recupera_y_cancelada_admite_nuevo_intento(tmp_path):
+    from arybot.cola_local import ColaLocal
+    store=ColaLocal(tmp_path)
+    def send(owner, req, data=None):
+        return store.enqueue('FACTURA',data or {'ticket':'000123'},source='Portal web',
+                             source_id='web:'+owner*64+':'+req*64,safe=False,
+                             correo='demo@example.com',clave='station-folio')
+    first,new=send('a','1')
+    assert new
+    same,new=send('a','2')
+    assert not new and same['id']==first['id']
+    assert store.source('web:'+'a'*64+':'+'2'*64)['id']==first['id']
+    with pytest.raises(SolicitudDuplicada):
+        send('b','3')
+    with pytest.raises(SolicitudDuplicada):
+        send('a','4',{'ticket':'000123','rfc':'OTHER'})
+    store.cancel(first['id'])
+    same,new=send('a','2')
+    assert not new and same['estado']=='CANCELADA'
+    retry,new=send('a','5')
+    assert new and retry['id']!=first['id']
