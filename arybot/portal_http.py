@@ -326,6 +326,14 @@ class PortalWSGI:
             actual_mode = 'seguro' if self.modo_seguro() else 'real'
             if expected_mode != actual_mode:
                 raise HttpError(409, 'El modo de operación cambió o no se confirmó. Recarga la página y revisa si es prueba o trámite real antes de enviar.')
+            # Si el cliente envía de nuevo exactamente los mismos datos
+            # (incluida constancia fiscal validada y folio leído de foto),
+            # recuperar la referencia original. No encolar ni timbrar otra vez.
+            # Una coincidencia SOLO de folio/RFC nunca concede seguimiento.
+            previous=self.cola.store.solicitud_activa_identica(kind,data,safe=self.modo_seguro())
+            if previous is not None:
+                self.cola.despertar_solicitud_existente()
+                return 200, self._response_job(previous), 'application/json; charset=utf-8', headers
             if not self.aceptando:
                 raise HttpError(503, 'La recepción está pausada. Los datos no se enviaron al bot.')
             if not self.limits.aceptar(('envios', ip), self.settings['limite_envios_10_minutos'], 600):
@@ -348,8 +356,19 @@ class PortalWSGI:
             code, data, content_type, headers = self._dispatch(environ)
         except EntradaPortalError as exc:
             code, data, content_type = 400, {'error': str(exc)}, 'application/json; charset=utf-8'
-        except SolicitudDuplicada:
-            code, data, content_type = 409, {'error': 'Ese ticket/RFC ya tiene una solicitud ACTIVA en la estación. Espera a que termine y luego podrás volver a consultarlo.'}, 'application/json; charset=utf-8'
+        except SolicitudDuplicada as exc:
+            incierta = ('timbrado' in str(exc).lower() or
+                        'operación archivada' in str(exc).lower())
+            mensaje = ('Hay una operación anterior cuyo timbrado no está confirmado. '
+                       'No se emitió otra factura. Consulta tu referencia original con ARY.'
+                       if incierta else
+                       'Ese ticket ya tiene una solicitud registrada en la estación. '
+                       'No se creó una segunda factura. Consulta el seguimiento original; '
+                       'si capturaste datos distintos, comunícate con ARY.')
+            code, data, content_type = 409, {
+                'error': mensaje,
+                'codigo': 'TIMBRADO_INCIERTO' if incierta else 'SOLICITUD_EXISTENTE',
+            }, 'application/json; charset=utf-8'
         except HttpError as exc:
             code, data, content_type = exc.code, {'error': exc.message}, 'application/json; charset=utf-8'
         except Exception:
