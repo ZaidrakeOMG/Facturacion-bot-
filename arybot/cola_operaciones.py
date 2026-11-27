@@ -5,6 +5,7 @@ No se reintenta automáticamente ninguna acción sobre Polaris después de un er
 """
 from __future__ import annotations
 import threading
+import time
 from .cola_local import ColaLocal
 from .cola_modelo import (ajustes_cola,datos_alta,factura_datos,como_solicitud,clave_trabajo,
                          ColaError,ESTADOS_REVISION)
@@ -37,10 +38,63 @@ class ColaOperaciones:
         # La pausa manual pertenece únicamente a esta ejecución del programa.
         # No se hereda de cierres anteriores ni de cuadros de diálogo.
         self._manual_pause=bool(self.store.meta('pendiente_comprobar_polaris')=='1')
+        self._operator_pause=False
+        self._last_auto_probe=0.0
+        self._auto_probe_reported=False
         for job in recovered:self._notice(job,'revision')
         # Recupera un acuse que no alcanzó a persistirse después de encolar; UNIQUE evita duplicarlo.
         for job in self.store.list(10000):
             if job['estado']=='EN_COLA':self._notice(job,'recibida')
+
+    def _reactivar_automaticamente_tras_migracion(self):
+        """La lista archivada no debe detener facturas NUEVAS.
+
+        Comprobar automáticamente las ventanas de Polaris en modo lectura;
+        no tocar la solicitud antigua ni intentar repetir su CFDI. Respetar
+        cualquier pausa manual y cualquier bloqueo de trabajos actuales.
+        """
+        if self._operator_pause or self._consumer.locked():
+            return False
+        if self.store.meta('pendiente_comprobar_polaris')!='1':
+            return False
+        state=self.store.status()
+        if state.get('bloqueo') or state.get('activa'):
+            return False
+        if not any(r['estado']=='EN_COLA' for r in self.store.list()):
+            return False
+        now=time.monotonic()
+        if now-self._last_auto_probe<3.0:
+            return False
+        self._last_auto_probe=now
+        libre=False
+        if self.polaris is not None:
+            try:
+                libre=self.polaris.pantalla_libre_para_nueva_solicitud() is True
+            except Exception as exc:
+                if not self._auto_probe_reported:
+                    self.log('No se pudo comprobar Polaris automáticamente: '+str(exc))
+        if not libre:
+            if not self._auto_probe_reported:
+                self.log('Una factura nueva está pendiente. El bot comprobará '
+                         'automáticamente que Polaris esté libre, sin repetir '
+                         'las solicitudes antiguas.')
+                self._auto_probe_reported=True
+            return False
+        try:
+            self.store.resume(polaris_comprobado=True)
+        except ColaError as exc:
+            if not self._auto_probe_reported:
+                self.log('Polaris todavía no está disponible: '+str(exc))
+                self._auto_probe_reported=True
+            return False
+        self._manual_pause=False
+        self._auto_probe_reported=False
+        self.log('Polaris libre. Atención automática reactivada para '
+                 'solicitudes nuevas; los folios anteriores siguen archivados.')
+        try:self.on_event('cola','')
+        except Exception:pass
+        self._wake.set()
+        return True
 
     def _notice(self,job,event,reason=''):
         try:self.avisos.publicar(job,event,reason)
@@ -93,6 +147,7 @@ class ColaOperaciones:
             # congelados. Solo se respeta la pausa que el operador hizo en ESTA sesión
             # y los bloqueos interactivos reales (alta/factura preparada en pantalla).
             if state=='EN_COLA':
+                self._reactivar_automaticamente_tras_migracion()
                 st=self.store.status()
                 if not self._manual_pause and not st.get('bloqueo'):
                     try:
@@ -130,6 +185,9 @@ class ColaOperaciones:
         if self.thread and self.thread.is_alive():return
         self._stop.clear()
 
+        # Si quedó una pausa SOLO por archivar el historial, reanudar
+        # automáticamente cuando la pantalla real de Polaris esté libre.
+        self._reactivar_automaticamente_tras_migracion()
         # Si quedaron solicitudes EN_COLA de una ejecución anterior, arrancan solas.
         st=self.store.status()
         if st.get('conteos',{}).get('EN_COLA',0) and not st.get('bloqueo') and not self._manual_pause:
@@ -139,6 +197,7 @@ class ColaOperaciones:
         def loop():
             while not self._stop.is_set():
                 try:
+                    self._reactivar_automaticamente_tras_migracion()
                     if self.ejecutar_una():
                         continue
                 except Exception as exc:
@@ -157,9 +216,11 @@ class ColaOperaciones:
     def iniciar_cola(self, *, polaris_comprobado=False):
         self.store.resume(polaris_comprobado=polaris_comprobado)
         self._manual_pause=False
+        self._operator_pause=False
         self._wake.set();self.on_event('cola','')
 
     def pausar(self):
+        self._operator_pause=True
         self._manual_pause=True
         self.store.pause('Pausada por el operador en esta sesión; termina la operación actual. Gmail y correos siguen disponibles.')
         self.on_event('cola','')
