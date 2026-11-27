@@ -1048,7 +1048,7 @@ def test_retomar_folio_nunca_emite_si_no_se_ha_confirmado_polaris(tmp_path):
     bot.invoice.return_value='ENVIO_SOLICITADO'
     cfg={'app':{'modo_prueba':False},'gmail':{},'ocr':{},'polaris':{},'cola':dict(DEFAULTS)}
     q=ColaOperaciones(tmp_path,cfg,bot,Mock(),store=store,avisos=Mock())
-    with pytest.raises(ColaError,match='confirmar'):
+    with pytest.raises(ColaError,match='confirma'):
         q.retomar_folio_sin_cfdi('ARY IV','7000010')
     with pytest.raises(ColaError,match='pantalla abierta'):
         q.retomar_folio_sin_cfdi('ARY IV','7000010',confirmado=True)
