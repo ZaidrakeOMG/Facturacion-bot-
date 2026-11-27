@@ -519,3 +519,19 @@ def test_prueba_no_pasa_siguiente_si_polaris_no_cerro(tmp_path):
     assert q.store.status()['pausada']
     assert not q.ejecutar_una()
     assert bot.invoice.call_count == 1
+
+
+def test_modo_seguro_no_congela_una_emision_pendiente(tmp_path):
+    """Emisiones esperan autorización, pero no frenan solicitudes de prueba."""
+    store = ColaLocal(tmp_path)
+    real, _ = store.enqueue('FACTURA', {'ticket':'101'}, source='Portal web',
+                            safe=False, clave='REAL-101')
+    test, _ = store.enqueue('FACTURA', {'ticket':'102'}, source='Manual',
+                            safe=True, clave='TEST-102')
+    job = store.claim(production_allowed=False)
+    assert job and job['id'] == test['id']
+    store.finish(test['id'], 'PRUEBA_CERRADA', reason='Prueba sin emisión')
+    assert store.claim(production_allowed=False) is None
+    assert not store.status()['pausada']
+    job = store.claim(production_allowed=True)
+    assert job and job['id'] == real['id']
