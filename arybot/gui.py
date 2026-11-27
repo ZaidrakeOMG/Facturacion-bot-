@@ -361,7 +361,7 @@ class App:
         # Inicializar los formularios base antes de las pestañas dependientes.
         # AltaClientesTab lee test_station durante su constructor.
         self._build_panel(); self._build_test(); self._build_cfg()
-        self.cola_tab=ColaTab(nb,self); nb.add(self.cola_tab,text="Cola y avisos")
+        self.cola_tab=ColaTab(nb,self); nb.add(self.cola_tab,text="Resultados y avisos")
         nb.add(self.tab_test,text="Facturación manual")
         self.alta_clientes_tab=AltaClientesTab(nb,self); nb.add(self.alta_clientes_tab,text="Alta de cliente")
         self.alertas_tab=AlertasTab(nb,self); nb.add(self.alertas_tab,text="Alertas internas")
@@ -427,7 +427,7 @@ class App:
         self.btn_payment.grid(row=11,column=1,sticky="w",pady=6)
         self.btn_cleanup=ttk.Button(self.tab_test,text="Probar SOLO limpieza de ventanas",command=self.test_cleanup_only)
         self.btn_cleanup.grid(row=11,column=2,sticky="w",padx=8,pady=6)
-        self.direct_status=tk.StringVar(value="Listo. La solicitud se agrega a la cola de trabajo.")
+        self.direct_status=tk.StringVar(value="Listo. Al recibirla, el bot atenderá la solicitud automáticamente.")
         ttk.Label(self.tab_test,textvariable=self.direct_status,wraplength=850,foreground="#3a4a5a").grid(row=12,column=0,columnspan=4,sticky="w",pady=(6,0))
         ttk.Label(self.tab_test,text="Captura: la fecha se elige en calendario; RFC y folio usan teclado real. Pago y Uso CFDI se seleccionan explícitamente.",foreground="#3a4a5a",wraplength=820).grid(row=13,column=0,columnspan=4,sticky="w",pady=(6,0))
         ttk.Label(self.tab_test,text="Seguro de emergencia: mueve el mouse a la esquina superior izquierda para detener PyAutoGUI.",foreground="#8a2d2d",wraplength=820).grid(row=14,column=0,columnspan=4,sticky="w",pady=(6,0))
@@ -438,12 +438,12 @@ class App:
     def _sync_invoice_mode(self):
         if not hasattr(self, "btn_test"): return
         safe=bool(self.mode_var.get())
-        self.btn_test.configure(text=("Encolar preparación (NO TIMBRA)" if safe else "Encolar factura y correo (REAL)"))
+        self.btn_test.configure(text=("Probar SIN emitir factura" if safe else "Facturar y solicitar correo"))
         self.direct_hint_label.configure(foreground="#334a60" if safe else "#9a261b")
         self.direct_hint.set(
-            "MODO SEGURO: la solicitud entra a la cola y se prepara SIN Aceptar. Después requiere liberar la revisión."
+            "PRUEBA: no se emite ningún CFDI. El bot registra el resultado y continúa con las siguientes solicitudes si Polaris quedó libre."
             if safe else
-            "PRODUCCIÓN EN COLA: Aceptar factura → Enviar por Correo → XML + PDF. Se confirma antes de encolar.")
+            "FACTURACIÓN: el bot procesa automáticamente cada solicitud, informa SÍ/NO y continúa con la siguiente si Polaris está libre.")
 
     def _freeze_direct(self):
         self._direct_busy=True;self._direct_frozen=[]
