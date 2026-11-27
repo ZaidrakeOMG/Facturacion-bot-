@@ -842,6 +842,7 @@ def test_migracion_auto_espera_si_hay_ventana_de_polaris(tmp_path):
          'gmail':{},'ocr':{},'polaris':{},'cola':dict(DEFAULTS)}
     bot=Mock()
     bot.pantalla_libre_para_nueva_solicitud.return_value=False
+    bot.invoice.return_value='ENVIO_SOLICITADO'
     q=ColaOperaciones(tmp_path,cfg,bot,Mock(),avisos=Mock())
     job,_=q.encolar_factura(Solicitud(estacion='ARY VI',rfc='AAA010101AAA',
                         ticket='0006043151',fecha_ticket=date.today().strftime('%d/%m/%Y'),
@@ -856,7 +857,8 @@ def test_migracion_auto_espera_si_hay_ventana_de_polaris(tmp_path):
     assert q._reactivar_automaticamente_tras_migracion()
     assert not q.store.status()['pausada']
     assert q.ejecutar_una()
-    assert q.store.get(job['id'])['estado']=='REVISION_REQUERIDA' or bot.invoice.called
+    assert q.store.get(job['id'])['estado']=='ENVIO_SOLICITADO'
+    bot.invoice.assert_called_once()
 
 
 def test_pausa_del_operador_no_se_reanuda_sola(tmp_path):
