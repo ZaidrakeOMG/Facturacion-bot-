@@ -284,6 +284,70 @@
   });
   $("filtro-resultado").addEventListener("change",()=>{if(state.data)renderTable();});
 
+  // Los cambios de dispositivo se visualizan sin recargar la página.
+  let deviceMode = "si";
+  function renderDevices() {
+    const report=state.data?.reporte||{};
+    const devices=report.dispositivos||{};
+    const categories=[
+      ["telefono","phone"],["computadora","computer"],
+      ["tableta","tablet"],["no_identificado","unknown"]
+    ];
+    const value=key=>numero(devices[key]?.[deviceMode]);
+    const total=categories.reduce((n,[key])=>n+value(key),0);
+    const known=total-value("no_identificado");
+    const label=deviceMode==="si"?"Con factura":"Todas las solicitudes";
+    set("device-scope",deviceMode==="si"?"Distribución de facturas con resultado positivo":"Todas las solicitudes reales recibidas");
+    animateNumber("device-total",total);
+    animateNumber("device-phone",value("telefono"));
+    animateNumber("device-computer",value("computadora"));
+    set("device-phone-label",label);
+    set("device-computer-label",label);
+    for(const [key,id] of categories){
+      const count=value(key);
+      const percentage=total?count/total*100:0;
+      set("device-bar-"+id,fmt(count)+" · "+percentage.toFixed(1)+"%");
+      const bar=$("device-fill-"+id);
+      const next=percentage.toFixed(2)+"%";
+      if(bar.dataset.target!==next){
+        bar.dataset.target=next;
+        requestAnimationFrame(()=>{bar.style.width=next;});
+      }
+      bar.parentNode.setAttribute("aria-label",key.replaceAll("_"," ")+": "+fmt(count)+" de "+fmt(total));
+      bar.parentNode.setAttribute("role","meter");
+      bar.parentNode.setAttribute("aria-valuemin","0");
+      bar.parentNode.setAttribute("aria-valuemax",String(total));
+      bar.parentNode.setAttribute("aria-valuenow",String(count));
+    }
+    set("device-phone-percent",(total?value("telefono")/total*100:0).toFixed(1)+"%");
+    set("device-pc-percent",(total?value("computadora")/total*100:0).toFixed(1)+"%");
+    set("device-known-percent",(total?known/total*100:0).toFixed(1)+"%");
+  }
+  for(const button of q("[data-device-mode]")) {
+    button.addEventListener("click",()=>{
+      deviceMode=button.dataset.deviceMode==="total"?"total":"si";
+      for(const b of q("[data-device-mode]")){
+        const active=b.dataset.deviceMode===deviceMode;
+        b.classList.toggle("active",active);
+        b.setAttribute("aria-pressed",String(active));
+      }
+      if(state.data)renderDevices();
+    });
+  }
+  // Entrada escalonada al hacer scroll, desactivada si se prefiere reducir movimiento.
+  if(!reducedMotion && "IntersectionObserver" in window){
+    const sections=[...q("#vista-resumen .metric, #vista-resumen .analytics-row .panel, #analitica-dispositivos")];
+    for(const el of sections){el.classList.add("motion-reveal","waiting");}
+    const reveal=new IntersectionObserver(entries=>{
+      for(const item of entries){
+        if(!item.isIntersecting)continue;
+        item.target.classList.remove("waiting");
+        reveal.unobserve(item.target);
+      }
+    },{threshold:0.07,rootMargin:"0px 0px -16px 0px"});
+    sections.forEach(el=>reveal.observe(el));
+  }
+
   function render(data) {
     state.data=data;
     if(!data.disponible){
@@ -300,6 +364,7 @@
     set("menu-incidencias",fmt(numero(facts.no)+numero(facts.revision)));
     set("fecha-resumen", $("selector-periodo").selectedOptions[0]?.textContent||"");
     drawDonut(facts);
+    renderDevices();
     set("cola-global",fmt(data.conteos?.EN_COLA));
     set("ejecutando-global",fmt(data.conteos?.EJECUTANDO));
     set("altas-ok",fmt(altas.alta_si));
