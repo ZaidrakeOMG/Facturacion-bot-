@@ -23,10 +23,10 @@ class ColaTab(ttk.Frame):
         self.nb=ttk.Notebook(self);self.nb.pack(fill='both',expand=True,pady=(10,0))
         jobs=ttk.Frame(self.nb,padding=6);opts=ttk.Frame(self.nb,padding=12);mails=ttk.Frame(self.nb,padding=6)
         self.nb.add(jobs,text='Solicitudes');self.nb.add(opts,text='Avisos y tiempos');self.nb.add(mails,text='Correos al cliente')
-        cols=('id','tipo','estacion','folio','facturado','detalle')
+        cols=('id','tipo','estacion','folio','facturado')
         self.tree=ttk.Treeview(jobs,columns=cols,show='headings',height=12,selectmode='browse')
-        labels=('Solicitud','Trámite','Estación','Folio / RFC','¿Se facturó?','Motivo / detalle')
-        widths=(120,75,95,115,118,385)
+        labels=('Solicitud','Trámite','Estación','Folio / RFC','¿Se facturó?')
+        widths=(160,100,140,190,120)
         for c,label,w in zip(cols,labels,widths):self.tree.heading(c,text=label);self.tree.column(c,width=w,minwidth=40)
         vs=ttk.Scrollbar(jobs,orient='vertical',command=self.tree.yview);self.tree.configure(yscrollcommand=vs.set)
         vs.pack(side='right',fill='y');self.tree.pack(fill='both',expand=True)
@@ -35,7 +35,7 @@ class ColaTab(ttk.Frame):
                        ('Resolver bloqueo confirmado',self.release),('Cerrar incidencias anteriores',self.release_all),
                        ('Retirar solicitud sin iniciar',self.cancel),('Retirar solicitudes sin iniciar',self.cancel_all)]:
             ttk.Button(acts,text=txt,command=fn).pack(side='left',padx=(0,7))
-        ttk.Label(jobs,text='Una falla previa al timbrado no frena la siguiente factura. Si no se confirmó el resultado después de Aceptar, se protege la pantalla para impedir duplicados.',
+        ttk.Label(jobs,text='SÍ = Polaris confirmó el flujo de factura. NO = todavía no hay una factura confirmada; pulsa Ver detalle para conocer el motivo. Los casos inciertos requieren verificar Polaris antes de volver a emitir.',
                   wraplength=850).pack(anchor='w')
         mail_enabled=app.cfg.get('app',{}).get('gmail_habilitado',True)
         self.enabled=tk.BooleanVar(value=self.options['avisar_cliente'] and mail_enabled)
@@ -197,9 +197,14 @@ class ColaTab(ttk.Frame):
         if not job:return
         data=job['datos']
         resultado,motivo=resultado_facturacion(job)
+        visible=('SÍ' if resultado=='SÍ' else 'NO') if job['tipo']=='FACTURA' else 'No aplica (no es factura)'
         lines=[tracking(job['id']), 'Trámite: '+job['tipo'],
-               '¿Se facturó?: '+resultado, 'Detalle: '+motivo,
+               '¿Se facturó?: '+visible,
+               'Motivo: '+motivo,
                'Origen: '+job['origen'], 'Correo de avisos: '+job['correo'], '']
+        if resultado=='SIN CONFIRMAR':
+            lines.insert(4,'IMPORTANTE: No se ha confirmado si Polaris emitió el CFDI. '
+                            'No intentes facturar otra vez el mismo ticket hasta verificarlo.')
         lines += [f'{k}: {v}' for k,v in data.items()]
         self._show('Resultado y detalles','\n'.join(lines))
 
@@ -280,10 +285,13 @@ class ColaTab(ttk.Frame):
         self.status.set(f'{estado} | Solicitudes por atender: {pendientes}')
         tabla=[]
         for r in rows:
-            resultado,motivo=resultado_facturacion(r)
-            resumen=' '.join(str(motivo).split())
+            resultado,_motivo=resultado_facturacion(r)
+            # La columna de facturación solo muestra SÍ / NO para FACTURAS.
+            # NO = sin confirmación de factura en este momento, no una
+            # declaración de que Polaris jamás timbró el ticket.
+            visible=('SÍ' if resultado=='SÍ' else 'NO') if r['tipo']=='FACTURA' else '—'
             tabla.append((r['id'],(tracking(r['id']),r['tipo'],r['datos'].get('estacion',''),
-                r['datos'].get('ticket') or r['datos'].get('rfc',''),resultado,resumen[:165])))
+                r['datos'].get('ticket') or r['datos'].get('rfc',''),visible)))
         self._sync(self.tree,tabla)
         notices=self.cola.store.notices()
         self._sync(self.mailtree,[(r['id'],(datetime.fromtimestamp(r['creado']).strftime('%d/%m %H:%M:%S'),r['evento'],r['correo'],r['estado'])) for r in notices])
