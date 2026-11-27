@@ -861,6 +861,8 @@ class App:
                 st=self.cola.store.status()
                 if st.get('activa'):
                     text='POLARIS TRABAJANDO: '+str(getattr(self.polaris,'etapa_alerta','Preparando ventana...'))
+                elif self.cola.store.meta('pendiente_comprobar_polaris')=='1':
+                    text='NUEVA ETAPA DE PRODUCCIÓN | Lista anterior archivada. Revisa Polaris y pulsa Reanudar atención automática.'
                 elif st.get('bloqueo'):
                     text='ATENCIÓN DETENIDA: resultado de Polaris pendiente de confirmar. '+str(st.get('motivo',''))+' | Resultados y avisos > Resolver bloqueo confirmado.'
                 elif st.get('pausada'):
