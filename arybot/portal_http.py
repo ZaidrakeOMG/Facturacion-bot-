@@ -364,9 +364,11 @@ class PortalWSGI:
                 raise HttpError(503, 'La cola está llena. No se registró esta solicitud.')
             safe = self.modo_seguro()
             if kind == 'ALTA':
-                job, _ = self.cola.encolar_alta(sol, source='Portal web', source_id=source_id, safe=safe)
+                job, _ = self.cola.encolar_alta(sol, source='Portal web', source_id=source_id, safe=safe,
+                                                  dispositivo_origen=data['dispositivo_origen'])
             else:
-                job, _ = self.cola.encolar_factura(sol, source='Portal web', source_id=source_id, safe=safe)
+                job, _ = self.cola.encolar_factura(sol, source='Portal web', source_id=source_id, safe=safe,
+                                                     dispositivo_origen=data['dispositivo_origen'])
         return 201, self._response_job(job, incluir_perfil_local=True), 'application/json; charset=utf-8', headers
 
     def __call__(self, environ, start_response):
