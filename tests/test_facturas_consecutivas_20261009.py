@@ -465,3 +465,57 @@ def test_retirar_pendientes_en_lote_preserva_activa_y_revision(tmp_path):
     assert store.get(b['id'])['estado']=='CANCELADA'
     assert store.get(c['id'])['estado']=='CANCELADA'
     assert store.cancel_pending()==[]
+
+
+def test_pruebas_seguras_no_bloquean_la_siguiente(tmp_path):
+    """Dos facturas de prueba nunca deben dejar el procesamiento detenido."""
+    from arybot.cola_operaciones import ColaOperaciones
+    from arybot.cola_modelo import DEFAULTS
+    from arybot.parser import Solicitud
+    cfg = {'app': {'modo_prueba': True, 'correo': 'bot@example.com'},
+           'gmail': {}, 'ocr': {}, 'polaris': {}, 'cola': dict(DEFAULTS)}
+    bot = Mock()
+    bot.invoice.return_value = 'PRUEBA_OK'
+    bot.diag = None
+    bot.etapa_alerta = 'FACTURACION: prueba'
+    q = ColaOperaciones(tmp_path, cfg, bot, Mock(), avisos=Mock())
+    jobs = []
+    for folio in ('100001', '100002'):
+        sol = Solicitud(estacion='ARY V', rfc='AAA010101AAA', ticket=folio,
+                        fecha_ticket=date.today().strftime('%d/%m/%Y'),
+                        forma_pago='EFECTIVO', correo_destino='cliente@example.com',
+                        remitente='cliente@example.com')
+        job, _ = q.encolar_factura(sol, safe=True)
+        jobs.append(job)
+    assert q.ejecutar_una()
+    assert q.store.get(jobs[0]['id'])['estado'] == 'PRUEBA_CERRADA'
+    assert not q.store.status()['pausada']
+    assert q.ejecutar_una()
+    assert q.store.get(jobs[1]['id'])['estado'] == 'PRUEBA_CERRADA'
+    assert bot.cerrar_polaris_tras_solicitud.call_count == 2
+    assert not q.store.status()['pausada']
+
+
+def test_prueba_no_pasa_siguiente_si_polaris_no_cerro(tmp_path):
+    """Nunca abrir otro cliente sobre una captura cuyo cierre falló."""
+    from arybot.cola_operaciones import ColaOperaciones
+    from arybot.cola_modelo import DEFAULTS
+    from arybot.parser import Solicitud
+    cfg = {'app': {'modo_prueba': True, 'correo': 'bot@example.com'},
+           'gmail': {}, 'ocr': {}, 'polaris': {}, 'cola': dict(DEFAULTS)}
+    bot = Mock()
+    bot.invoice.return_value = 'PRUEBA_OK'
+    bot.cerrar_polaris_tras_solicitud.side_effect = RuntimeError('No se cerró Polaris')
+    bot.diag = None
+    bot.etapa_alerta = 'FACTURACION: prueba'
+    q = ColaOperaciones(tmp_path, cfg, bot, Mock(), avisos=Mock())
+    for folio in ('100003', '100004'):
+        sol = Solicitud(estacion='ARY V', rfc='AAA010101AAA', ticket=folio,
+                        fecha_ticket=date.today().strftime('%d/%m/%Y'),
+                        forma_pago='EFECTIVO', correo_destino='cliente@example.com',
+                        remitente='cliente@example.com')
+        q.encolar_factura(sol, safe=True)
+    assert q.ejecutar_una()
+    assert q.store.status()['pausada']
+    assert not q.ejecutar_una()
+    assert bot.invoice.call_count == 1
