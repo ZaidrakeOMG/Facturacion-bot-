@@ -82,6 +82,7 @@ class GuiTests(unittest.TestCase):
         self.app.worker=Mock();self.app.worker.is_alive.return_value=True
         self.tab.pdf_path.set(str(self.constancia))
         self.tab.phone.set('8711234567');self.tab.email.set('cliente@example.com')
+        self.tab.regimen.set('601 — General de Ley Personas Morales')
         self.tab.prepare()
         self.assertTrue(self.tab.busy);self.app.worker.stop.assert_not_called()
         self.assertEqual(self.app.cola.store.get(self.tab.job_id)['estado'],'EN_COLA')
@@ -99,6 +100,7 @@ class GuiTests(unittest.TestCase):
 
     def test_no_validation_network(self):
         self.tab.pdf_path.set(str(self.constancia));self.tab.phone.set('8711234567');self.tab.email.set('cliente@example.com')
+        self.tab.regimen.set('601 — General de Ley Personas Morales')
         self.assertEqual(self.tab._sol().rfc,'AAA010101AAA')
 
 if __name__=='__main__':unittest.main(verbosity=2)
