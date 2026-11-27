@@ -30,6 +30,11 @@ if errorlevel 1 (
 
 set /p "ARY_ESTACION=Estacion (ejemplo ARY IV): "
 set /p "ARY_TICKET=Ticket o folio (ejemplo 0006043150): "
+"%PY%" -c "import os,re,sys; from arybot.parser import STATIONS; e=os.environ.get('ARY_ESTACION','').strip().upper(); t=os.environ.get('ARY_TICKET','').strip(); sys.exit(0 if e in STATIONS and re.fullmatch('[0-9]{1,20}',t) and int(t)>0 else 1)"
+if errorlevel 1 (
+  echo ERROR: Estacion invalida o ticket no numerico. Usa ARY IV y 0006043150.
+  goto :error
+)
 echo.
 echo SOLO si ya se verifico en Polaris que no hay CFDI.
 set /p "ARY_CONFIRMACION=Para autorizar la recuperacion escribe SIN CFDI: "
@@ -41,7 +46,7 @@ if errorlevel 1 (
 
 echo.
 echo [1/2] Creando respaldo consistente de SQLite...
-"%PY%" -c "import sqlite3,datetime; from pathlib import Path; p=Path('data/cola_operaciones.sqlite3'); b=p.with_name('cola_operaciones_RESPALDO_'+datetime.datetime.now().strftime('%Y%m%d_%H%M%S_%f')+'.sqlite3'); src=sqlite3.connect(str(p),timeout=20); dst=sqlite3.connect(str(b)); src.backup(dst); dst.close(); src.close(); print('RESPALDO:',b)"
+"%PY%" -c "import sqlite3,datetime; from pathlib import Path; p=Path('data/cola_operaciones.sqlite3'); b=p.with_name('cola_operaciones_RESPALDO_'+datetime.datetime.now().strftime('%%Y%%m%%d_%%H%%M%%S_%%f')+'.sqlite3'); src=sqlite3.connect(str(p),timeout=20); dst=sqlite3.connect(str(b)); src.backup(dst); dst.close(); src.close(); print('RESPALDO:',b)"
 if errorlevel 1 (
   echo ERROR: No se creo el respaldo. No se hara ninguna recuperacion.
   goto :error
