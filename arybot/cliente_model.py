@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import hashlib
 import re
 from .parser import normalize_station, STATIONS
+from .regimen_fiscal import validar_regimen
 
 
 class AltaClienteError(RuntimeError):
@@ -22,10 +23,11 @@ class AltaCliente:
     correo: str
     razon_social: str = ''
     calle_constancia: str = ''
+    regimen_fiscal: str = ''
 
     @classmethod
     def crear(cls, estacion: str, rfc: str, idcif: str, telefono: str, correo: str, *,
-              razon_social: str = '', calle_constancia: str = '') -> 'AltaCliente':
+              razon_social: str = '', calle_constancia: str = '', regimen_fiscal: str = '') -> 'AltaCliente':
         # No transformar números a int: conserva ceros iniciales del idCIF/teléfono.
         vals=(estacion,rfc,idcif,telefono,correo)
         if any(not isinstance(x,str) for x in vals):
@@ -58,12 +60,17 @@ class AltaCliente:
         if any(not isinstance(x, str) or any(ord(c) < 32 for c in x) or len(x) > 180
                for x in (razon_social, calle_constancia)):
             raise AltaClienteError('Los datos de la constancia fiscal no son válidos.')
-        return cls(st,rf,ci,ph,local+'@'+domain.lower(),razon_social.strip(),calle_constancia.strip())
+        regimen=str(regimen_fiscal or '').strip()
+        if regimen:
+            try: regimen=validar_regimen(rf,regimen)
+            except ValueError as exc: raise AltaClienteError(str(exc)) from exc
+        return cls(st,rf,ci,ph,local+'@'+domain.lower(),razon_social.strip(),calle_constancia.strip(),regimen)
 
     def validar(self) -> 'AltaCliente':
         """Revalida también instancias creadas sin pasar por crear()."""
         return self.crear(self.estacion,self.rfc,self.idcif,self.telefono,self.correo,
-                          razon_social=self.razon_social, calle_constancia=self.calle_constancia)
+                          razon_social=self.razon_social, calle_constancia=self.calle_constancia,
+                          regimen_fiscal=self.regimen_fiscal)
 
     def clave_local(self) -> str:
         # Huella del RFC/estación; no conserva los cuatro datos en claro.
@@ -72,4 +79,5 @@ class AltaCliente:
 
     def campos_cliente(self) -> dict:
         return {'rfc':self.rfc,'idcif':self.idcif,'telefono':self.telefono,'correo':self.correo,
-                'razon_social':self.razon_social,'calle_constancia':self.calle_constancia}
+                'razon_social':self.razon_social,'calle_constancia':self.calle_constancia,
+                'regimen_fiscal':self.regimen_fiscal}
