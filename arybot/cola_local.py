@@ -121,9 +121,11 @@ class ColaLocal:
             reserved = old[0] if old else ''
             pending = c.execute("SELECT 1 FROM trabajos WHERE id=? AND estado='REVISION_REQUERIDA'",
                                 (reserved,)).fetchone() if reserved else None
-            if pending:
+            comprobar = c.execute(
+                "SELECT valor FROM ajustes WHERE clave='pendiente_comprobar_polaris'").fetchone()
+            if pending or (comprobar and comprobar[0]=='1'):
                 self._set(c,'pausada','1')
-                self._set(c,'motivo_pausa','Hay un CFDI o envío incierto pendiente de revisión.')
+                self._set(c,'motivo_pausa','Confirma en Polaris que no hay un timbrado o envío anterior en curso.')
             else:
                 self._set(c,'bloqueo','')
                 self._set(c,'pausada','0')
@@ -167,8 +169,13 @@ class ColaLocal:
                       (ident,source_id,clave,kind,source,int(safe),state,json.dumps(data,ensure_ascii=False),correo,reason,now,now,int(minutes)))
         return self.get(ident),True
 
-    def resume(self):
+    def resume(self, *, polaris_comprobado=False):
         with self.connect(True) as c:
+            comprobar = c.execute("SELECT valor FROM ajustes WHERE clave='pendiente_comprobar_polaris'").fetchone()
+            if comprobar and comprobar[0]=='1':
+                if not polaris_comprobado:
+                    raise ColaError('Confirma que no hay ninguna factura o envío anterior abierto en Polaris.')
+                self._set(c,'pendiente_comprobar_polaris','0')
             # Un cierre incierto del envío deja Polaris reservado hasta que
             # el operador revise el CFDI y LIBERE ese trabajo explícitamente.
             block=c.execute("SELECT valor FROM ajustes WHERE clave='bloqueo'").fetchone()
@@ -311,7 +318,7 @@ class ColaLocal:
                 self._set(c,'pausada','0')
                 self._set(c,'motivo_pausa','')
 
-    def archivar_solicitudes(self, ident=None, *, confirmado=False):
+    def archivar_solicitudes(self, ident=None, *, confirmado=False, marca_inicio=None):
         """Quita solicitudes de la vista de forma transaccional y SIN borrar historia.
 
         ident=None archiva todo lo visible; de otro modo solo el ID seleccionado.
@@ -322,6 +329,12 @@ class ColaLocal:
         if confirmado is not True:
             raise ColaError('Confirma primero que verificaste Polaris y que puedes retirar la solicitud.')
         with self.connect(True) as c:
+            if marca_inicio and c.execute(
+                    "SELECT 1 FROM ajustes WHERE clave=? AND valor='1'",
+                    (marca_inicio,)).fetchone():
+                return {'archivadas':0,'canceladas':0,'atascadas':0,
+                        'riesgos_protegidos':0,'requiere_reanudar':False,
+                        'primera_vez':False}
             if ident is None:
                 rows=c.execute("SELECT * FROM trabajos WHERE archivado=0 ORDER BY creado,id").fetchall()
             else:
@@ -391,14 +404,19 @@ class ColaLocal:
                 count+=1
             if erased_block:
                 self._set(c,'bloqueo','')
-                # No liberar una pausa manual por accidente; el operador
-                # puede reanudar tras verificar que Polaris está libre.
                 self._set(c,'pausada','1')
                 self._set(c,'motivo_pausa',
                           'Se archivó una operación bloqueada. Comprueba que Polaris está libre y reanuda.')
+            if marca_inicio:
+                # Un arranque nuevo solo limpia el historial UNA vez, en la
+                # misma transacción que marca el cambio de versión.
+                self._set(c,marca_inicio,'1')
+                if erased_block:
+                    self._set(c,'pendiente_comprobar_polaris','1')
             return {'archivadas':count,'canceladas':canceladas,
                     'atascadas':stale,'riesgos_protegidos':riesgos,
-                    'requiere_reanudar':erased_block}
+                    'requiere_reanudar':erased_block,
+                    'primera_vez':bool(marca_inicio)}
 
     def cancel_pending(self):
         """Withdraw waiting jobs atomically, preserving history and active work."""
