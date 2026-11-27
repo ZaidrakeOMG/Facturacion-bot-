@@ -383,7 +383,9 @@ class ColaLocal:
                     row['id']==block or previous=='EJECUTANDO' or
                     any(token in norm for token in (
                         'posible cfdi','timbrado inciert','envio inciert',
-                        'timbrad','no se confirmo el cierre','correo pendiente',
+                        'no se confirmo el timbrado','timbrado no confirmado',
+                        'aceptar solicitado','resultado fiscal incierto',
+                        'no se confirmo el cierre','correo pendiente',
                         'operacion o captura pendiente'))
                 ))
                 result=json.loads(row['resultado'] or '{}')
