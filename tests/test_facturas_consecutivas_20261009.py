@@ -548,6 +548,7 @@ def test_archivar_solicitudes_cancelar_solo_espera(tmp_path):
     bot = Mock()
     q = ColaOperaciones(tmp_path, cfg, bot, Mock(), avisos=Mock())
     sol = Solicitud(estacion='ARY V', rfc='AAA010101AAA', ticket='30001',
+                   fecha_ticket=date.today().strftime('%d/%m/%Y'),
                    forma_pago='EFECTIVO', correo_destino='prueba@example.com')
     job, _ = q.encolar_factura(sol, source_id='web:30001', safe=False)
     with pytest.raises(ColaError, match='Confirma'):
