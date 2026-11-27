@@ -4,7 +4,8 @@ import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
-from MONITOR_ARY_WEB import instantanea, preparar_clave, obtener_clave
+from unittest.mock import patch
+from MONITOR_ARY_WEB import instantanea, preparar_clave, obtener_clave, verificar_clave, guardar_clave_interactiva
 
 
 class MonitorSoloLecturaTests(unittest.TestCase):
@@ -16,6 +17,18 @@ class MonitorSoloLecturaTests(unittest.TestCase):
             self.assertFalse(preparar_clave(path))
             self.assertEqual(first,obtener_clave(path))
             self.assertGreaterEqual(len(first),32)
+
+    def test_cambio_credenciales_guarda_solo_hash(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / "clave.txt"
+            preparar_clave(path)
+            with patch("getpass.getpass", side_effect=["2903*+", "2903*+"]):
+                guardar_clave_interactiva(path)
+            stored = obtener_clave(path)
+            self.assertTrue(stored.startswith("pbkdf2_sha256$"))
+            self.assertNotIn("2903*+", stored)
+            self.assertTrue(verificar_clave("2903*+", stored))
+            self.assertFalse(verificar_clave("incorrecta", stored))
 
     def test_lectura_sin_mutaciones_y_sin_datos_fiscales(self):
         with tempfile.TemporaryDirectory() as d:
