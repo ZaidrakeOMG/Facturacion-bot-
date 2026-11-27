@@ -905,3 +905,70 @@ def test_comprobacion_libre_lee_ventanas_sin_tocarlas():
     bot._has_unsaved_prompt.return_value=None
     bot._validar_misma_sesion_windows.side_effect=RuntimeError('Otro escritorio')
     assert bot.pantalla_libre_para_nueva_solicitud() is False
+
+
+def test_portal_reenvio_identico_devuelve_referencia_original(monkeypatch,tmp_path):
+    """Reenvío de la misma constancia+ticket vuelve al seguimiento, no a Polaris."""
+    import threading
+    from arybot.cola_local import ColaLocal
+    from arybot.cola_modelo import factura_datos,clave_trabajo
+    from arybot.portal_http import PortalWSGI
+    from arybot.parser import Solicitud
+    from arybot import portal_http
+    data=factura_datos(Solicitud(
+        estacion='ARY IV',rfc='AAA010101AAA',ticket='0006043150',
+        fecha_ticket=date.today().strftime('%d/%m/%Y'),forma_pago='EFECTIVO',
+        correo_destino='cliente@example.com',remitente='cliente@example.com'))
+    store=ColaLocal(tmp_path)
+    old,_=store.enqueue('FACTURA',data,source='Portal web',
+                        source_id='web:original',safe=False,
+                        clave=clave_trabajo('FACTURA',data))
+    assert store.solicitud_activa_identica('FACTURA',data,safe=False)['id']==old['id']
+    assert store.solicitud_activa_identica('FACTURA',data,safe=True) is None
+    assert store.solicitud_activa_identica('FACTURA',dict(data,correo_destino='otro@example.com'),safe=False) is None
+    assert store.solicitud_activa_identica('FACTURA',dict(data,rfc='BBB010101BBB'),safe=False) is None
+
+    api=PortalWSGI.__new__(PortalWSGI)
+    api.cola=Mock(store=store)
+    api.cola.despertar_solicitud_existente=Mock()
+    api.cola.encolar_factura=Mock(side_effect=AssertionError('No encolar otra vez'))
+    api._guard=lambda env,post=False:{'sid':'a'*32}
+    api._body=lambda env:{}
+    api._mac=lambda purpose,value:'x'*64
+    api._sign=lambda purpose,value:'firma-original'
+    api.clock=lambda:0
+    api.limits=Mock()
+    api.limits.aceptar.return_value=True
+    api.lock=threading.RLock()
+    api.aceptando=True
+    api.settings={'max_solicitudes_pendientes':100,'limite_envios_10_minutos':8}
+    api.modo_seguro=lambda:False
+    monkeypatch.setattr(portal_http,'validar_entrada',lambda body,**kwargs:('FACTURA',None,data))
+    monkeypatch.setattr(portal_http,'piloto_habilitado',lambda:False)
+    code,returned,content_type,_=api._dispatch({
+        'REQUEST_METHOD':'POST','PATH_INFO':'/api/facturacion/solicitudes',
+        'HTTP_X_ARY_REQUEST_ID':'0'*32,'HTTP_X_ARY_MODE':'real',
+        'REMOTE_ADDR':'127.0.0.1'})
+    assert code==200
+    assert returned['referencia'].startswith('ARY-')
+    assert returned['estado']=='EN_COLA'
+    assert returned['seguimiento']=='firma-original'
+    assert len(store.list())==1
+    assert store.get(old['id'])['estado']=='EN_COLA'
+    api.cola.despertar_solicitud_existente.assert_called_once()
+    api.cola.encolar_factura.assert_not_called()
+
+
+def test_portal_duplicado_no_revela_seguimiento_a_otros_datos(tmp_path):
+    from arybot.cola_local import ColaLocal
+    from arybot.cola_modelo import clave_trabajo
+    store=ColaLocal(tmp_path)
+    original=dict(estacion='ARY IV',ticket='0006043150',rfc='AAA010101AAA',
+                  fecha_ticket=date.today().isoformat(),forma_pago='EFECTIVO',
+                  uso_cfdi='G03',correo_destino='cliente@example.com')
+    job,_=store.enqueue('FACTURA',original,source='Portal web',
+                        safe=False,clave=clave_trabajo('FACTURA',original))
+    assert store.solicitud_activa_identica('FACTURA',dict(original,correo_destino='intruso@example.com'),safe=False) is None
+    assert store.solicitud_activa_identica('FACTURA',dict(original,uso_cfdi='S01'),safe=False) is None
+    store.archivar_solicitudes(job['id'],confirmado=True)
+    assert store.solicitud_activa_identica('FACTURA',original,safe=False) is None

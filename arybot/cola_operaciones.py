@@ -213,6 +213,19 @@ class ColaOperaciones:
         self.thread.start()
         self._wake.set()
 
+    def despertar_solicitud_existente(self):
+        """Un segundo envío idéntico NO crea otro trabajo ni repite su factura.
+
+        Solo despierta al mismo consumidor del primer envío para que siga
+        trabajando cuando Polaris esté libre.
+        """
+        if self._stop.is_set():
+            return
+        if self.thread is None or not self.thread.is_alive():
+            self.iniciar_hilos()
+        self._reactivar_automaticamente_tras_migracion()
+        self._wake.set()
+
     def iniciar_cola(self, *, polaris_comprobado=False):
         self.store.resume(polaris_comprobado=polaris_comprobado)
         self._manual_pause=False
