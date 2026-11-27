@@ -13,6 +13,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import ipaddress
 import json
 from pathlib import Path
+from urllib.parse import urlsplit
 import secrets
 import sqlite3
 import time
@@ -204,6 +205,7 @@ class Handler(BaseHTTPRequestHandler):
                         "application/json; charset=utf-8")
 
     def do_GET(self):
+        ruta = urlsplit(self.path).path
         try:
             ip = ipaddress.ip_address(self.client_address[0])
         except ValueError:
@@ -217,7 +219,7 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("Content-Length", "0")
             self.end_headers()
             return
-        if self.path == "/api/estado":
+        if ruta == "/api/estado":
             body = json.dumps(instantanea(self.server.base / "data" / "cola_operaciones.sqlite3"),
                               ensure_ascii=False, separators=(",", ":")).encode("utf-8")
             return self._responder(200, body, "application/json; charset=utf-8")
@@ -226,9 +228,9 @@ class Handler(BaseHTTPRequestHandler):
             "/monitor.css": ("monitor.css", "text/css; charset=utf-8"),
             "/monitor.js": ("monitor.js", "text/javascript; charset=utf-8"),
         }
-        if self.path not in assets:
+        if ruta not in assets:
             return self._error(404, "Ruta no disponible.")
-        filename, mime = assets[self.path]
+        filename, mime = assets[ruta]
         try:
             body = (self.server.base / "monitor_web" / filename).read_bytes()
         except OSError:
