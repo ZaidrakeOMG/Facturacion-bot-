@@ -284,7 +284,10 @@ class ColaTab(ttk.Frame):
         if not job:return
         data=job['datos']
         resultado,motivo=resultado_facturacion(job)
-        visible=('SÍ' if resultado=='SÍ' else 'NO') if job['tipo']=='FACTURA' else 'No aplica (no es factura)'
+        visible=(resultado if resultado in ('SÍ','NO') else
+                 'SIN CONFIRMAR' if resultado=='SIN CONFIRMAR' else
+                 'PENDIENTE' if job['tipo']=='FACTURA' else
+                 'No aplica (no es factura)')
         lines=[tracking(job['id']), 'Trámite: '+job['tipo'],
                '¿Se facturó?: '+visible,
                'Motivo: '+motivo,
@@ -362,7 +365,7 @@ class ColaTab(ttk.Frame):
         emision_pendiente=any(r['estado']=='EN_COLA' and not r['seguro'] for r in rows)
         if state['pausada']:
             if self.cola.store.meta('pendiente_comprobar_polaris')=='1':
-                estado='NUEVA ETAPA: lista limpia. Comprueba Polaris y pulsa Reanudar atención automática.'
+                estado='Nueva etapa: comprobando automáticamente que Polaris esté libre para facturar los tickets nuevos.'
             else:
                 causa=state['motivo'] or 'Revisa Polaris antes de reanudar.'
                 estado='ATENCIÓN DETENIDA: '+causa
@@ -376,10 +379,10 @@ class ColaTab(ttk.Frame):
         tabla=[]
         for r in rows:
             resultado,_motivo=resultado_facturacion(r)
-            # La columna de facturación solo muestra SÍ / NO para FACTURAS.
-            # NO = sin confirmación de factura en este momento, no una
-            # declaración de que Polaris jamás timbró el ticket.
-            visible=('SÍ' if resultado=='SÍ' else 'NO') if r['tipo']=='FACTURA' else '—'
+            # La columna queda vacía hasta tener un resultado definitivo.
+            # Una solicitud recibida no es un fracaso; no mostrar NO mientras
+            # espera ni ante un timbrado incierto que deba comprobarse.
+            visible=resultado if r['tipo']=='FACTURA' and resultado in ('SÍ','NO') else ''
             tabla.append((r['id'],(tracking(r['id']),r['tipo'],r['datos'].get('estacion',''),
                 r['datos'].get('ticket') or r['datos'].get('rfc',''),visible)))
         self._sync(self.tree,tabla)
