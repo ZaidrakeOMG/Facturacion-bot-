@@ -20,7 +20,7 @@ def _bot(fake_windows, values):
 
 def test_lee_fecha_del_wrapper_si_editor_interno_esta_vacio(monkeypatch):
     monkeypatch.setattr(polaris,'win32gui',SimpleNamespace(GetParent=lambda h:{10:20,20:100}.get(h,0),
-        GetWindowText=lambda h:''))
+        GetWindowText=lambda h:''),raising=False)
     bot,events = _bot(None,{10:'',20:'23-11-2026'})
     h,value = bot._read_date_control(100)
     assert (h,value)==(20,'23-11-2026')
@@ -29,7 +29,7 @@ def test_lee_fecha_del_wrapper_si_editor_interno_esta_vacio(monkeypatch):
 
 def test_fecha_anidada_con_lecturas_discrepantes_se_detiene(monkeypatch):
     monkeypatch.setattr(polaris,'win32gui',SimpleNamespace(GetParent=lambda h:{10:20,20:100}.get(h,0),
-        GetWindowText=lambda h:''))
+        GetWindowText=lambda h:''),raising=False)
     bot,_ = _bot(None,{10:'23/11/2026',20:'24/11/2026'})
     with pytest.raises(polaris.PolarisError,match='valores diferentes'):
         bot._read_date_control(100)
@@ -37,6 +37,6 @@ def test_fecha_anidada_con_lecturas_discrepantes_se_detiene(monkeypatch):
 
 def test_sin_lectura_no_inventa_fecha(monkeypatch):
     monkeypatch.setattr(polaris,'win32gui',SimpleNamespace(GetParent=lambda h:{10:20,20:100}.get(h,0),
-        GetWindowText=lambda h:''))
+        GetWindowText=lambda h:''),raising=False)
     bot,_ = _bot(None,{10:'',20:''})
     assert bot._read_date_control(100)==(10,'')
