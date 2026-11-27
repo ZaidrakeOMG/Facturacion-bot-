@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parent
 ASSETS = ROOT / "monitor_web"
 PASSWORD_FILE = ROOT / "data" / "monitor_web_clave.txt"
 DB = ROOT / "data" / "cola_operaciones.sqlite3"
-USER = "ary"
+USER = "Ary"
 
 
 def preparar_clave(path=PASSWORD_FILE):
@@ -48,6 +48,58 @@ def obtener_clave(path=PASSWORD_FILE):
     if len(key) < 32:
         raise RuntimeError("La clave del monitor es demasiado corta.")
     return key
+
+
+def verificar_clave(password, almacenada):
+    """Acepta hashes locales PBKDF2 y claves aleatorias antiguas."""
+    if almacenada.startswith("pbkdf2_sha256$"):
+        try:
+            algoritmo, iteraciones, salt, esperado = almacenada.split("$", 3)
+            rondas = int(iteraciones)
+            if not 100_000 <= rondas <= 500_000:
+                return False
+            salt_bytes = base64.urlsafe_b64decode(salt)
+            esperado_bytes = base64.urlsafe_b64decode(esperado)
+            if len(salt_bytes) != 16 or len(esperado_bytes) != 32:
+                return False
+            calculado = hashlib.pbkdf2_hmac(
+                "sha256", password.encode("utf-8"), salt_bytes, rondas
+            )
+            return hmac.compare_digest(calculado, esperado_bytes)
+        except (ValueError, UnicodeError):
+            return False
+    return hmac.compare_digest(password, almacenada)
+
+
+def guardar_clave_interactiva(path):
+    """Nunca acepta la clave como argumento ni la muestra en pantalla."""
+    from getpass import getpass
+    nueva = getpass("Nueva contrasena del monitor (no se mostrara): ")
+    verificacion = getpass("Repite la contrasena: ")
+    if not hmac.compare_digest(nueva, verificacion):
+        raise ValueError("Las contrasenas no coinciden.")
+    if len(nueva) < 6 or len(nueva) > 128:
+        raise ValueError("La contrasena debe tener entre 6 y 128 caracteres.")
+    if any(ord(c) < 33 or ord(c) == 127 for c in nueva):
+        raise ValueError("La contrasena no debe contener espacios ni caracteres de control.")
+    salt = secrets.token_bytes(16)
+    rondas = 240_000
+    digest = hashlib.pbkdf2_hmac("sha256", nueva.encode("utf-8"), salt, rondas)
+    registro = "$".join((
+        "pbkdf2_sha256", str(rondas),
+        base64.urlsafe_b64encode(salt).decode("ascii"),
+        base64.urlsafe_b64encode(digest).decode("ascii")
+    ))
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    # Mantener las ACL del archivo preexistente instalado por Windows.
+    with path.open("w", encoding="ascii") as output:
+        output.write(registro + "\n")
+    try:
+        path.chmod(0o600)
+    except OSError:
+        pass
+    print("Contrasena local actualizada para usuario Ary. Reinicia SOLO la tarea del monitor.")
 
 
 def instantanea(db_path=DB):
@@ -189,9 +241,7 @@ class Handler(BaseHTTPRequestHandler):
         try:
             raw = base64.b64decode(auth[6:], validate=True).decode("utf-8")
             user, separator, pwd = raw.partition(":")
-            return bool(separator) and hmac.compare_digest(user, USER) and hmac.compare_digest(
-                pwd, self.server.clave
-            )
+            return bool(separator) and hmac.compare_digest(user, USER) and verificar_clave(pwd, self.server.clave)
         except (ValueError, UnicodeError, TypeError):
             return False
 
@@ -221,12 +271,16 @@ def main():
     parser.add_argument("--red", action="append", default=None,
                         help="Red de origen permitida, por ejemplo 10.20.0.0/16.")
     parser.add_argument("--crear-clave", action="store_true")
+    parser.add_argument("--cambiar-clave", action="store_true", help="Pedir nueva contrasena sin mostrarla ni guardarla en GitHub.")
     args = parser.parse_args()
     base = Path(args.base).resolve()
     clave_path = base / "data" / "monitor_web_clave.txt"
     if args.crear_clave:
         nuevo = preparar_clave(clave_path)
         print(("Clave creada" if nuevo else "Clave existente") + ": " + str(clave_path))
+        return
+    if args.cambiar_clave:
+        guardar_clave_interactiva(clave_path)
         return
     if not 1024 <= args.port <= 65535:
         parser.error("El puerto debe estar entre 1024 y 65535.")
