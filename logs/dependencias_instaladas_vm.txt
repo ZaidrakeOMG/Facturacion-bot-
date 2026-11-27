@@ -4,7 +4,7 @@ cffi==2.1.1
 charset-normalizer==3.5.2
 comtypes==1.4.17
 cryptography==50.0.2
-google-api-core==2.40.0
+google-api-core==2.42.0
 google-api-python-client==2.201.0
 google-auth==2.59.1
 google-auth-httplib2==0.4.4
