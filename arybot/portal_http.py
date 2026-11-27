@@ -19,6 +19,7 @@ import threading
 import time
 from urllib.parse import urlsplit
 from .cola_modelo import SolicitudDuplicada
+from .dispositivo_origen import clasificar, datos_equivalentes
 from .portal_modelo import validar_entrada, catalogos, estado_publico, EntradaPortalError
 from .ticket_foto import analizar_ticket_foto, analizar_codigo_barras_foto, FotoTicketError
 from .ticket_vision import piloto_habilitado
@@ -314,13 +315,17 @@ class PortalWSGI:
             raise HttpError(400, 'Falta el identificador único del formulario.')
         vision = piloto_habilitado()
         kind, sol, data = validar_entrada(body, vision=True) if vision else validar_entrada(body)
+        # Se conserva SOLO la categoría; no se guardan IP, User-Agent ni cabeceras.
+        data['dispositivo_origen'] = clasificar(
+            environ.get('HTTP_USER_AGENT', ''), environ.get('HTTP_SEC_CH_UA_MOBILE', '')
+        )
         source_id = 'web:' + self._mac('request', session['sid'] + ':' + request_id)
         with self.lock:
             # Reenvíos de trabajos vigentes usan la MISMA referencia; no crean
             # una segunda solicitud mientras la primera está en proceso.
             old = self.cola.store.source(source_id)
             if old:
-                if old['tipo'] != kind or old['datos'] != data:
+                if old['tipo'] != kind or not datos_equivalentes(old['datos'], data):
                     raise HttpError(409, 'Esta solicitud ya se envió con otros datos. Revisa su seguimiento antes de iniciar otra.')
                 if (kind == 'FACTURA' and old['archivado']
                         and old['estado'] in ('CANCELADA', 'REVISION_CERRADA',
