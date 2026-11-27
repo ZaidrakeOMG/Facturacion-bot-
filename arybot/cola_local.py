@@ -25,6 +25,10 @@ CREATE TABLE IF NOT EXISTS avisos (
  asunto TEXT NOT NULL, cuerpo TEXT NOT NULL, estado TEXT NOT NULL, creado REAL NOT NULL,
  actualizado REAL NOT NULL, gmail_id TEXT NOT NULL DEFAULT '', detalle TEXT NOT NULL DEFAULT '', not_before REAL NOT NULL DEFAULT 0,
  UNIQUE(trabajo,evento));
+CREATE TABLE IF NOT EXISTS recuperaciones_folio (
+ id TEXT PRIMARY KEY, trabajo TEXT NOT NULL, clave TEXT NOT NULL, fecha REAL NOT NULL,
+ estado_anterior TEXT NOT NULL, motivo_anterior TEXT NOT NULL,
+ resultado_anterior TEXT NOT NULL, accion TEXT NOT NULL);
 '''
 
 class ColaLocal:
@@ -379,7 +383,9 @@ class ColaLocal:
                     row['id']==block or previous=='EJECUTANDO' or
                     any(token in norm for token in (
                         'posible cfdi','timbrado inciert','envio inciert',
-                        'timbrad','no se confirmo el cierre','correo pendiente',
+                        'no se confirmo el timbrado','timbrado no confirmado',
+                        'aceptar solicitado','resultado fiscal incierto',
+                        'no se confirmo el cierre','correo pendiente',
                         'operacion o captura pendiente'))
                 ))
                 result=json.loads(row['resultado'] or '{}')
@@ -444,6 +450,86 @@ class ColaLocal:
                     'atascadas':stale,'riesgos_protegidos':riesgos,
                     'requiere_reanudar':requiere_reanudar,
                     'primera_vez':bool(marca_inicio)}
+
+    def retomar_folio_sin_cfdi(self, estacion, ticket, *, confirmado=False):
+        """Reabrir EXACTAMENTE una solicitud anterior, sin emitir aquí un CFDI.
+
+        Únicamente tras comprobación explícita de que Polaris NO contiene
+        una factura emitida para ese ticket. La transacción conserva la
+        identidad original de seguimiento e inserta auditoría inmutable.
+        """
+        if confirmado is not True:
+            raise ColaError('Debes confirmar que verificaste el folio en Polaris y NO existe CFDI.')
+        import re
+        from .parser import STATIONS, fecha_facturable_portal
+        from .cola_modelo import clave_trabajo
+        estacion=str(estacion or '').strip().upper()
+        ticket=str(ticket or '').strip()
+        if estacion not in STATIONS or not re.fullmatch(r'\d{1,20}',ticket) or not int(ticket):
+            raise ColaError('Selecciona una estación ARY válida y un folio numérico.')
+        clave=clave_trabajo('FACTURA', {'estacion':estacion,'ticket':ticket})
+        now=time.time()
+        with self.connect(True) as c:
+            executing=c.execute("SELECT id FROM trabajos WHERE estado='EJECUTANDO' LIMIT 1").fetchone()
+            if executing:
+                raise ColaError('El bot está procesando una solicitud. Espera a que termine.')
+            rows=c.execute(
+                """SELECT * FROM trabajos WHERE clave=? AND tipo='FACTURA'
+                   ORDER BY creado DESC,id""",(clave,)).fetchall()
+            if not rows:
+                raise ColaError('Ese folio no aparece en el historial de esta VM. No se creó otra solicitud.')
+            if any(r['estado'] in ('ENVIO_SOLICITADO','YA_FACTURADO') for r in rows):
+                raise ColaError('Hay un resultado previo de factura confirmada para ese folio. '
+                                'Comprueba el CFDI en Polaris; no se permite reemitirlo.')
+            if any(r['estado'] in ('EN_COLA','EJECUTANDO','PREPARADA_FACTURA') for r in rows
+                   if not r['archivado']):
+                raise ColaError('El folio tiene una solicitud activa. El bot debe procesar esa misma.')
+            if any(r['tipo']=='FACTURA' and r['seguro'] and not r['archivado']
+                   and r['estado'] not in ('PRUEBA_CERRADA',) for r in rows):
+                raise ColaError('Hay una prueba abierta de este folio. Ciérrala primero.')
+            # Las consultas antiguas se conservan: solo una puede reactivarse.
+            candidates=[r for r in rows if r['origen']=='Portal web' and not r['seguro']
+                        and r['estado'] in ('CANCELADA','REVISION_CERRADA',
+                                           'REVISION_REQUERIDA','ESPERANDO_DATOS')]
+            if not candidates:
+                raise ColaError('No hay una solicitud web anterior recuperable para ese folio.')
+            selected=candidates[0]
+            data=json.loads(selected['datos'])
+            if not isinstance(data,dict):
+                raise ColaError('La solicitud no contiene datos fiscales recuperables.')
+            try:
+                fecha_facturable_portal(data.get('fecha_ticket',''))
+            except ValueError as exc:
+                raise ColaError('El ticket ya no puede facturarse automáticamente: '+str(exc)) from exc
+            if any(r['id']!=selected['id'] and not r['archivado']
+                   and r['estado'] not in ('REVISION_REQUERIDA','REVISION_CERRADA',
+                                           'CANCELADA','ESPERANDO_DATOS','PRUEBA_CERRADA')
+                   for r in rows):
+                raise ColaError('Existe otra operación abierta para ese folio. Revísala primero.')
+            block=c.execute("SELECT valor FROM ajustes WHERE clave='bloqueo'").fetchone()
+            block=block[0] if block else ''
+            if block and not any(r['id']==block for r in rows):
+                raise ColaError('Polaris tiene reservada otra operación. No se puede retomar este folio.')
+            for row in rows:
+                if row['riesgo_cfdi'] or row['id']==selected['id']:
+                    c.execute(
+                        """INSERT INTO recuperaciones_folio
+                           (id,trabajo,clave,fecha,estado_anterior,motivo_anterior,
+                            resultado_anterior,accion) VALUES(?,?,?,?,?,?,?,?)""",
+                        (uuid.uuid4().hex,row['id'],clave,now,row['estado'],
+                         row['motivo'] or '',row['resultado'] or '{}',
+                         'OPERADOR_VERIFICO_POLARIS_SIN_CFDI'))
+            # Limpiar la protección de las operaciones anteriores del mismo
+            # ticket SOLO después de la verificación del operador.
+            c.execute("UPDATE trabajos SET riesgo_cfdi=0 WHERE clave=? AND tipo='FACTURA'",(clave,))
+            if block:
+                self._set(c,'bloqueo','')
+            c.execute(
+                """UPDATE trabajos SET estado='EN_COLA',archivado=0,riesgo_cfdi=0,
+                   motivo=?,resultado='{}',creado=?,actualizado=?,iniciado=NULL,
+                   terminado=NULL WHERE id=?""",
+                ('Reactivada tras verificar en Polaris que el ticket no tiene CFDI.',now,now,selected['id']))
+        return self.get(selected['id'])
 
     def cancel_pending(self):
         """Withdraw waiting jobs atomically, preserving history and active work."""

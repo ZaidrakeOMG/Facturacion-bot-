@@ -972,3 +972,135 @@ def test_portal_duplicado_no_revela_seguimiento_a_otros_datos(tmp_path):
     assert store.solicitud_activa_identica('FACTURA',dict(original,uso_cfdi='S01'),safe=False) is None
     store.archivar_solicitudes(job['id'],confirmado=True)
     assert store.solicitud_activa_identica('FACTURA',original,safe=False) is None
+
+
+def _factura_web_guardada(store, folio, *, estado='REVISION_REQUERIDA',
+                          motivo='Posible CFDI timbrado o envío pendiente.',
+                          seguro=False):
+    """Simula un único trámite web; jamás toca Windows ni Polaris."""
+    from arybot.parser import Solicitud
+    from arybot.cola_modelo import factura_datos, clave_trabajo
+    data=factura_datos(Solicitud(estacion='ARY IV',ticket=folio,
+        rfc='AAA010101AAA',fecha_ticket=date.today().strftime('%d/%m/%Y'),
+        forma_pago='EFECTIVO',correo_destino='cliente@example.com'))
+    job,_=store.enqueue('FACTURA',data,source='Portal web',safe=seguro,
+                        source_id='web:unico-'+folio,clave=clave_trabajo('FACTURA',data))
+    if estado!='EN_COLA':
+        store.finish(job['id'],estado,reason=motivo,hold=estado=='REVISION_REQUERIDA')
+    return store.get(job['id'])
+
+
+def test_retomar_folio_archivado_tiene_misma_referencia_y_auditoria(tmp_path):
+    """Un ticket NO timbrado vuelve a EN_COLA una vez sin perder su trazabilidad."""
+    import sqlite3
+    from arybot.cola_local import ColaLocal
+    store=ColaLocal(tmp_path)
+    old=_factura_web_guardada(store,'0006043150')
+    old_id=old['id']
+    archive=store.archivar_solicitudes(old_id,confirmado=True)
+    assert archive['archivadas']==1
+    assert store.get(old_id)['riesgo_cfdi']==1
+    with pytest.raises(ColaError,match='confirmar'):
+        store.retomar_folio_sin_cfdi('ARY IV','0006043150')
+    new=store.retomar_folio_sin_cfdi('ARY IV','0006043150',confirmado=True)
+    assert new['id']==old_id
+    assert new['estado']=='EN_COLA'
+    assert new['archivado']==0
+    assert new['riesgo_cfdi']==0
+    assert new['iniciado'] is None
+    assert new['seguro'] is False
+    assert store.source('web:unico-0006043150')['id']==old_id
+    assert len(store.list(incluir_archivadas=True))==1
+    assert not store.meta('bloqueo')
+    with sqlite3.connect(store.path) as db:
+        row=db.execute('SELECT trabajo,estado_anterior,motivo_anterior,accion '
+                       'FROM recuperaciones_folio').fetchone()
+    assert row[0]==old_id
+    assert row[1]=='REVISION_REQUERIDA'
+    assert 'timbrado' in row[2]
+    assert row[3]=='OPERADOR_VERIFICO_POLARIS_SIN_CFDI'
+
+
+def test_retomar_folio_no_autoriza_si_ya_hay_factura_o_activa(tmp_path):
+    from arybot.cola_local import ColaLocal
+    store=ColaLocal(tmp_path)
+    done=_factura_web_guardada(store,'7000001',estado='ENVIO_SOLICITADO',motivo='CFDI terminado')
+    store.archivar_solicitudes(done['id'],confirmado=True)
+    with pytest.raises(ColaError,match='confirmada'):
+        store.retomar_folio_sin_cfdi('ARY IV','7000001',confirmado=True)
+    active=_factura_web_guardada(store,'7000002',estado='EN_COLA')
+    with pytest.raises(ColaError,match='activa'):
+        store.retomar_folio_sin_cfdi('ARY IV','7000002',confirmado=True)
+    assert store.get(active['id'])['estado']=='EN_COLA'
+    with pytest.raises(ColaError,match='no aparece'):
+        store.retomar_folio_sin_cfdi('ARY IV','7999999',confirmado=True)
+
+
+def test_retomar_folio_nunca_emite_si_no_se_ha_confirmado_polaris(tmp_path):
+    from arybot.cola_operaciones import ColaOperaciones
+    from arybot.cola_modelo import DEFAULTS
+    from arybot.cola_local import ColaLocal
+    store=ColaLocal(tmp_path)
+    old=_factura_web_guardada(store,'7000010')
+    store.archivar_solicitudes(old['id'],confirmado=True)
+    bot=Mock()
+    bot.pantalla_libre_para_nueva_solicitud.return_value=False
+    bot.invoice.return_value='ENVIO_SOLICITADO'
+    cfg={'app':{'modo_prueba':False},'gmail':{},'ocr':{},'polaris':{},'cola':dict(DEFAULTS)}
+    q=ColaOperaciones(tmp_path,cfg,bot,Mock(),store=store,avisos=Mock())
+    with pytest.raises(ColaError,match='confirma'):
+        q.retomar_folio_sin_cfdi('ARY IV','7000010')
+    with pytest.raises(ColaError,match='pantalla abierta'):
+        q.retomar_folio_sin_cfdi('ARY IV','7000010',confirmado=True)
+    bot.invoice.assert_not_called()
+    assert store.get(old['id'])['archivado']==1
+    bot.pantalla_libre_para_nueva_solicitud.return_value=True
+    result=q.retomar_folio_sin_cfdi('ARY IV','7000010',confirmado=True)
+    assert result['id']==old['id']
+    assert store.status()['pausada'] is False
+    assert store.meta('pendiente_comprobar_polaris')=='0'
+    assert q.ejecutar_una()
+    assert store.get(old['id'])['estado']=='ENVIO_SOLICITADO'
+    bot.invoice.assert_called_once()
+    assert len(store.list(incluir_archivadas=True))==1
+
+
+def test_retomar_folio_rechaza_modo_seguro_y_polaris_ocupado(tmp_path):
+    from arybot.cola_operaciones import ColaOperaciones
+    from arybot.cola_modelo import DEFAULTS
+    from arybot.cola_local import ColaLocal
+    store=ColaLocal(tmp_path)
+    old=_factura_web_guardada(store,'7000020')
+    store.archivar_solicitudes(old['id'],confirmado=True)
+    bot=Mock()
+    bot.pantalla_libre_para_nueva_solicitud.return_value=True
+    cfg={'app':{'modo_prueba':True},'gmail':{},'ocr':{},'polaris':{},'cola':dict(DEFAULTS)}
+    q=ColaOperaciones(tmp_path,cfg,bot,Mock(),store=store,avisos=Mock())
+    with pytest.raises(ColaError,match='MODO SEGURO'):
+        q.retomar_folio_sin_cfdi('ARY IV','7000020',confirmado=True)
+    cfg['app']['modo_prueba']=False
+    q._consumer.acquire()
+    try:
+        with pytest.raises(ColaError,match='trabajando'):
+            q.retomar_folio_sin_cfdi('ARY IV','7000020',confirmado=True)
+    finally:q._consumer.release()
+    assert store.get(old['id'])['archivado']==1
+    bot.invoice.assert_not_called()
+
+
+def test_archivo_no_marca_timbrado_no_intentado_como_incierto(tmp_path):
+    """Un fallo antes de Aceptar no crea una falsa marca de CFDI incierto."""
+    from arybot.cola_local import ColaLocal
+    store=ColaLocal(tmp_path)
+    job=_factura_web_guardada(store,'7000030',estado='EN_COLA')
+    store.finish(job['id'],'REVISION_REQUERIDA',
+                 reason='Error antes del timbrado: no se pudo abrir facturación.',hold=False)
+    store.archivar_solicitudes(job['id'],confirmado=True)
+    assert store.get(job['id'])['riesgo_cfdi']==0
+    assert store.get(job['id'])['archivado']==1
+    assert not store.status()['bloqueo']
+    # El mismo ticket puede volver a consultarse: Polaris determina después
+    # si existe un CFDI. La gestión de fechas sigue vigente.
+    new,_=store.enqueue('FACTURA',job['datos'],source='Portal web',safe=False,
+                        clave=job['clave'])
+    assert new['id']!=job['id']
