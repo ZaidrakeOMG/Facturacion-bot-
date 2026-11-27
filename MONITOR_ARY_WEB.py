@@ -6,8 +6,7 @@ from __future__ import annotations
 
 import argparse
 import base64
-from collections import Counter
-from datetime import datetime
+from contextlib import closing
 import hmac
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import ipaddress
@@ -70,7 +69,7 @@ def instantanea(db_path=DB):
         salida["mensaje"] = "La base de datos de la cola aun no existe."
         return salida
     try:
-        with sqlite3.connect(p.resolve().as_uri() + "?mode=ro", timeout=4, uri=True) as conn:
+        with closing(sqlite3.connect(p.resolve().as_uri() + "?mode=ro", timeout=4, uri=True)) as conn:
             conn.row_factory = sqlite3.Row
             conn.execute("PRAGMA query_only=ON")
             meta = dict(conn.execute("SELECT clave, valor FROM ajustes"))
@@ -193,7 +192,7 @@ class Handler(BaseHTTPRequestHandler):
             return bool(separator) and hmac.compare_digest(user, USER) and hmac.compare_digest(
                 pwd, self.server.clave
             )
-        except (ValueError, UnicodeError):
+        except (ValueError, UnicodeError, TypeError):
             return False
 
     def do_POST(self):
