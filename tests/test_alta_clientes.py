@@ -12,17 +12,17 @@ from arybot.alta_clientes import AltaClientes,DiarioAltas,PantallaAlta
 
 def sol(**kw):
     v=dict(estacion='ARY VI',rfc='AAA010101AAA',idcif='12345678901',
-           telefono='8711234567',correo='cliente@example.com')
+           telefono='8711234567',correo='cliente@example.com',regimen_fiscal='601')
     v.update(kw)
     return AltaCliente.crear(**v)
 
 
 class ModelTests(unittest.TestCase):
     def test_four_customer_fields(self):
-        self.assertEqual(set(sol().campos_cliente()),{'rfc','idcif','telefono','correo'})
+        self.assertTrue({'rfc','idcif','telefono','correo','regimen_fiscal'} <= set(sol().campos_cliente()))
     def test_station_is_internal_context(self):self.assertEqual(sol(estacion='11507').estacion,'ARY VI')
     def test_rfc_upper(self):self.assertEqual(sol(rfc='aaa010101aaa').rfc,'AAA010101AAA')
-    def test_rfc_persona(self):self.assertEqual(len(sol(rfc='AAAA010101AAA').rfc),13)
+    def test_rfc_persona(self):self.assertEqual(len(sol(rfc='AAAA010101AAA',regimen_fiscal='612').rfc),13)
     def test_idcif_leading_zero(self):self.assertEqual(sol(idcif='00123456789').idcif,'00123456789')
     def test_phone_format(self):self.assertEqual(sol(telefono='+52 (871) 123-4567').telefono,'+528711234567')
     def test_domain_lower(self):self.assertEqual(sol(correo='Cliente@EXAMPLE.COM').correo,'Cliente@example.com')
@@ -75,6 +75,8 @@ class FakeUI:
         if self.fail_lookup:raise AltaClienteError('SAT timeout')
         self.fields.update(nombre='CLIENTE DE PRUEBA',cp='27000')
         if self.fiscal_error:self.fields['cp']=''
+    def seleccionar_regimen(self,*args):self.calls.append('regimen')
+    def verificar_regimen(self,*args):self.calls.append('regimen_ok')
     def verificar_contexto(self,*args):
         if not self.context:raise AltaClienteError('station/process changed')
     def validar_aceptar(self,*args):
