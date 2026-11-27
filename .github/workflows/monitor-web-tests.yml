@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - 'MONITOR_ARY_WEB.py'
+      - 'monitor_reportes.py'
       - 'monitor_web/**'
       - 'tests/test_monitor_ary_web.py'
       - '.github/workflows/monitor-web-tests.yml'
@@ -16,7 +17,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Validar sintaxis
-        run: python -m py_compile MONITOR_ARY_WEB.py
+        run: python -m py_compile MONITOR_ARY_WEB.py monitor_reportes.py
       - name: Pruebas de SQLite sin escritura ni datos fiscales
         run: python -m unittest discover -s tests -p test_monitor_ary_web.py -v
       - name: Validar JavaScript
