@@ -447,3 +447,92 @@ def test_coordinador_liberacion_masiva_exige_confirmacion_y_no_toca_polaris(tmp_
     bot.assert_not_called()
     avisos.assert_not_called()
     ui_event.assert_called_with('cola', '')
+
+
+def test_retirar_pendientes_en_lote_preserva_activa_y_revision(tmp_path):
+    from arybot.cola_local import ColaLocal
+    store=ColaLocal(tmp_path)
+    def add(n):
+        return store.enqueue('FACTURA',{'ticket':str(n)},source='Portal web',
+                             correo='cliente@example.com',safe=False,clave=str(n),minutes=5)[0]
+    a,b,c,d=[add(i) for i in range(4)]
+    store.resume()
+    assert store.claim()['id']==a['id']
+    store.finish(d['id'],'REVISION_REQUERIDA',reason='Caso anterior.')
+    assert set(store.cancel_pending())=={b['id'],c['id']}
+    assert store.get(a['id'])['estado']=='EJECUTANDO'
+    assert store.get(d['id'])['estado']=='REVISION_REQUERIDA'
+    assert store.get(b['id'])['estado']=='CANCELADA'
+    assert store.get(c['id'])['estado']=='CANCELADA'
+    assert store.cancel_pending()==[]
+
+
+def test_pruebas_seguras_no_bloquean_la_siguiente(tmp_path):
+    """Dos facturas de prueba nunca deben dejar el procesamiento detenido."""
+    from arybot.cola_operaciones import ColaOperaciones
+    from arybot.cola_modelo import DEFAULTS
+    from arybot.parser import Solicitud
+    cfg = {'app': {'modo_prueba': True, 'correo': 'bot@example.com'},
+           'gmail': {}, 'ocr': {}, 'polaris': {}, 'cola': dict(DEFAULTS)}
+    bot = Mock()
+    bot.invoice.return_value = 'PRUEBA_OK'
+    bot.diag = None
+    bot.etapa_alerta = 'FACTURACION: prueba'
+    q = ColaOperaciones(tmp_path, cfg, bot, Mock(), avisos=Mock())
+    jobs = []
+    for folio in ('100001', '100002'):
+        sol = Solicitud(estacion='ARY V', rfc='AAA010101AAA', ticket=folio,
+                        fecha_ticket=date.today().strftime('%d/%m/%Y'),
+                        forma_pago='EFECTIVO', correo_destino='cliente@example.com',
+                        remitente='cliente@example.com')
+        job, _ = q.encolar_factura(sol, safe=True)
+        jobs.append(job)
+    assert q.ejecutar_una()
+    assert q.store.get(jobs[0]['id'])['estado'] == 'PRUEBA_CERRADA'
+    assert not q.store.status()['pausada']
+    assert q.ejecutar_una()
+    assert q.store.get(jobs[1]['id'])['estado'] == 'PRUEBA_CERRADA'
+    assert bot.cerrar_polaris_tras_solicitud.call_count == 2
+    assert not q.store.status()['pausada']
+
+
+def test_prueba_no_pasa_siguiente_si_polaris_no_cerro(tmp_path):
+    """Nunca abrir otro cliente sobre una captura cuyo cierre falló."""
+    from arybot.cola_operaciones import ColaOperaciones
+    from arybot.cola_modelo import DEFAULTS
+    from arybot.parser import Solicitud
+    cfg = {'app': {'modo_prueba': True, 'correo': 'bot@example.com'},
+           'gmail': {}, 'ocr': {}, 'polaris': {}, 'cola': dict(DEFAULTS)}
+    bot = Mock()
+    bot.invoice.return_value = 'PRUEBA_OK'
+    bot.cerrar_polaris_tras_solicitud.side_effect = RuntimeError('No se cerró Polaris')
+    bot.diag = None
+    bot.etapa_alerta = 'FACTURACION: prueba'
+    q = ColaOperaciones(tmp_path, cfg, bot, Mock(), avisos=Mock())
+    for folio in ('100003', '100004'):
+        sol = Solicitud(estacion='ARY V', rfc='AAA010101AAA', ticket=folio,
+                        fecha_ticket=date.today().strftime('%d/%m/%Y'),
+                        forma_pago='EFECTIVO', correo_destino='cliente@example.com',
+                        remitente='cliente@example.com')
+        q.encolar_factura(sol, safe=True)
+    assert q.ejecutar_una()
+    assert q.store.status()['pausada']
+    assert not q.ejecutar_una()
+    assert bot.invoice.call_count == 1
+
+
+def test_modo_seguro_no_congela_una_emision_pendiente(tmp_path):
+    """Emisiones esperan autorización, pero no frenan solicitudes de prueba."""
+    store = ColaLocal(tmp_path)
+    real, _ = store.enqueue('FACTURA', {'ticket':'101'}, source='Portal web',
+                            safe=False, clave='REAL-101')
+    test, _ = store.enqueue('FACTURA', {'ticket':'102'}, source='Manual',
+                            safe=True, clave='TEST-102')
+    store.resume()
+    job = store.claim(production_allowed=False)
+    assert job and job['id'] == test['id']
+    store.finish(test['id'], 'PRUEBA_CERRADA', reason='Prueba sin emisión')
+    assert store.claim(production_allowed=False) is None
+    assert not store.status()['pausada']
+    job = store.claim(production_allowed=True)
+    assert job and job['id'] == real['id']

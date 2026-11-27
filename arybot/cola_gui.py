@@ -3,46 +3,47 @@ from __future__ import annotations
 import tkinter as tk
 from tkinter import ttk,messagebox
 from datetime import datetime
-from .cola_modelo import ajustes_cola,tracking,texto_cliente,ESTADOS_REVISION,ESTADOS_TERMINALES
+from .cola_modelo import ajustes_cola,tracking,texto_cliente,ESTADOS_REVISION,ESTADOS_TERMINALES,resultado_facturacion
 
 class ColaTab(ttk.Frame):
     def __init__(self,parent,app):
         super().__init__(parent,padding=10);self.app=app;self.cola=app.cola;self._closed=False
         self.status=tk.StringVar();self.options=ajustes_cola(app.cfg)
-        ttk.Label(self,text='Cola de trabajo y avisos al cliente',font=('Segoe UI',13,'bold')).pack(anchor='w')
-        self.explanation=ttk.Label(self,text='Gmail recibe y los correos se envían en segundo plano. Una sola operación controla Polaris. '
-                           'No uses teclado/ratón en este escritorio mientras el robot está capturando.',
+        ttk.Label(self,text='Resultados de facturación y avisos',font=('Segoe UI',13,'bold')).pack(anchor='w')
+        self.explanation=ttk.Label(self,text='El bot atiende automáticamente una solicitud a la vez y pasa a la siguiente cuando Polaris queda libre. SÍ = flujo completado; NO = no completado. Si no se confirma un timbrado, no se vuelve a emitir el mismo folio. '
+                           'No uses teclado ni ratón mientras Polaris está capturando.',
                   wraplength=950,foreground='#374c60')
         self.explanation.pack(anchor='w',pady=(5,8))
         self.bind('<Configure>',self._reflow,add='+')
         self.status_label=ttk.Label(self,textvariable=self.status,wraplength=950);self.status_label.pack(fill='x',pady=(0,8))
         bar=ttk.Frame(self);bar.pack(fill='x')
-        ttk.Button(bar,text='▶ Iniciar / continuar cola',command=self.resume).pack(side='left',padx=(0,8))
-        ttk.Button(bar,text='Pausar después de la actual',command=self.pause).pack(side='left',padx=(0,8))
+        ttk.Button(bar,text='▶ Reanudar atención automática',command=self.resume).pack(side='left',padx=(0,8))
+        ttk.Button(bar,text='Detener después de la actual',command=self.pause).pack(side='left',padx=(0,8))
         ttk.Button(bar,text='Actualizar',command=self.refresh).pack(side='left')
         self.nb=ttk.Notebook(self);self.nb.pack(fill='both',expand=True,pady=(10,0))
         jobs=ttk.Frame(self.nb,padding=6);opts=ttk.Frame(self.nb,padding=12);mails=ttk.Frame(self.nb,padding=6)
         self.nb.add(jobs,text='Solicitudes');self.nb.add(opts,text='Avisos y tiempos');self.nb.add(mails,text='Correos al cliente')
-        cols=('id','tipo','origen','modo','estacion','folio','estado')
+        cols=('id','tipo','estacion','folio','facturado','detalle')
         self.tree=ttk.Treeview(jobs,columns=cols,show='headings',height=12,selectmode='browse')
-        labels=('Solicitud','Tipo','Origen','Modo','Estación','Folio / RFC','Estado')
-        widths=(115,80,80,60,95,125,205)
+        labels=('Solicitud','Trámite','Estación','Folio / RFC','¿Se facturó?','Motivo / detalle')
+        widths=(120,75,95,115,118,385)
         for c,label,w in zip(cols,labels,widths):self.tree.heading(c,text=label);self.tree.column(c,width=w,minwidth=40)
         vs=ttk.Scrollbar(jobs,orient='vertical',command=self.tree.yview);self.tree.configure(yscrollcommand=vs.set)
         vs.pack(side='right',fill='y');self.tree.pack(fill='both',expand=True)
         acts=ttk.Frame(jobs);acts.pack(fill='x',pady=8)
         for txt,fn in [('Ver detalle',self.detail),('Revisar alta seleccionada',self.open_alta),
-                       ('Liberar revisión',self.release),('Liberar todas las revisiones',self.release_all),
-                       ('Retirar de la cola',self.cancel)]:
+                       ('Resolver bloqueo confirmado',self.release),('Cerrar incidencias anteriores',self.release_all),
+                       ('Retirar solicitud sin iniciar',self.cancel),('Retirar solicitudes sin iniciar',self.cancel_all)]:
             ttk.Button(acts,text=txt,command=fn).pack(side='left',padx=(0,7))
-        ttk.Label(jobs,text='Liberar revisiones solo cambia su estado local; no toca Polaris ni repite operaciones. Los casos inciertos quedan protegidos.',
+        ttk.Label(jobs,text='Una falla previa al timbrado no frena la siguiente factura. Si no se confirmó el resultado después de Aceptar, se protege la pantalla para impedir duplicados.',
                   wraplength=850).pack(anchor='w')
-        self.enabled=tk.BooleanVar(value=self.options['avisar_cliente'])
-        self.in_safe=tk.BooleanVar(value=self.options['avisar_en_modo_seguro'])
+        mail_enabled=app.cfg.get('app',{}).get('gmail_habilitado',True)
+        self.enabled=tk.BooleanVar(value=self.options['avisar_cliente'] and mail_enabled)
+        self.in_safe=tk.BooleanVar(value=self.options['avisar_en_modo_seguro'] and mail_enabled)
         self.fact=tk.IntVar(value=self.options['minutos_factura']);self.alta=tk.IntVar(value=self.options['minutos_alta'])
         self.margin=tk.IntVar(value=self.options['margen_minutos'])
-        ttk.Checkbutton(opts,text='Enviar avisos al cliente: recepción, proceso, resultado o revisión',variable=self.enabled).grid(row=0,column=0,columnspan=3,sticky='w',pady=5)
-        ttk.Checkbutton(opts,text='Enviar avisos REALES también en MODO SEGURO (identificados como PRUEBA)',variable=self.in_safe).grid(row=1,column=0,columnspan=3,sticky='w',pady=5)
+        ttk.Checkbutton(opts,text='Enviar avisos al cliente: recepción, proceso, resultado o revisión',variable=self.enabled,state='normal' if mail_enabled else 'disabled').grid(row=0,column=0,columnspan=3,sticky='w',pady=5)
+        ttk.Checkbutton(opts,text='Enviar avisos identificados como PRUEBA durante las pruebas',variable=self.in_safe,state='normal' if mail_enabled else 'disabled').grid(row=1,column=0,columnspan=3,sticky='w',pady=5)
         for r,label,var in [(2,'Minutos base por factura',self.fact),(3,'Minutos base por alta',self.alta),(4,'Margen adicional (minutos)',self.margin)]:
             ttk.Label(opts,text=label).grid(row=r,column=0,sticky='e',pady=6,padx=8)
             ttk.Spinbox(opts,from_=1,to=240,textvariable=var,width=7).grid(row=r,column=1,sticky='w')
@@ -62,8 +63,8 @@ class ColaTab(ttk.Frame):
         ms.pack(side='right',fill='y');self.mailtree.pack(fill='both',expand=True)
         mb=ttk.Frame(mails);mb.pack(fill='x',pady=8)
         ttk.Button(mb,text='Ver mensaje',command=self.mail_detail).pack(side='left',padx=6)
-        ttk.Button(mb,text='Reenviar aviso seleccionado (REAL)',command=self.retry_mail).pack(side='left',padx=6)
-        ttk.Label(mails,text='ENVIADA = Gmail aceptó el mensaje; no confirma recepción. Reenviar SOLO manda el aviso, nunca repite Polaris.',wraplength=870).pack(anchor='w')
+        ttk.Button(mb,text='Reenviar aviso seleccionado',command=self.retry_mail,state='normal' if mail_enabled else 'disabled').pack(side='left',padx=6)
+        ttk.Label(mails,text='Historial de avisos. En esta edición Gmail está desactivado; Polaris conserva su propio envío de factura.',wraplength=870).pack(anchor='w')
         self._poll=self.after(500,self._tick);self.bind('<Destroy>',self._destroy,add='+')
         self.refresh()
 
@@ -94,10 +95,9 @@ class ColaTab(ttk.Frame):
         if not self._can_dialog():return
         rows=[r for r in self.cola.store.list(10000) if r['estado']=='EN_COLA']
         real=sum(not r['seguro'] for r in rows)
-        if real and not messagebox.askyesno('Continuar cola con trabajos reales',
-            f'Hay {real} solicitud(es) REAL(es) en cola. Las facturas pueden timbrarse y enviarse. '
-            'Las altas se preparan y requieren aprobación individual antes de guardar.\n\n'
-            'Confirma que Polaris no tiene capturas/avisos pendientes y deja libre el teclado y ratón. ¿Continuar?',parent=self,default='no'):return
+        if real and not messagebox.askyesno('Reanudar atención automática',
+            f'Hay {real} solicitud(es) de emisión pendientes. Se procesarán una por una y podrán timbrarse. '
+            'Asegúrate de que Polaris no tenga documentos o avisos abiertos y deja libre el teclado y ratón. ¿Continuar?',parent=self,default='no'):return
         try:self.cola.iniciar_cola()
         except Exception as exc:messagebox.showwarning('Cola',str(exc),parent=self)
         self.refresh()
@@ -137,12 +137,12 @@ class ColaTab(ttk.Frame):
                 parent=self)
             return
         mensaje = (
-            f'Se cerrarán {n} solicitud(es) en REVISION_REQUERIDA.\n'
-            f'Se conservarán {excluidas} revisión(es) protegida(s) por posible '
+            f'Se cerrarán {n} incidencias antiguas no protegidas.\n'
+            f'Se conservarán {excluidas} caso(s) sin confirmar por posible '
             'timbrado, correo, alta o cierre incierto.\n\n'
             'CONFIRMACIÓN: revisé que las solicitudes a cerrar NO tienen '
             'documentos timbrados, envíos ni guardados pendientes en Polaris.\n\n'
-            'Esto solo cambia su estado local a REVISION_CERRADA. '
+            'Esto solo cierra su seguimiento interno. '
             'No borra registros, no toca Polaris, no emite facturas, '
             'no envía avisos y no repite trámites.\n\n'
             '¿Confirmas liberar las revisiones indicadas?'
@@ -163,6 +163,25 @@ class ColaTab(ttk.Frame):
             'No se alteraron facturas, registros de Polaris ni correos.',
             parent=self)
 
+    def cancel_all(self):
+        # No modal while Polaris is capturing; require a second click instead.
+        if self.cola.ocupada:
+            if not getattr(self,'_bulk_cancel_armed',False):
+                self._bulk_cancel_armed=True
+                self.status.set('Vuelve a pulsar Retirar todos los pendientes para confirmar. No se interrumpe la actual.')
+                self.after(10000,lambda:setattr(self,'_bulk_cancel_armed',False))
+                return
+        else:
+            n=self.cola.store.status()['conteos'].get('EN_COLA',0)
+            if not n:return
+            if not messagebox.askyesno('Retirar pendientes',
+                    f'¿Retirar las {n} solicitudes pendientes? Se conserva la actual y el historial.',
+                    parent=self,default='no'):return
+        self._bulk_cancel_armed=False
+        try:self.cola.cancelar_pendientes(confirmado=True)
+        except Exception as exc:self.status.set(str(exc));return
+        self.refresh()
+
     def cancel(self):
         if not self._can_dialog():return
         job=self.selected()
@@ -176,13 +195,13 @@ class ColaTab(ttk.Frame):
         if not self._can_dialog():return
         job=self.selected()
         if not job:return
-        data=job['datos'];eta=self.cola.store.eta(job['id'],ajustes_cola(self.app.cfg)['margen_minutos'])
-        lines=[tracking(job['id']),job['tipo']+' — '+job['estado'],'Modo: '+('SEGURO' if job['seguro'] else 'REAL'),
-               'Origen: '+job['origen'],'Correo de avisos: '+job['correo'],
-               'Estimado: '+(f'{eta[0]}–{eta[1]} minutos' if eta else 'Sin estimado fiable mientras espera revisión/pausa'),
-               'Detalle: '+job['motivo'],'']
+        data=job['datos']
+        resultado,motivo=resultado_facturacion(job)
+        lines=[tracking(job['id']), 'Trámite: '+job['tipo'],
+               '¿Se facturó?: '+resultado, 'Detalle: '+motivo,
+               'Origen: '+job['origen'], 'Correo de avisos: '+job['correo'], '']
         lines += [f'{k}: {v}' for k,v in data.items()]
-        self._show('Detalle de solicitud','\n'.join(lines))
+        self._show('Resultado y detalles','\n'.join(lines))
 
     def open_alta(self):
         if not self._can_dialog():return
@@ -225,7 +244,7 @@ class ColaTab(ttk.Frame):
         if not self._can_dialog():return
         row=self._mail()
         if not row:return
-        if not messagebox.askyesno('Reenviar aviso REAL',
+        if not messagebox.askyesno('Reenviar aviso',
             'Revisa Gmail Enviados: el intento anterior pudo haberse recibido.\n\nPara: '+row['correo']+'\nAsunto: '+row['asunto']+
             '\n\nEsto SOLO reenvía el aviso, nunca registra clientes ni vuelve a facturar. ¿Confirmas?',parent=self,default='no'):return
         try:self.cola.avisos.reenviar(row['id'])
@@ -245,15 +264,30 @@ class ColaTab(ttk.Frame):
 
     def refresh(self):
         state=self.cola.store.status();c=state['conteos']
-        self.status.set(('POLARIS TRABAJANDO' if state['activa'] else ('COLA PAUSADA' if state['pausada'] else 'COLA ACTIVA'))+
-                        f" | Pendientes: {c.get('EN_COLA',0)} | "+state['motivo'])
-        # La pestaña Solicitudes representa trabajo pendiente/revisión, no historial.
-        # Los estados terminales ya resueltos no se quedan aparentando estar en cola.
-        rows=[r for r in self.cola.store.list() if r['estado'] not in ESTADOS_TERMINALES]
-        self._sync(self.tree,[(r['id'],(tracking(r['id']),r['tipo'],r['origen'],'SEGURO' if r['seguro'] else 'REAL',
-                              r['datos'].get('estacion',''),r['datos'].get('ticket') or r['datos'].get('rfc',''),r['estado'])) for r in rows])
+        rows=self.cola.store.list()
+        pendientes=c.get('EN_COLA',0)
+        modo_seguro=bool(self.app.cfg.get('app',{}).get('modo_prueba',True))
+        emision_pendiente=any(r['estado']=='EN_COLA' and not r['seguro'] for r in rows)
+        if state['pausada']:
+            causa=state['motivo'] or 'Revisa Polaris antes de reanudar.'
+            estado='ATENCIÓN DETENIDA: '+causa
+        elif state['activa']:
+            estado='Polaris procesando una solicitud; al terminar continuará con la siguiente.'
+        elif modo_seguro and emision_pendiente:
+            estado='NO SE PUEDE FACTURAR: MODO SEGURO activado. Autoriza emisión para atender los tickets pendientes.'
+        else:
+            estado='Atención automática activa.'
+        self.status.set(f'{estado} | Solicitudes por atender: {pendientes}')
+        tabla=[]
+        for r in rows:
+            resultado,motivo=resultado_facturacion(r)
+            resumen=' '.join(str(motivo).split())
+            tabla.append((r['id'],(tracking(r['id']),r['tipo'],r['datos'].get('estacion',''),
+                r['datos'].get('ticket') or r['datos'].get('rfc',''),resultado,resumen[:165])))
+        self._sync(self.tree,tabla)
         notices=self.cola.store.notices()
         self._sync(self.mailtree,[(r['id'],(datetime.fromtimestamp(r['creado']).strftime('%d/%m %H:%M:%S'),r['evento'],r['correo'],r['estado'])) for r in notices])
+
     def _tick(self):
         if self._closed:return
         try:self.refresh()

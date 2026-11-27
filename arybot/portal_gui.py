@@ -55,8 +55,9 @@ def main():
             self.portal = PortalWSGI(self.cola, self.cfg, settings, BASE)
             self._build_portal_tab()
             self._start_portal()
-            self.root.title('ARY Facturación Bot v4.3 fecha + Portal integrado 1.2')
-            self.nb.select(self.portal_tab)
+            self.root.title('ARY | Centro de facturación V2')
+            self.nb.select(self.dashboard_tab)
+            self._sync_navigation()
             self.root.after(150, self._drain_portal_diagnostics)
             self.root.deiconify()
 
@@ -82,7 +83,7 @@ def main():
                 self.portal_status.set('Portal activo en ' + settings['escuchar_en'] + ':'
                     + str(settings['puerto']) + ('. Solicitudes desde IIS: '
                     + settings['proxy_confiable'] if network_app.lan else '. Solo modo local.'))
-                self.log('Bot y portal activos en una sola instancia. Se utiliza la misma Cola y avisos.')
+                self.log('Bot y portal activos en una sola instancia. Consulta Resultados y avisos.')
             except Exception as exc:
                 self.portal.pausar_recepcion()
                 if self.web_server:
@@ -159,7 +160,7 @@ def main():
 
         def _build_portal_tab(self):
             tab = ttk.Frame(self.nb, padding=16)
-            self.nb.add(tab, text='Portal web')
+            self.nb.insert(1, tab, text='Portal web')
             self.portal_tab = tab
             ttk.Label(tab, text='Alta de clientes y facturación desde la página', font=('Segoe UI', 14, 'bold')).pack(anchor='w')
             self.portal_status = tk.StringVar(value='Iniciando portal...')
@@ -173,7 +174,7 @@ def main():
             self.pause_web_btn.pack(side='left')
             self.real_web = tk.BooleanVar(value=settings['permitir_facturacion_real'])
             ttk.Checkbutton(tab, variable=self.real_web, command=self._change_real,
-                text='Permitir solicitudes REALES del portal cuando el bot esté fuera de MODO SEGURO').pack(anchor='w', pady=(18, 10))
+                text='Autorizar emisión automática de facturas desde el portal').pack(anchor='w', pady=(18, 10))
             connection = ttk.LabelFrame(tab, text='Conexión con IIS', padding=10)
             connection.pack(fill='x', pady=(4, 8))
             ttk.Label(connection, text='Bot: ' + settings['escuchar_en'] + ':' + str(settings['puerto'])
@@ -186,16 +187,16 @@ def main():
             self.portal_check = tk.StringVar(value='Comprueba la dirección de salud desde el servidor IIS. No registra solicitudes.')
             ttk.Label(connection, textvariable=self.portal_check, wraplength=820).pack(anchor='w', pady=(8, 0))
             info = (
-                'Las solicitudes web se muestran en Cola y avisos. En recepción REAL, si Polaris está libre el trabajo inicia; '
-                'si ya hay otro trabajo, espera su turno en la cola.\n\n'
-                'El alta conserva la revisión del operador: PREPARADA_ALTA → Revisar alta seleccionada. '
-                'En MODO SEGURO no se pulsa Aceptar final para timbrar.\n\n'
+                'Las solicitudes web se procesan automáticamente una por una. Si Polaris está libre, inicia la siguiente; '
+                'si no se completó, muestra NO con la explicación y sigue a la siguiente cuando la pantalla esté libre.\n\n'
+                'La pantalla de Resultados y avisos indica SÍ, NO o SIN CONFIRMAR. '
+                'Este último resultado protege de un timbrado duplicado. En MODO SEGURO nunca se emite CFDI.\n\n'
                 'Para IIS: publica solo portal_web/ary_facturacion.htm. La carpeta IIS contiene el fragmento '
                 'de la regla y la prueba interna; no reemplaces el web.config completo. '
                 'No publiques esta carpeta del bot, credenciales, tokens ni data.\n\n'
                 'El tramo IIS → bot usa HTTP privado. Antes de datos reales, protégelo con HTTPS o un canal '
                 'IPsec/VPN y establece la revisión de identidad/propiedad del ticket. El filtro por IP no cifra. '
-                'Activar recepción real requiere tu confirmación.\n\n'
+                'Autorizar emisión de CFDI requiere tu confirmación.\n\n'
                 'Cerrar el programa detiene la recepción. Las solicitudes y los ajustes se guardan en tu carpeta actual.'
             )
             help_box = tk.Text(tab, height=9, wrap='word', font=('Segoe UI', 9), relief='flat')
@@ -206,8 +207,8 @@ def main():
 
         def _sync_portal_mode(self):
             if self.portal:
-                self.portal_mode.set('Recepción en PRUEBA: no timbra.' if self.portal.modo_seguro()
-                    else 'RECEPCIÓN REAL: las nuevas facturas podrán emitirse al procesar la cola. Las altas conservan revisión.')
+                self.portal_mode.set('MODO SEGURO activo: no se emiten facturas.' if self.portal.modo_seguro()
+                    else 'EMISIÓN AUTORIZADA: las solicitudes se procesan automáticamente, una por una.')
 
         def _open_page(self):
             if self.cola.ocupada:
@@ -217,7 +218,7 @@ def main():
             # y las solicitudes podían quedarse EN_COLA sin empezar.
             origin = settings['origenes_permitidos'][0] if settings['https_publico'] else 'http://127.0.0.1:' + str(settings['puerto'])
             webbrowser.open(origin + '/ary_facturacion.htm')
-            self.log('Portal abierto. La cola continúa automática.')
+            self.log('Portal abierto. La atención de solicitudes continúa automáticamente.')
 
         def _toggle_receiving(self):
             if not self.web_server:
@@ -238,8 +239,8 @@ def main():
             requested = bool(self.real_web.get())
             # Ya se comprobó arriba que Polaris no está ocupado. Cambiar este permiso
             # no necesita pausar la cola y así cancelar el cuadro no deja trabajos congelados.
-            if requested and not messagebox.askyesno('Autorizar solicitudes reales del portal',
-                'Con el bot fuera de MODO SEGURO, las nuevas solicitudes web se atenderán automáticamente cuando Polaris esté libre; si está ocupado, quedarán en cola.\n\n'
+            if requested and not messagebox.askyesno('Autorizar emisión de facturas desde el portal',
+                'Con el bot fuera de MODO SEGURO, cada solicitud recibida será procesada automáticamente. Cuando finalice una, seguirá con la siguiente si Polaris está libre.\n\n'
                 'Confirma que probaste el flujo y estableciste la revisión de identidad/propiedad del ticket para tu publicación. '
                 'Las solicitudes antiguas conservarán su modo. ¿Autorizar?', parent=self.root, default='no'):
                 self.real_web.set(previous)
@@ -256,9 +257,9 @@ def main():
                 if requested:
                     try:
                         self.cola.iniciar_cola()
-                        self.log('Recepción REAL autorizada: cola automática activa. Si Polaris está libre, la solicitud inicia de inmediato.')
+                        self.log('Emisión automática autorizada. Se atenderá la siguiente solicitud al quedar libre Polaris.')
                     except Exception as exc:
-                        self.log('Recepción REAL autorizada, pero la cola requiere revisión antes de continuar: '+str(exc))
+                        self.log('Emisión autorizada, pero Polaris aún tiene una operación sin confirmar: '+str(exc))
             except Exception:
                 settings['permitir_facturacion_real'] = previous
                 self.real_web.set(previous)

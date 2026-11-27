@@ -21,6 +21,7 @@ from urllib.parse import urlsplit
 from .cola_modelo import SolicitudDuplicada
 from .portal_modelo import validar_entrada, catalogos, estado_publico, EntradaPortalError
 from .ticket_foto import analizar_ticket_foto, analizar_codigo_barras_foto, FotoTicketError
+from .ticket_vision import piloto_habilitado
 from .asistencia_whatsapp import perfil_local_facturacion
 
 PREFIX = '/api/facturacion'
@@ -277,7 +278,12 @@ class PortalWSGI:
                 raise HttpError(429, 'Se alcanzó el límite de lectura de fotos. Intenta más tarde.')
             try:
                 if modo_ticket == 'codigo_barras':
-                    resultado = analizar_codigo_barras_foto(body['foto_ticket'])
+                    self.cola.log('LECTOR vision-r6 | Groq: ' +
+                                  ('ACTIVO' if piloto_habilitado() else 'INACTIVO'))
+                    if piloto_habilitado():
+                        resultado = analizar_codigo_barras_foto(body['foto_ticket'], vision=True)
+                    else:
+                        resultado = analizar_codigo_barras_foto(body['foto_ticket'])
                 else:
                     resultado = analizar_ticket_foto(body['foto_ticket'])
             except FotoTicketError as exc:
@@ -306,7 +312,8 @@ class PortalWSGI:
         request_id = environ.get('HTTP_X_ARY_REQUEST_ID', '')
         if not re.fullmatch('[0-9a-f]{32}', request_id):
             raise HttpError(400, 'Falta el identificador único del formulario.')
-        kind, sol, data = validar_entrada(body)
+        vision = piloto_habilitado()
+        kind, sol, data = validar_entrada(body, vision=True) if vision else validar_entrada(body)
         source_id = 'web:' + self._mac('request', session['sid'] + ':' + request_id)
         with self.lock:
             # Primero recuperar un envío de resultado incierto; no se repite en Polaris.
@@ -361,6 +368,8 @@ class PortalWSGI:
                     ('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()')]
         if content_type.startswith('application/json'):
             headers.append(('Content-Security-Policy', "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'"))
+        if environ.get('PATH_INFO') == PREFIX + '/validar-ticket':
+            headers.append(('X-ARY-Lector', 'vision-r6'))
         if code == 429:
             headers.append(('Retry-After', '60'))
         start_response(str(code) + ' ' + HTTPStatus(code).phrase, headers)

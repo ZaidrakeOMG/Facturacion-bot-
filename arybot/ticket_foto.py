@@ -86,6 +86,9 @@ def _folios_codigo_barras(imagen, *, exigir_lector=False) -> list[str]:
             (gris.width * 2, gris.height * 2), Image.Resampling.LANCZOS)
         variantes.append(ImageOps.expand(ampliada, border=48, fill=255))
 
+    if max(gris.size) <= 1800:
+        variantes.append(ImageOps.expand(contraste, border=max(24, round(gris.width * .07)), fill=255))
+
     lector_operativo = False
     try:
         import zxingcpp
@@ -93,9 +96,18 @@ def _folios_codigo_barras(imagen, *, exigir_lector=False) -> list[str]:
             codigos = zxingcpp.read_barcodes(fuente)
             lector_operativo = True
             for codigo in codigos:
-                formato = str(codigo.format).upper().replace(' ', '').replace('_', '')
+                formato = re.sub(r'[^A-Z0-9]', '', str(codigo.format).upper())
                 if 'CODE39' in formato or 'CODE128' in formato:
                     agregar(str(codigo.text).strip())
+        if not valores and max(gris.size) <= 1800:
+            for angulo in (-4, 4, -8, 8):
+                fuente = ImageOps.expand(contraste.rotate(
+                    angulo, resample=Image.Resampling.BICUBIC,
+                    expand=True, fillcolor=255), border=32, fill=255)
+                for codigo in zxingcpp.read_barcodes(fuente):
+                    formato = re.sub(r'[^A-Z0-9]', '', str(codigo.format).upper())
+                    if 'CODE39' in formato or 'CODE128' in formato:
+                        agregar(str(codigo.text).strip())
     except (ImportError, OSError, RuntimeError, ValueError, AttributeError) as exc:
         log.debug('ZXing no pudo leer: %s', type(exc).__name__)
 
@@ -626,29 +638,28 @@ def _zona_numero_bajo_barras(imagen):
         round(der * imagen.width / w), round(abajo * imagen.height / h)))
 
 
-def _folio_ocr_bajo_barras(imagen) -> str | None:
+def _votos_ocr_bajo_barras(zona):
     """Respaldo: diez digitos impresos, dos lecturas iguales, sin inventar ceros."""
     from PIL import Image, ImageOps
-    zona = _zona_numero_bajo_barras(imagen)
     if zona is None:
-        return None
+        return Counter()
     try:
         import pytesseract
         from .ocr_ticket import find_tesseract
         exe = find_tesseract()
         if not exe:
             logging.getLogger(__name__).warning('Respaldo OCR: Tesseract no instalado.')
-            return None
+            return Counter()
         pytesseract.pytesseract.tesseract_cmd = exe
     except (ImportError, OSError):
-        return None
+        return Counter()
     gris = ImageOps.autocontrast(ImageOps.grayscale(zona))
     gris.thumbnail((1600, 900), Image.Resampling.LANCZOS)
     if gris.width < 1200 and gris.height < 450:
         gris = gris.resize((gris.width * 2, gris.height * 2), Image.Resampling.LANCZOS)
     gris = ImageOps.expand(gris, border=20, fill=255)
     variantes = (
-        (gris, 11),
+        (gris, 7),
         (gris.point(lambda v: 0 if v < 130 else 255), 6),
         (gris.point(lambda v: 0 if v < 150 else 255), 11),
     )
@@ -663,12 +674,52 @@ def _folio_ocr_bajo_barras(imagen) -> str | None:
         # No eliminar signos ni juntar fragmentos de numeros.
         candidatos = set(re.findall(r'(?m)^[ \t]*([0-9]{10})[ \t]*$', texto))
         votos.update(candidatos)
+    return votos
+
+
+def _folio_ocr_bajo_barras(imagen) -> str | None:
+    votos = _votos_ocr_bajo_barras(_zona_numero_bajo_barras(imagen))
     if len(votos) == 1 and max(votos.values()) >= 2:
         return next(iter(votos))
     return None
 
 
-def analizar_codigo_barras_foto(foto_base64: str) -> dict[str, str]:
+def _folio_vision_bajo_barras(imagen):
+    """Return candidate and independent local corroboration separately."""
+    zona = _zona_numero_bajo_barras(imagen)
+    if zona is None:
+        return None, False
+    from .ticket_vision import leer_numero_recortado
+    log = logging.getLogger(__name__)
+    # Call vision even if local OCR returned nothing or contradictory digits.
+    candidato = leer_numero_recortado(zona)
+    if not isinstance(candidato, str) or not re.fullmatch(r"[0-9]{10}", candidato):
+        log.info("GROQ VISION: sin candidato válido.")
+        return None, False
+    votos = _votos_ocr_bajo_barras(zona)
+    corroborado = len(votos) == 1 and candidato in votos
+    log.warning("GROQ VISION: %s.", "lectura corroborada por OCR local" if corroborado
+                else "candidato sin corroboración local")
+    return candidato, corroborado
+
+
+def _confirmar_vision(imagen, candidato):
+    """Repite la lectura visual sin revelar el primer folio al modelo.
+    Es concordancia entre lecturas, NO evidencia independiente de la venta.
+    """
+    zona = _zona_numero_bajo_barras(imagen)
+    if zona is None:
+        return False
+    from .ticket_vision import leer_numero_recortado
+    segundo = leer_numero_recortado(zona, variante=True)
+    coincide = isinstance(segundo, str) and segundo == candidato
+    logging.getLogger(__name__).warning("GROQ VISION: segunda lectura %s.",
+                                        "coincidente" if coincide else
+                                        ("sin respuesta válida" if segundo is None else "discrepante"))
+    return coincide
+
+
+def analizar_codigo_barras_foto(foto_base64: str, *, vision=False, confirmar_vision=False) -> dict[str, str]:
     """Lee CODE39/CODE128 o el numero impreso bajo las barras mediante OCR.
 
     La foto puede ser un recorte horizontal que incluya unicamente las
@@ -719,6 +770,17 @@ def analizar_codigo_barras_foto(foto_base64: str) -> dict[str, str]:
     folio_ocr = _folio_ocr_bajo_barras(foto)
     if folio_ocr:
         return {'folio': folio_ocr}
+    if vision:
+        # Vision works in production. At submission a non-corroborated
+        # candidate requires a second matching visual reading.
+        from .ticket_vision import piloto_habilitado
+        if piloto_habilitado():
+            folio_vision, corroborado = _folio_vision_bajo_barras(foto)
+            if folio_vision:
+                metodo = 'groq_corroborada' if corroborado else 'groq_no_verificada'
+                if not corroborado and confirmar_vision and _confirmar_vision(foto, folio_vision):
+                    metodo = 'groq_doble_lectura'
+                return {'folio': folio_vision, 'lectura': metodo}
     if error_lector is not None:
         raise error_lector
     raise FotoTicketError(

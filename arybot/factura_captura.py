@@ -26,10 +26,24 @@ def coincide(campo,a,b):
         return bool(re.fullmatch(r'[0-9]+',str(a).strip()) and re.fullmatch(r'[0-9]+',str(b).strip())
                     and int(str(a).strip())==int(str(b).strip()))
     if campo=='fecha':
+        # Polaris puede exponer el mismo valor con /, - o formato ISO,
+        # según la versión de DevExpress y la configuración de Windows.
+        # Se comprueba la fecha REAL, nunca sólo los números del texto.
+        from datetime import datetime
         def f(v):
-            m=re.fullmatch(r'\s*(\d{1,2})/(\d{1,2})/(\d{4})\s*',str(v or ''))
-            return (int(m.group(3)),int(m.group(2)),int(m.group(1))) if m else None
-        return bool(f(a) and f(a)==f(b))
+            value=str(v or '').strip()
+            patterns=(
+                (r'\d{1,2}/\d{1,2}/\d{4}', '%d/%m/%Y'),
+                (r'\d{1,2}-\d{1,2}-\d{4}', '%d-%m-%Y'),
+                (r'\d{4}-\d{2}-\d{2}', '%Y-%m-%d'),
+            )
+            for pattern,fmt in patterns:
+                if re.fullmatch(pattern,value):
+                    try:return datetime.strptime(value,fmt).date()
+                    except ValueError:return None
+            return None
+        fecha_lectura=f(a)
+        return fecha_lectura is not None and fecha_lectura==f(b)
     return str(a).strip()==str(b).strip()
 
 class LecturaCombo(TextoWindows):
@@ -66,6 +80,7 @@ class CapturaFactura:
         self.b=bot;self.texto=texto or TextoWindows();self.teclado=teclado or TecladoFactura()
         self.combo=combo or LecturaCombo();self.reloj=reloj or time.monotonic
         self.dormir=dormir or time.sleep;self.foco_override=foco;self.eventos=[]
+        self._native_targets={}
     @property
     def w(self):
         from . import polaris
@@ -112,6 +127,12 @@ class CapturaFactura:
                 raise CapturaFacturaError('El foco no está en el campo esperado. No se envían más teclas.')
     def control(self,root,pt,campo,tipo='edit',lectura=False):
         self._guard(root)
+        from .native_controls import mapped, resolve, advise_fallback
+        if not lectura and mapped(self.b,campo,root):
+            h=resolve(self.b,root,campo)
+            self._native_targets[(root,h)]=campo
+            self._evento(campo,'CONTROL_NATIVO_IDENTIFICADO',clase=self.b._class_name(h))
+            return h
         r=self.b._rect(root);x=r.left+int(r.width*pt[0]);y=r.top+int(r.height*pt[1])
         under=self.w.WindowFromPoint((x,y))
         if not under or not self.b._is_descendant_or_same(root,under):
@@ -162,8 +183,16 @@ class CapturaFactura:
             self._evento(campo,'CONTROL_ANIDADO_RESUELTO',clase=self.b._class_name(h),coincidencias=len(unique))
         if not lectura and not self.w.IsWindowEnabled(h):raise CapturaFacturaError('El campo '+campo+' está deshabilitado.')
         self._evento(campo,'CONTROL_IDENTIFICADO',clase=self.b._class_name(h))
+        if not lectura:advise_fallback(self.b,root,campo,h)
         return h
     def enfocar(self,root,h):
+        if (root,h) in self._native_targets:
+            from .native_controls import focus_native, resolve
+            self._guard(root)
+            if resolve(self.b,root,self._native_targets[(root,h)])!=h:
+                raise CapturaFacturaError('Cambió la identidad nativa antes de enfocar.')
+            focus_native(self.b,root,h);self.dormir(.2);self._guard(root,h)
+            return
         from . import polaris
         self._guard(root);r=self.b._rect(h);x=(r.left+r.right)//2;y=(r.top+r.bottom)//2
         under=self.w.WindowFromPoint((x,y))
@@ -216,6 +245,8 @@ class CapturaFactura:
         self.salir(root,h,campo)
         self.confirmar(root,h,campo,value)
         self._evento(campo,'CAMPO_CONFIRMADO_NO_VACIO',vacio=False,longitud=len(value))
+        from .native_controls import remember_verified
+        remember_verified(self.b,root,campo,h)
     def escribir_rel(self,root,pt,campo,value):
         h=self.control(root,pt,campo);self.escribir(root,h,campo,value);return h
     def seleccionar(self,root,pt,campo,target):
@@ -225,13 +256,23 @@ class CapturaFactura:
             self._evento(campo,'OPCION_NO_UNICA',opciones=len(items))
             raise CapturaFacturaError('La opción solicitada no se encontró de forma única en el catálogo de '+campo+'.')
         idx=matches[0]
+        if (root,h) in self._native_targets and not self.combo.abierto(h):
+            try:actual,value=self.combo.actual(h)
+            except Exception:actual,value=-1,''
+            if actual==idx and canon(value)==canon(target):
+                self.validar_combo(root,h,campo,target)
+                return items[idx]
         self.enfocar(root,h)
-        # Clic en flecha dentro del Combo, no en un Edit vecino.
-        from . import polaris
-        r=self.b._rect(h);x=r.right-8;y=(r.top+r.bottom)//2
-        if not self.b._is_descendant_or_same(h,self.w.WindowFromPoint((x,y))):
-            raise CapturaFacturaError('No se localizó la flecha de '+campo+'.')
-        if not self.combo.abierto(h):polaris.pyautogui.click(x,y);self.dormir(.2)
+        if (root,h) in self._native_targets:
+            # F4 se dirige al selector nativo ya enfocado; nunca a Cuenta.
+            if not self.combo.abierto(h):self.teclado.tecla('f4',lambda:self._guard(root,h));self.dormir(.2)
+        else:
+            # Flujo legado para los controles aún no calibrados.
+            from . import polaris
+            r=self.b._rect(h);x=r.right-8;y=(r.top+r.bottom)//2
+            if not self.b._is_descendant_or_same(h,self.w.WindowFromPoint((x,y))):
+                raise CapturaFacturaError('No se localizó la flecha de '+campo+'.')
+            if not self.combo.abierto(h):polaris.pyautogui.click(x,y);self.dormir(.2)
         if not self.combo.abierto(h):raise CapturaFacturaError('No se abrió la lista de '+campo+'. No se pulsa Enter.')
         guard=lambda:self._guard_combo(root,h)
         # Selección EXPLÍCITA aunque la etiqueta inicial muestre G03/Efectivo.
@@ -269,6 +310,8 @@ class CapturaFactura:
             if canon(actual)!=canon(target):raise CapturaFacturaError('Polaris no conserva la selección de '+campo+'.')
             self.dormir(.15)
         self._evento(campo,'SELECCION_CONFIRMADA',coincide=True)
+        from .native_controls import remember_verified
+        remember_verified(self.b,root,campo,h)
     def verificar_receptor(self,inv,rfc):
         """Sólo lectura de campos que Polaris llena. No los 'repara'."""
         handles={k:self.control(inv,pt,k,lectura=True) for k,pt in self.RECEPTOR.items()}

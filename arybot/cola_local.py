@@ -175,10 +175,15 @@ class ColaLocal:
                 if not r:return None
             else:
                 if meta.get('pausada','1')=='1':return None
-                r=c.execute("SELECT * FROM trabajos WHERE estado='EN_COLA' ORDER BY creado,id LIMIT 1").fetchone()
+                # MODO SEGURO jamás convierte una solicitud de emisión a prueba
+                # ni pausa las demás. Las emisiones esperan a que el operador
+                # autorice facturación; las solicitudes seguras pueden avanzar.
+                if production_allowed:
+                    r=c.execute("SELECT * FROM trabajos WHERE estado='EN_COLA' ORDER BY creado,id LIMIT 1").fetchone()
+                else:
+                    r=c.execute("SELECT * FROM trabajos WHERE estado='EN_COLA' AND seguro=1 ORDER BY creado,id LIMIT 1").fetchone()
                 if not r:return None
             if not r['seguro'] and not production_allowed:
-                self._set(c,'pausada','1');self._set(c,'motivo_pausa','Hay una solicitud REAL pendiente y MODO SEGURO está activo. No se convirtió su modo.')
                 return None
             previous=r['estado']
             c.execute("UPDATE trabajos SET estado='EJECUTANDO',iniciado=?,actualizado=? WHERE id=?",(time.time(),time.time(),r['id']))
@@ -288,6 +293,15 @@ class ColaLocal:
             else:
                 self._set(c,'pausada','0')
                 self._set(c,'motivo_pausa','')
+
+    def cancel_pending(self):
+        """Withdraw waiting jobs atomically, preserving history and active work."""
+        with self.connect(True) as c:
+            ids=[r[0] for r in c.execute("SELECT id FROM trabajos WHERE estado='EN_COLA'")]
+            now=time.time()
+            c.execute("UPDATE trabajos SET estado='CANCELADA',motivo=?,actualizado=?,terminado=? WHERE estado='EN_COLA'",
+                      ('Retirada en lote antes de iniciar.',now,now))
+            return ids
 
     def cancel(self,ident):
         with self.connect(True) as c:

@@ -31,7 +31,7 @@ def texto(body, key, *, max_len=254, opcional=False):
     return value.strip()
 
 
-def validar_entrada(body):
+def validar_entrada(body, *, vision=False):
     if not isinstance(body, dict):
         raise EntradaPortalError('La solicitud debe contener un formulario válido.')
     campos_portal = {
@@ -94,8 +94,17 @@ def validar_entrada(body):
                 raise EntradaPortalError('Modo de lectura de ticket no permitido.')
             try:
                 if modo_ticket == 'codigo_barras':
-                    ticket_verificado = analizar_codigo_barras_foto(
-                        body.get('foto_ticket'))['folio']
+                    if vision:
+                        lectura = analizar_codigo_barras_foto(
+                            body.get('foto_ticket'), vision=True, confirmar_vision=True)
+                        if lectura.get('lectura') == 'groq_no_verificada':
+                            raise FotoTicketError(
+                                'La segunda lectura del folio no coincidió o no respondió. '
+                                'Continúa con facturación para verificarlo antes de emitir el CFDI.')
+                        ticket_verificado = lectura['folio']
+                    else:
+                        ticket_verificado = analizar_codigo_barras_foto(
+                            body.get('foto_ticket'))['folio']
                 else:
                     ticket_verificado = analizar_ticket_foto(body.get('foto_ticket'))['folio']
             except FotoTicketError as exc:

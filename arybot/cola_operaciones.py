@@ -47,6 +47,29 @@ class ColaOperaciones:
                 try:self.db.actualizar(mid,estado=job['estado'],detalle=job['motivo'] or 'Seguimiento '+ident[:12])
                 except Exception:self.log('No se actualizó el historial antiguo. Consulte Cola y avisos para el estado definitivo.')
 
+    def _finalizar_prueba_sin_bloquear(self, ident, kind, result):
+        """Una prueba NO timbra; cerrar su pantalla y atender la siguiente.
+
+        Si Polaris no confirma el cierre, se detiene por seguridad para no
+        escribir el siguiente cliente sobre una factura todavía abierta.
+        """
+        try:
+            self.polaris.cerrar_polaris_tras_solicitud('PRUEBA SIN EMISIÓN '+kind)
+            if kind == 'ALTA' and self.alta is not None:
+                self.alta.liberar()
+        except Exception as exc:
+            motivo=('La prueba NO emitió CFDI, pero Polaris no confirmó que la pantalla '
+                    'se cerró sin guardar: '+str(exc)+'. Comprueba la ventana antes de continuar.')
+            self.store.finish(ident,'REVISION_REQUERIDA',result={'resultado':'PRUEBA_SIN_EMISION'},
+                              hold=True,reason=motivo)
+            self.log('No se pasó al siguiente cliente porque no pudo cerrarse la pantalla de prueba: '+str(exc))
+            self._notice(self.store.get(ident),'revision')
+            return False
+        self.store.finish(ident,'PRUEBA_CERRADA',result={'resultado':str(result)[:200]},
+                          reason='Prueba terminada SIN emitir CFDI ni registrar cliente; continuando con la siguiente.')
+        self._notice(self.store.get(ident),'completada')
+        return True
+
     def _enqueue(self,kind,data,*,source='Formulario',source_id=None,safe=True,correo='',state='EN_COLA',reason=''):
         opts=ajustes_cola(self.cfg)
         minutes=opts['minutos_alta'] if kind=='ALTA' else opts['minutos_factura']
@@ -132,7 +155,7 @@ class ColaOperaciones:
     def detener(self):
         self._stop.set();self._wake.set();self.avisos.detener()
     @property
-    def ocupada(self):return bool(self.store.status()['activa'])
+    def ocupada(self):return self._consumer.locked() or bool(self.store.status()['activa'])
 
     def ejecutar_una(self):
         if not self._consumer.acquire(blocking=False):return False
@@ -153,8 +176,7 @@ class ColaOperaciones:
                     result=self.polaris.invoice(como_solicitud(data),test_mode=safe)
                     if result=='PRUEBA_OK' and safe:
                         cerrar_sesion=False
-                        self.store.finish(ident,'PREPARADA_FACTURA',result={'resultado':result},hold=True,
-                                          reason='Factura preparada SIN TIMBRAR. Resuelva manualmente la captura antes de continuar la cola.')
+                        self._finalizar_prueba_sin_bloquear(ident,'FACTURA',result)
                     elif result=='ENVIO_SOLICITADO' and not safe:
                         self.store.finish(ident,'ENVIO_SOLICITADO',result={'resultado':result},reason='Polaris solicitó el correo; recepción no verificada.')
                         self._notice(self.store.get(ident),'completada')
@@ -179,9 +201,7 @@ class ColaOperaciones:
                     else:
                         cerrar_sesion=False
                         result=self.alta.preparar(sol)
-                        self.store.finish(ident,'PREPARADA_ALTA',result=result,hold=True,
-                                          reason='Alta preparada SIN GUARDAR. Requiere revisar duplicados y autorizar Aceptar en Alta de cliente.')
-                        self._notice(self.store.get(ident),'revision_alta')
+                        self._finalizar_prueba_sin_bloquear(ident,'ALTA',result)
                 else:
                     cerrar_sesion=False
                     if kind=='ESTACION':result=self.polaris.test_station_only(data['estacion'])
@@ -219,12 +239,10 @@ class ColaOperaciones:
                 # NO cerrar/terminar Polaris ni abrir otro cliente sobre un envío vivo.
                 fiscal_incierto=(kind=='FACTURA' and
                                  step.startswith(('TIMBRADO:', 'ENVIO_CORREO:')))
-                if receptor_pendiente:
-                    cerrar_sesion=False
-                    reason=(str(exc)+' | Sin timbrado: se conservaron los datos '
-                            'de Facturación en Polaris para que un operador revise '
-                            'manualmente el RFC, número de cliente y folio antes '
-                            'de decidir si procede Aceptar. La cola queda bloqueada.')
+                if receptor_pendiente and not fiscal_incierto:
+                    motivo_cierre='ERROR FACTURA'
+                    reason=(str(exc)+' | Captura omitida por receptor no verificado. '
+                            'Se limpiará Polaris antes de continuar; no se reintenta.')
                 elif alta_incierta:
                     cerrar_sesion=False
                     reason=(str(exc)+' | Posible alta guardada. Revise el número de cliente en Polaris antes de liberar la revisión; no repita el registro.')
@@ -236,7 +254,7 @@ class ColaOperaciones:
                     motivo_cierre='ERROR '+kind
                     reason=str(exc)
                 self.store.finish(ident,'REVISION_REQUERIDA',
-                                  hold=fiscal_incierto or alta_incierta or receptor_pendiente,reason=reason,
+                                  hold=fiscal_incierto or alta_incierta,reason=reason,
                                   result={'codigo_cliente': (CODIGO_SIN_REGIMEN if sin_regimen
                                                             else CODIGO_NO_REGISTRADO if no_registrado
                                                             else CODIGO_VERIFICACION_FISCAL)}
@@ -251,10 +269,8 @@ class ColaOperaciones:
                              'rfc':data.get('rfc',''),'folio':data.get('ticket',''),'correo_cliente':job['correo']}
                     try:self.alertas.reportar(category,step,exc,contexto=context,modo_seguro=safe,bot=self.polaris)
                     except Exception:self.log('No se pudo preparar la alerta interna; revise la solicitud.')
-                if receptor_pendiente:
-                    self.log('RFC receptor sin lectura automática concluyente. '
-                             'No se pulsó Aceptar final; Polaris permanece abierto '
-                             'y la cola espera revisión presencial.')
+                if receptor_pendiente and not fiscal_incierto:
+                    self.log('RFC receptor sin confirmar: se omite esta solicitud y se limpia Polaris. No se pulsó Aceptar.')
                 elif alta_incierta:
                     self.log('Alta con guardado incierto: Polaris sigue abierto y la cola espera revisión; no se repite Aceptar.')
                 elif sin_regimen or no_registrado:
@@ -275,6 +291,8 @@ class ColaOperaciones:
                         if job and job['tipo']=='ALTA' and self.alta is not None:
                             self.alta.liberar()
                     except Exception as close_exc:
+                        self._manual_pause=True
+                        self.store.pause('Polaris no confirmó el cierre. Revisar sesión antes de continuar.')
                         self.log('No se pudo cerrar Polaris al terminar la solicitud: '+str(close_exc))
             finally:
                 self._consumer.release()
@@ -321,6 +339,17 @@ class ColaOperaciones:
             self.log('No se pudo actualizar la vista; los cambios quedaron guardados.')
         self._wake.set()
         return result
+
+    def cancelar_pendientes(self, *, confirmado=False):
+        if confirmado is not True:
+            raise ColaError('Confirma retirar las solicitudes pendientes.')
+        ids=self.store.cancel_pending()
+        for ident in ids:
+            self._notice(self.store.get(ident),'cancelada')
+            self._changed(ident)
+        self._wake.set()
+        self.log('Cola: '+str(len(ids))+' pendientes retiradas; historial conservado.')
+        return len(ids)
 
     def cancelar(self,ident):
         self.store.cancel(ident);self._notice(self.store.get(ident),'cancelada');self._changed(ident)

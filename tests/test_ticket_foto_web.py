@@ -626,3 +626,106 @@ def test_el_servidor_rechaza_folio_alterado_aunque_haya_foto():
         kind,sol,datos=validar_entrada(_cuerpo_final())
     assert kind == 'FACTURA' and sol.ticket == '0008430573'
     assert 'foto_ticket' not in datos
+
+
+def test_vision_pilot_marks_uncorroborated_candidate():
+    from collections import Counter
+    from arybot.ticket_foto import _folio_vision_bajo_barras
+    zona = Image.new("L", (300, 40), "white")
+    for votes, result in [
+        (Counter({"0008430573": 1}), ("0008430573", True)),
+        (Counter({"0008430578": 1}), ("0008430573", False)),
+        (Counter(), ("0008430573", False)),
+    ]:
+        with patch("arybot.ticket_foto._zona_numero_bajo_barras", return_value=zona), \
+             patch("arybot.ticket_foto._votos_ocr_bajo_barras", return_value=votes), \
+             patch("arybot.ticket_vision.leer_numero_recortado", return_value="0008430573") as vision:
+            assert _folio_vision_bajo_barras(zona) == result
+            vision.assert_called_once()
+
+
+def test_vision_available_in_portal_without_test_flag(monkeypatch):
+    from arybot.ticket_foto import analizar_codigo_barras_foto
+    from arybot.ticket_vision import piloto_habilitado
+    monkeypatch.delenv("ARY_GROQ_VISION", raising=False)
+    monkeypatch.delenv("ARY_GROQ_VISION_PRUEBA", raising=False)
+    assert piloto_habilitado()
+    with patch("arybot.ticket_foto._folios_codigo_barras", return_value=[]), \
+         patch("arybot.ticket_foto._folio_ocr_bajo_barras", return_value=None), \
+         patch("arybot.ticket_foto._folio_vision_bajo_barras", return_value=("0008430573", False)) as vision:
+        assert analizar_codigo_barras_foto(foto(), vision=True) == {
+            "folio": "0008430573", "lectura": "groq_no_verificada"}
+        monkeypatch.setenv("ARY_GROQ_VISION", "0")
+        with pytest.raises(FotoTicketError):
+            analizar_codigo_barras_foto(foto(), vision=True)
+        assert vision.call_count == 1
+
+
+def test_production_requires_corroboration_but_accepts_verified_vision():
+    from types import SimpleNamespace
+    from arybot.portal_modelo import validar_entrada, EntradaPortalError
+    identidad = SimpleNamespace(rfc="SEP1312171X9", razon_social="EMPRESA", calle="", idcif="")
+    body = _cuerpo_final()
+    body["modo_ticket"] = "codigo_barras"
+    with patch("arybot.portal_modelo.leer_constancia_pdf_base64", return_value=identidad):
+        with patch("arybot.portal_modelo.analizar_codigo_barras_foto",
+                   return_value={"folio":"0008430573", "lectura":"groq_no_verificada"}):
+            with pytest.raises(EntradaPortalError, match="segunda lectura"):
+                validar_entrada(body, vision=True)
+        with patch("arybot.portal_modelo.analizar_codigo_barras_foto",
+                   return_value={"folio":"0008430573", "lectura":"groq_corroborada"}):
+            kind, sol, data = validar_entrada(body, vision=True)
+            assert kind == "FACTURA" and sol.ticket == "0008430573"
+
+
+def test_doble_lectura_vision_coincidente_y_discrepante(monkeypatch):
+    from arybot.ticket_foto import analizar_codigo_barras_foto
+    monkeypatch.setenv("ARY_GROQ_VISION", "1")
+    with patch("arybot.ticket_foto._folios_codigo_barras", return_value=[]), \
+         patch("arybot.ticket_foto._folio_ocr_bajo_barras", return_value=None), \
+         patch("arybot.ticket_foto._folio_vision_bajo_barras", return_value=("0008430573", False)), \
+         patch("arybot.ticket_foto._zona_numero_bajo_barras", return_value=Image.new("L",(300,40),"white")), \
+         patch("arybot.ticket_vision.leer_numero_recortado", return_value="0008430573") as second:
+        assert analizar_codigo_barras_foto(foto(), vision=True)["lectura"] == "groq_no_verificada"
+        second.assert_not_called()
+        assert analizar_codigo_barras_foto(foto(), vision=True, confirmar_vision=True) == {
+            "folio": "0008430573", "lectura": "groq_doble_lectura"}
+        assert second.call_args.kwargs == {"variante": True}
+        second.return_value = "0008430578"
+        assert analizar_codigo_barras_foto(foto(), vision=True, confirmar_vision=True)["lectura"] == "groq_no_verificada"
+
+
+def test_portal_admite_doble_lectura_y_no_folio_editado():
+    from types import SimpleNamespace
+    from arybot.portal_modelo import validar_entrada, EntradaPortalError
+    identidad = SimpleNamespace(rfc="SEP1312171X9", razon_social="EMPRESA", calle="", idcif="")
+    body = _cuerpo_final()
+    body["modo_ticket"] = "codigo_barras"
+    with patch("arybot.portal_modelo.leer_constancia_pdf_base64", return_value=identidad), \
+         patch("arybot.portal_modelo.analizar_codigo_barras_foto", return_value={
+             "folio":"0008430573", "lectura":"groq_doble_lectura"}) as lector:
+        kind, sol, _ = validar_entrada(body, vision=True)
+        assert kind == "FACTURA" and sol.ticket == "0008430573"
+        assert lector.call_args.kwargs == {"vision": True, "confirmar_vision": True}
+        body["ticket"] = "0008430578"
+        with pytest.raises(EntradaPortalError, match="no coincide"):
+            validar_entrada(body, vision=True)
+
+
+def test_cache_vision_temporal_y_no_almacena_fallos(monkeypatch):
+    from collections import OrderedDict
+    from arybot import ticket_vision as v
+    monkeypatch.setattr(v, "_cache", OrderedDict())
+    monkeypatch.setattr(v, "_CACHE_MAX", 2)
+    clock = [100.0]
+    monkeypatch.setattr(v.time, "monotonic", lambda: clock[0])
+    v._remember(b"a", "0008430573")
+    v._remember(b"bad", None)
+    assert v._cached(b"a") == "0008430573"
+    assert v._cached(b"bad") is None
+    v._remember(b"b", "0008430574")
+    v._remember(b"c", "0008430575")
+    assert v._cached(b"a") is None
+    assert v._cached(b"b") == "0008430574"
+    clock[0] += 601
+    assert v._cached(b"b") is None

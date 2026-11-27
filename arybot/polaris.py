@@ -1610,7 +1610,10 @@ class PolarisBot:
             dlg, self.BUSCAR["campo_busqueda"], "rfc", rfc
         )
         self.log('RFC escrito y confirmado después de salir del campo. Ejecutando Buscar...')
-        self._click_rel(dlg,self.BUSCAR["buscar"],wait=.20)
+        from .native_controls import mapped, invoke_mapped
+        if mapped(self,'buscar',dlg):
+            invoke_mapped(self,dlg,'buscar');time.sleep(.20)
+        else:self._click_rel(dlg,self.BUSCAR["buscar"],wait=.20)
         time.sleep(1.2)
         from .cliente_facturacion import exigir_cliente_facturable
         from .lectura_catalogo_fiscal import seleccionar_cliente_exacto
@@ -1699,6 +1702,14 @@ class PolarisBot:
         }
         canon=aliases.get(target.upper().replace(" ",""), target)
         canon_plain=plain(canon)
+
+        from .native_controls import mapped
+        if mapped(self,"uso_cfdi",inv):
+            self._activate(inv)
+            selected=self._captura_factura().seleccionar(inv,self.FACTURA["uso_cfdi"],"uso_cfdi",canon)
+            self._pasos_factura["cfdi"]=selected
+            self.diag.evento("FACTURACION: Uso CFDI","OK","Selección nativa confirmada",{"seleccion_no_vacia":True})
+            return selected
 
         # CASO NORMAL ARY: Polaris ya muestra GASTOS EN GENERAL por defecto.
         # NO hacemos clic en Cuenta ni enviamos HOME/DOWN/ENTER. El siguiente
@@ -1907,6 +1918,13 @@ class PolarisBot:
 
         self._activate(inv)
 
+        from .native_controls import mapped
+        if mapped(self,"forma_pago",inv):
+            self._captura_factura().seleccionar(inv,self.FACTURA["forma_pago"],"forma_pago",target)
+            self._pasos_factura["pago"]=target
+            self.diag.evento("FACTURACION: forma de pago","OK","Selección nativa confirmada",{"seleccion_no_vacia":True})
+            return target
+
         # EFECTIVO es el valor con el que abre Facturación de Efectivo. No hay
         # necesidad de tocar el control si eso es lo solicitado.
         if target == "EFECTIVO":
@@ -1945,6 +1963,12 @@ class PolarisBot:
     def _calendar_day_cell(year, month, day):
         """Casilla del calendario Polaris: domingo primero, máximo seis semanas."""
         weeks=calendar.Calendar(firstweekday=6).monthdayscalendar(int(year),int(month))
+        # El calendario DevExpress de Polaris siempre muestra seis filas.
+        # Cuando el día 1 cae en domingo, agrega una semana COMPLETA
+        # del mes anterior arriba. En el video del 23/11/2026, omitir
+        # esa fila hacía pulsar 16/11/2026 (una semana antes).
+        if calendar.weekday(int(year),int(month),1)==6:
+            weeks.insert(0,[0]*7)
         while len(weeks)<6:
             weeks.append([0]*7)
         for row,week in enumerate(weeks[:6]):
@@ -2095,23 +2119,62 @@ class PolarisBot:
         return h
 
     def _read_date_control(self, inv):
-        """Lee Fecha sin pasar por la validación estricta de Edit único."""
+        """Lee Fecha en controles DevExpress anidados, sin escribir ni cambiar su valor.
+
+        WindowFromPoint puede devolver un wrapper TcxDateEdit vacío aunque
+        el editor interno sí tenga la fecha. Sólo se aceptan lecturas válidas
+        de la misma cadena de HWND del campo; si difieren, no se continúa.
+        """
+        from datetime import datetime
         h=self._date_hwnd_at_point(inv)
-        value=''
-        try:
-            value=self._captura_factura().texto.leer(h)
-        except Exception:
+        reader=self._captura_factura().texto
+        candidatos=[]
+        cur=h
+        for _ in range(8):
+            if not cur or cur==inv or not self._same_polaris_process(inv,cur):
+                break
+            if 'EDIT' in self._class_name(cur).upper() or cur==h:
+                candidatos.append(cur)
             try:
-                value=win32gui.GetWindowText(h) or ''
+                cur=win32gui.GetParent(cur)
             except Exception:
-                value=''
-        value=str(value or '').strip()
+                break
+        fechas=[]
+        for control in candidatos:
+            value=''
+            try:
+                value=reader.leer(control)
+            except Exception:
+                pass
+            if not value:
+                try:value=win32gui.GetWindowText(control) or ''
+                except Exception:pass
+            value=str(value or '').strip()
+            for fmt in ('%d/%m/%Y','%d-%m-%Y','%Y-%m-%d'):
+                try:
+                    parsed=datetime.strptime(value,fmt).date()
+                    # Strptime comprueba los valores; fullmatch rechaza etiquetas
+                    # o lecturas parciales sin excluir fechas con un dígito.
+                    pattern=(r'\d{4}-\d{2}-\d{2}' if fmt=='%Y-%m-%d'
+                             else r'\d{1,2}'+('/' if fmt=='%d/%m/%Y' else '-')
+                             +r'\d{1,2}'+('/' if fmt=='%d/%m/%Y' else '-')+r'\d{4}')
+                    if re.fullmatch(pattern,value):
+                        fechas.append((control,value,parsed))
+                        break
+                except ValueError:
+                    pass
+        distintos={parsed for _,_,parsed in fechas}
+        if len(distintos)>1:
+            self._screenshot_error("fecha_controles_discrepantes")
+            raise PolarisError("Los controles de Fecha muestran valores diferentes. No se continuará al folio.")
+        control,value=(fechas[0][0],fechas[0][1]) if fechas else (h,'')
         self.diag.evento(
             'FACTURACION: fecha','LECTURA_FECHA',
             'Lectura del control Fecha.',
-            {'vacio':not bool(value),'longitud':len(value),'clase':self._class_name(h)}
+            {'vacio':not bool(value),'longitud':len(value),
+             'clase':self._class_name(control),'controles_revisados':len(candidatos)}
         )
-        return h,value
+        return control,value
 
     def _set_ticket_date(self, inv, fecha_ticket):
         """Selecciona la fecha con el calendario nativo de Polaris, como en el video."""
@@ -2127,8 +2190,7 @@ class PolarisBot:
 
         self.etapa_alerta="FACTURACION: fecha del ticket"
         self.log(f"Fecha del ticket: seleccionando {visible} con el calendario nativo de Polaris...")
-        self._activate(inv)
-
+        # _read_date_control already activates the date window.
         inner,current_text=self._read_date_control(inv)
         current=None
         for fmt in ('%d/%m/%Y','%d-%m-%Y','%Y-%m-%d'):
@@ -2144,6 +2206,21 @@ class PolarisBot:
                 'No se pudo leer la fecha inicial; se usó el año actual sólo para navegación.',
                 {'fecha_inicial_legible':False}
             )
+
+        # Si la fecha ya está correcta NO abrir el calendario: la selección
+        # anterior estaba cambiando el 23/11/2026 por el 16/11/2026.
+        # Verificar una segunda lectura independiente antes de continuar.
+        if current==target:
+            _,confirmed_text=self._read_date_control(inv)
+            if coincide('fecha',confirmed_text,visible):
+                self._pasos_factura['fecha']=iso
+                self.diag.evento(
+                    'FACTURACION: fecha','OK',
+                    'Fecha ya correcta; se verificó dos veces sin modificar Polaris.',
+                    {'fecha_objetivo':visible,'coincide':True}
+                )
+                self.log("Fecha del ticket ya correcta y verificada. Continuando al folio...")
+                return iso
 
         # Abrir la flecha visible del TcxDateEdit directamente. No dependemos de
         # identificar el wrapper exterior, porque DevExpress expone varios HWND.
@@ -2208,6 +2285,7 @@ class PolarisBot:
         # Verificar que el campo Fecha quedó EXACTAMENTE con la fecha solicitada.
         end=time.time()+3.0
         stable=0
+        observed=''
         while time.time()<end:
             try:
                 _,observed=self._read_date_control(inv)
@@ -2224,9 +2302,12 @@ class PolarisBot:
             self.diag.evento(
                 'FACTURACION: fecha','ERROR',
                 'El calendario no dejó la fecha solicitada. No se continúa al folio.',
-                {'fecha_objetivo':visible,'coincide':False}
+                {'fecha_objetivo':visible,'fecha_observada':observed,'coincide':False}
             )
-            raise PolarisError("La fecha elegida en el calendario no coincide con la fecha del ticket. No se continuará al folio.")
+            raise PolarisError(
+                f"Fecha incorrecta en Polaris: quedó {observed or 'sin lectura'} "
+                f"y debía ser {visible}. Se detuvo antes del folio."
+            )
 
         self._pasos_factura['fecha']=iso
         self.diag.evento(
@@ -2267,7 +2348,9 @@ class PolarisBot:
 
         # Escritura real de teclado: cada carácter genera eventos normales de
         # Windows y después se sale con Tab para que Polaris confirme el valor.
-        self._assert_point_inside_window(inv,self.FACTURA["ticket"],"folio_ticket")
+        from .native_controls import mapped, invoke_mapped
+        if not mapped(self,"folio",inv):
+            self._assert_point_inside_window(inv,self.FACTURA["ticket"],"folio_ticket")
         self.log("Folio: escribiendo carácter por carácter (sin portapapeles)...")
         self._captura_factura().escribir_rel(
             inv, self.FACTURA["ticket"], "folio", ticket
@@ -2275,8 +2358,11 @@ class PolarisBot:
         time.sleep(.35)
 
         self.log("Folio escrito, confirmado y abandonado con Tab. Pulsando Agregar Folio...")
-        self._assert_point_inside_window(inv,self.FACTURA["agregar_folio"],"agregar_folio")
-        self._click_rel(inv,self.FACTURA["agregar_folio"],wait=.35)
+        if mapped(self,"agregar_folio",inv):
+            invoke_mapped(self,inv,"agregar_folio");time.sleep(.35)
+        else:
+            self._assert_point_inside_window(inv,self.FACTURA["agregar_folio"],"agregar_folio")
+            self._click_rel(inv,self.FACTURA["agregar_folio"],wait=.35)
         time.sleep(2.0)
 
         # Si por algún motivo se abrió "Accesos al Sistema", detectarlo y parar.
@@ -2472,6 +2558,8 @@ class PolarisBot:
         self.etapa_alerta="FACTURACION: comprobaciones previas"
         self._pasos_factura={}
         self._factura_test_mode=test_mode
+        from .native_controls import preflight
+        preflight(self,test_mode)
         self._guardia_campos_solicitud(sol,test_mode)
         from .factura_final import validar_correo
         if not isinstance(test_mode, bool):

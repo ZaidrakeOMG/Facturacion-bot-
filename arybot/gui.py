@@ -21,6 +21,10 @@ from .cola_gui import ColaTab
 from .alta_clientes import AltaClientes
 from .diagnostico import Diagnostico
 from .diagnostico_gui import DiagnosticoTab
+from .dashboard import Dashboard, apply_style, attach_navigation, NAVY, BLUE, BG, WHITE, INK, MUTED
+from .groq_gui import GroqTab
+from .native_gui import NativeTab
+from .sql_gui import SqlTab
 
 BASE=Path(__file__).resolve().parent.parent
 
@@ -246,12 +250,16 @@ class SelectorFecha(ttk.Frame):
 
 class App:
     def __init__(self,root):
-        self.root=root; self.root.title("ARY Facturación Bot - Python v4.9 fecha hoy"); self.root.geometry("1040x740"); self.root.minsize(900,620)
+        self.root=root; self.root.title("ARY | Centro de facturación")
+        w=min(1260,max(900,root.winfo_screenwidth()-70)); h=min(820,max(620,root.winfo_screenheight()-90))
+        self.root.geometry(f"{w}x{h}"); self.root.minsize(900,620)
         self.q=queue.Queue(); self.ui_events=queue.Queue(); self.worker=None; self._direct_busy=False; self._direct_frozen=[]
         self.diagnostico=Diagnostico(BASE)
         self._install_exception_hooks()
         self.cfgm=ConfigManager(BASE); self.cfg=self.cfgm.get(); self.db=DB(BASE/"data"/"arybot.sqlite3")
-        self.gmail=GmailClient(BASE,self.cfg,self.log)
+        # Esta edición usa exclusivamente la recepción web y manual.
+        self.cfg["app"]["gmail_habilitado"]=False
+        self.gmail=None
         try: self.alertas=AlertasInternas(BASE,self.cfg,self.log)
         except Exception:
             self.alertas=None;self.log("Alertas internas no disponibles: revisa la carpeta local del bot.")
@@ -270,11 +278,11 @@ class App:
         self.cola=ColaOperaciones(BASE,self.cfg,self.polaris,self.log,alertas=self.alertas,
                                  alta=self.alta_service,db=self.db,
                                  on_event=lambda kind,ident:self.ui_events.put((kind,ident)))
-        self.processor=Processor(BASE,self.cfg,self.db,self.gmail,self.polaris,self.log,alertas=self.alertas,cola=self.cola)
+        self.processor=None
         self._direct_job_id=None
         self._build(); self._sync_form_from_cfg(); self.root.after(100,self._drain_logs); self.root.after(800,self._startup_checks)
         self.root.protocol("WM_DELETE_WINDOW",self.close)
-        if self.alertas: self.alertas.iniciar()
+        if self.alertas and self.cfg["app"].get("gmail_habilitado",False): self.alertas.iniciar()
         self.cola.iniciar_hilos()
         self.root.after(150,self._drain_cola_events)
         self.root.after(500,self._estado_vm)
@@ -321,48 +329,65 @@ class App:
 
 
     def _build(self):
-        style=ttk.Style();
-        try: style.theme_use("vista")
-        except: pass
-        outer=ttk.Frame(self.root,padding=12); outer.pack(fill="both",expand=True)
+        apply_style(self.root)
+        shell=tk.Frame(self.root,bg=BG); shell.pack(fill="both",expand=True)
+        side=tk.Frame(shell,bg=NAVY,width=174); side.pack(side="left",fill="y"); side.pack_propagate(False)
+        brand=tk.Frame(side,bg=NAVY); brand.pack(fill="x",padx=15,pady=(20,20))
+        tk.Label(brand,text="ARY",font=("Segoe UI",31,"bold"),bg=NAVY,fg=WHITE,anchor="w").pack(fill="x")
+        tk.Frame(brand,bg="#C62836",height=3,width=43).pack(anchor="w",pady=(0,5))
+        tk.Label(brand,text="SUPER SERVICIOS",font=("Segoe UI",8,"bold"),bg=NAVY,fg="#AFC9E3",anchor="w").pack(fill="x")
+        tk.Label(side,text="OPERACIONES",font=("Segoe UI",8,"bold"),bg=NAVY,fg="#91A8BF",anchor="w").pack(fill="x",padx=15,pady=(0,4))
+        nav=tk.Frame(side,bg=NAVY); nav.pack(fill="both",expand=True)
+        tk.Label(side,text="FACTURACIÓN  |  V2",bg=NAVY,fg="#AFC9E3",font=("Segoe UI",8,"bold")).pack(side="bottom",pady=14)
+        outer=ttk.Frame(shell,padding=10); outer.pack(side="left",fill="both",expand=True)
         head=ttk.Frame(outer); head.pack(fill="x")
-        ttk.Label(head,text="ARY Facturación Bot",font=("Segoe UI",18,"bold")).pack(side="left")
-        ttk.Label(head,text="Base original + adaptador VM R1 (03/oct/2026)",font=("Segoe UI",10)).pack(side="left",padx=12)
+        ttk.Label(head,text="Centro de facturación ARY",font=("Segoe UI",17,"bold")).pack(side="left")
         self.mode_var=tk.BooleanVar(value=bool(self.cfg["app"].get("modo_prueba",True)))
-        self.mode_check=ttk.Checkbutton(head,text="MODO SEGURO (no presiona Aceptar final)",variable=self.mode_var,command=self._mode_changed)
+        self.mode_check=ttk.Checkbutton(head,text="MODO SEGURO",variable=self.mode_var,command=self._mode_changed)
         self.mode_check.pack(side="right")
-
-        st=ttk.Frame(outer); st.pack(fill="x",pady=(10,8))
-        self.gmail_status=ttk.Label(st,text="Gmail: comprobando..."); self.gmail_status.pack(side="left",padx=(0,20))
-        self.bot_status=ttk.Label(st,text="Bot: detenido"); self.bot_status.pack(side="left",padx=(0,20))
+        st=ttk.Frame(outer); st.pack(fill="x",pady=(8,4))
+        self.gmail_status=ttk.Label(st,text="Gmail desactivado")  # Referencias antiguas, no visible.
+        self.bot_status=ttk.Label(st,text="Recepción: portal web / manual",foreground=BLUE); self.bot_status.pack(side="left",padx=(0,14))
         self.polaris_status=ttk.Label(st,text="Polaris: comprobando..."); self.polaris_status.pack(side="left")
-
-        self.estado_vm_var=tk.StringVar(value='VM: comprobando módulo de Polaris y cola...')
-        ttk.Label(outer,textvariable=self.estado_vm_var,wraplength=960).pack(fill='x',pady=(0,6))
-        nb=ttk.Notebook(outer); self.nb=nb; nb.pack(fill="both",expand=True)
-        self.tab_panel=ttk.Frame(nb,padding=10); self.tab_test=ttk.Frame(nb,padding=10); self.tab_cfg=ttk.Frame(nb,padding=10)
-        nb.add(self.tab_panel,text="Panel"); nb.add(self.tab_test,text="Prueba Polaris"); nb.add(self.tab_cfg,text="Configuración")
+        self.estado_vm_var=tk.StringVar(value="Comprobando Polaris y atención automática...")
+        state_label=ttk.Label(outer,textvariable=self.estado_vm_var,foreground=MUTED,wraplength=750)
+        state_label.pack(fill="x",pady=(0,8))
+        outer.bind("<Configure>",lambda e: state_label.configure(wraplength=max(300,e.width-22)) if e.widget is outer else None,add="+")
+        nb=ttk.Notebook(outer,style="ARY.TNotebook"); self.nb=nb; nb.pack(fill="both",expand=True)
+        self.dashboard_tab=Dashboard(nb,self); nb.add(self.dashboard_tab,text="Estadísticas")
+        self.tab_panel=ttk.Frame(nb,padding=10)
+        self.tab_test=ttk.Frame(nb,padding=10)
+        self.tab_cfg=ttk.Frame(nb,padding=10)
+        # Inicializar los formularios base antes de las pestañas dependientes.
+        # AltaClientesTab lee test_station durante su constructor.
         self._build_panel(); self._build_test(); self._build_cfg()
-        self.alta_clientes_tab=AltaClientesTab(nb,self)
-        nb.insert(2,self.alta_clientes_tab,text="Alta de cliente")
-        self.alertas_tab=AlertasTab(nb,self)
-        nb.insert(3,self.alertas_tab,text="Alertas internas")
-        self.cola_tab=ColaTab(nb,self)
-        nb.insert(4,self.cola_tab,text="Cola y avisos")
-        self.diagnostico_tab=DiagnosticoTab(nb,self)
-        nb.insert(5,self.diagnostico_tab,text="Diagnóstico")
+        self.cola_tab=ColaTab(nb,self); nb.add(self.cola_tab,text="Resultados y avisos")
+        nb.add(self.tab_test,text="Facturación manual")
+        self.alta_clientes_tab=AltaClientesTab(nb,self); nb.add(self.alta_clientes_tab,text="Alta de cliente")
+        self.alertas_tab=AlertasTab(nb,self); nb.add(self.alertas_tab,text="Alertas internas")
+        self.diagnostico_tab=DiagnosticoTab(nb,self); nb.add(self.diagnostico_tab,text="Diagnóstico")
+        nb.add(self.tab_panel,text="Actividad del bot")
+        self.groq_tab=GroqTab(nb,self); nb.add(self.groq_tab,text="Inteligencia artificial")
+        self.native_tab=NativeTab(nb,self); nb.add(self.native_tab,text="Motor nativo")
+        self.sql_tab=SqlTab(nb,self); nb.add(self.sql_tab,text="Conexiones SQL")
+        nb.add(self.tab_cfg,text="Configuración")
+        self._sync_navigation=attach_navigation(self,nav)
+        nb.select(self.dashboard_tab)
 
     def _build_panel(self):
+        ttk.Label(self.tab_panel,text="Registro de actividad",font=("Segoe UI",18,"bold")).pack(anchor="w")
+        ttk.Label(self.tab_panel,text="Eventos de Polaris, solicitudes web y diagnósticos locales.",foreground=MUTED).pack(anchor="w",pady=(3,10))
         bar=ttk.Frame(self.tab_panel); bar.pack(fill="x")
-        ttk.Button(bar,text="Conectar Gmail",command=self.connect_gmail).pack(side="left",padx=(0,6))
-        self.btn_start=ttk.Button(bar,text="▶ Iniciar bot",command=self.start_bot); self.btn_start.pack(side="left",padx=6)
-        self.btn_stop=ttk.Button(bar,text="■ Detener",command=self.stop_bot,state="disabled"); self.btn_stop.pack(side="left",padx=6)
-        ttk.Button(bar,text="Procesar último correo",command=self.process_latest).pack(side="left",padx=6)
-        ttk.Button(bar,text="Empezar a vigilar desde ahora",command=self.reset_checkpoint).pack(side="left",padx=6)
-        ttk.Separator(self.tab_panel).pack(fill="x",pady=10)
-        ttk.Label(self.tab_panel,text="Eventos del bot",font=("Segoe UI",11,"bold")).pack(anchor="w")
-        self.logbox=tk.Text(self.tab_panel,height=25,wrap="word",font=("Consolas",9),state="disabled")
-        self.logbox.pack(fill="both",expand=True,pady=(5,0))
+        ttk.Button(bar,text="Ver resultados",command=lambda:self.nb.select(self.cola_tab)).pack(side="left")
+        ttk.Button(bar,text="Ver estadísticas",command=lambda:self.nb.select(self.dashboard_tab)).pack(side="left",padx=8)
+        self.btn_start=ttk.Button(bar,text="Recepción antigua desactivada",state="disabled")
+        self.btn_stop=ttk.Button(bar,text="Recepción antigua desactivada",state="disabled")
+        logframe=ttk.Frame(self.tab_panel); logframe.pack(fill="both",expand=True,pady=(12,0))
+        self.logbox=tk.Text(logframe,height=20,wrap="word",font=("Consolas",10),state="disabled",
+                            bg=NAVY,fg="#E1ECF6",insertbackground=WHITE,relief="flat",padx=12,pady=10)
+        scroll=ttk.Scrollbar(logframe,orient="vertical",command=self.logbox.yview)
+        self.logbox.configure(yscrollcommand=scroll.set)
+        scroll.pack(side="right",fill="y");self.logbox.pack(fill="both",expand=True)
 
     def _build_test(self):
         ttk.Label(self.tab_test,text="Facturación directa / prueba en Polaris",font=("Segoe UI",13,"bold")).grid(row=0,column=0,columnspan=4,sticky="w",pady=(0,6))
@@ -402,7 +427,7 @@ class App:
         self.btn_payment.grid(row=11,column=1,sticky="w",pady=6)
         self.btn_cleanup=ttk.Button(self.tab_test,text="Probar SOLO limpieza de ventanas",command=self.test_cleanup_only)
         self.btn_cleanup.grid(row=11,column=2,sticky="w",padx=8,pady=6)
-        self.direct_status=tk.StringVar(value="Listo. La solicitud se agrega a Cola y avisos; no necesitas detener Gmail.")
+        self.direct_status=tk.StringVar(value="Listo. Al recibirla, el bot atenderá la solicitud automáticamente.")
         ttk.Label(self.tab_test,textvariable=self.direct_status,wraplength=850,foreground="#3a4a5a").grid(row=12,column=0,columnspan=4,sticky="w",pady=(6,0))
         ttk.Label(self.tab_test,text="Captura: la fecha se elige en calendario; RFC y folio usan teclado real. Pago y Uso CFDI se seleccionan explícitamente.",foreground="#3a4a5a",wraplength=820).grid(row=13,column=0,columnspan=4,sticky="w",pady=(6,0))
         ttk.Label(self.tab_test,text="Seguro de emergencia: mueve el mouse a la esquina superior izquierda para detener PyAutoGUI.",foreground="#8a2d2d",wraplength=820).grid(row=14,column=0,columnspan=4,sticky="w",pady=(6,0))
@@ -413,12 +438,12 @@ class App:
     def _sync_invoice_mode(self):
         if not hasattr(self, "btn_test"): return
         safe=bool(self.mode_var.get())
-        self.btn_test.configure(text=("Encolar preparación (NO TIMBRA)" if safe else "Encolar factura y correo (REAL)"))
+        self.btn_test.configure(text=("Probar SIN emitir factura" if safe else "Facturar y solicitar correo"))
         self.direct_hint_label.configure(foreground="#334a60" if safe else "#9a261b")
         self.direct_hint.set(
-            "MODO SEGURO: la solicitud entra a la cola y se prepara SIN Aceptar. Después requiere liberar la revisión."
+            "PRUEBA: no se emite ningún CFDI. El bot registra el resultado y continúa con las siguientes solicitudes si Polaris quedó libre."
             if safe else
-            "PRODUCCIÓN EN COLA: Aceptar factura → Enviar por Correo → XML + PDF. Se confirma antes de encolar.")
+            "FACTURACIÓN: el bot procesa automáticamente cada solicitud, informa SÍ/NO y continúa con la siguiente si Polaris está libre.")
 
     def _freeze_direct(self):
         self._direct_busy=True;self._direct_frozen=[]
@@ -467,12 +492,9 @@ class App:
         ttk.Label(self.tab_cfg,text="Usuario").grid(row=r,column=0,sticky="e",padx=6,pady=5); ttk.Entry(self.tab_cfg,textvariable=self.user_var,width=30).grid(row=r,column=1,sticky="w"); r+=1
         ttk.Label(self.tab_cfg,text="Contraseña Polaris").grid(row=r,column=0,sticky="e",padx=6,pady=5); ttk.Entry(self.tab_cfg,textvariable=self.pass_var,show="*",width=30).grid(row=r,column=1,sticky="w"); ttk.Button(self.tab_cfg,text="Guardar segura en Windows",command=self.save_password).grid(row=r,column=2,sticky="w"); r+=1
         ttk.Separator(self.tab_cfg).grid(row=r,column=0,columnspan=4,sticky="ew",pady=12); r+=1
-        ttk.Label(self.tab_cfg,text="Correo / OCR",font=("Segoe UI",12,"bold")).grid(row=r,column=0,columnspan=4,sticky="w",pady=(0,8)); r+=1
-        ttk.Label(self.tab_cfg,text="Revisar cada (seg)").grid(row=r,column=0,sticky="e",padx=6,pady=5); ttk.Spinbox(self.tab_cfg,from_=5,to=300,textvariable=self.interval_var,width=8).grid(row=r,column=1,sticky="w"); r+=1
-        ttk.Label(self.tab_cfg,text="Asunto contiene").grid(row=r,column=0,sticky="e",padx=6,pady=5); ttk.Entry(self.tab_cfg,textvariable=self.subjects_var,width=50).grid(row=r,column=1,columnspan=2,sticky="w"); ttk.Label(self.tab_cfg,text="Separado por comas").grid(row=r,column=3,sticky="w"); r+=1
-        ttk.Label(self.tab_cfg,text="Tesseract.exe (opcional)").grid(row=r,column=0,sticky="e",padx=6,pady=5); ttk.Entry(self.tab_cfg,textvariable=self.tess_var,width=70).grid(row=r,column=1,columnspan=2,sticky="ew"); ttk.Button(self.tab_cfg,text="Examinar...",command=self.pick_tess).grid(row=r,column=3,padx=6); r+=1
-        ttk.Checkbutton(self.tab_cfg,text="Opción histórica: avisos ahora se configuran en Cola y avisos", state="disabled",variable=self.auto_missing).grid(row=r,column=1,columnspan=3,sticky="w",pady=4); r+=1
-        ttk.Checkbutton(self.tab_cfg,text="Recepción, resultado y errores: apartado Cola y avisos", state="disabled",variable=self.auto_done).grid(row=r,column=1,columnspan=3,sticky="w",pady=4); r+=1
+        ttk.Label(self.tab_cfg,text="Lectura de documentos / OCR",font=("Segoe UI",12,"bold")).grid(row=r,column=0,columnspan=4,sticky="w",pady=(0,8)); r+=1
+        ttk.Label(self.tab_cfg,text="Tesseract.exe (opcional)").grid(row=r,column=0,sticky="e",padx=6,pady=5); ttk.Entry(self.tab_cfg,textvariable=self.tess_var,width=50).grid(row=r,column=1,columnspan=2,sticky="ew"); ttk.Button(self.tab_cfg,text="Examinar...",command=self.pick_tess).grid(row=r,column=3,padx=6); r+=1
+        ttk.Label(self.tab_cfg,text="Groq: configura la clave desde Inteligencia artificial. Gmail desactivado.",foreground=MUTED).grid(row=r,column=0,columnspan=4,sticky="w",pady=8); r+=1
         ttk.Button(self.tab_cfg,text="Guardar configuración",command=self.save_config).grid(row=r,column=1,sticky="w",pady=14)
         self.tab_cfg.columnconfigure(2,weight=1)
 
@@ -481,12 +503,6 @@ class App:
         self.exe_var.set(p.get("executable","")); self.user_var.set(p.get("usuario","SUPERVISOR")); self.tess_var.set(o.get("tesseract_cmd","") or find_tesseract("")); self.interval_var.set(int(a.get("intervalo_segundos",20))); self.auto_missing.set(bool(a.get("auto_responder_faltantes",False))); self.auto_done.set(bool(a.get("auto_responder_completada",False))); self.subjects_var.set(", ".join(a.get("asunto_palabras",["FACTURA","CFDI"])))
 
     def _startup_checks(self):
-        def work():
-            try:
-                self.gmail.connect(interactive=False)
-                self.ui_events.put(('startup','Gmail: '+str(self.gmail.email)))
-            except Exception:self.ui_events.put(('startup','Gmail: falta conectar'))
-        threading.Thread(target=work,daemon=True,name='ARY-Comprobar-Gmail').start()
         if self.polaris:
             exe=self.cfg['polaris'].get('executable','');pw=self.polaris.has_password()
             self.polaris_status.config(text=f"Polaris: {'ruta OK' if exe and Path(exe).exists() else 'falta ruta'} / {'clave OK' if pw else 'falta clave'}")
@@ -501,6 +517,10 @@ class App:
 
     def _mode_changed(self):
         new=bool(self.mode_var.get())
+        if not new and getattr(self.polaris,"_native_pilot",False):
+            self.mode_var.set(True)
+            self.log("Desactiva primero el piloto nativo para autorizar producción.")
+            return
         if not new:
             if hasattr(self,'cola') and self.cola.ocupada:
                 self.mode_var.set(True)
@@ -508,8 +528,14 @@ class App:
             if not messagebox.askyesno("Activar producción","Desactivar MODO SEGURO permite que Polaris presione el Aceptar final y TIMBRE CFDI reales. ¿Confirmas?"):
                 self.mode_var.set(True); return
         self.cfg["app"]["modo_prueba"]=new; self.cfgm.save(); self.log("Modo cambiado a " + ("SEGURO" if new else "PRODUCCIÓN"))
+        if not new and hasattr(self,'cola'):
+            # Si las solicitudes recibidas esperaban autorización de producción,
+            # no exigir al operador otro clic de "reanudar".
+            try:self.cola.iniciar_cola()
+            except Exception as exc:self.log("La atención automática no pudo reanudarse: "+str(exc))
 
     def connect_gmail(self):
+        self.log("Recepción por Gmail desactivada. Utiliza el portal web."); return
         if self.cola.ocupada:
             self.log('Espera a que Polaris termine para abrir la autorización Gmail.');return
         win=tk.Toplevel(self.root)
@@ -658,6 +684,7 @@ class App:
         win.protocol("WM_DELETE_WINDOW",close_dialog)
 
     def start_bot(self):
+        self.log("Recepción por Gmail desactivada. Utiliza el portal web."); return
         if self.worker and self.worker.is_alive():return
         self.save_config(silent=True)
         self.worker=BotWorker(self.cfg,self.db,self.gmail,self.processor,self.log,self._worker_status)
@@ -677,6 +704,7 @@ class App:
         self.log('Deteniendo SOLO la recepción Gmail. Para detener nuevos trabajos de pantalla usa Pausar cola.')
 
     def reset_checkpoint(self):
+        self.log("Recepción por Gmail desactivada. Utiliza el portal web."); return
         if self.worker and self.worker.is_alive():
             self.log('Detén solo la recepción Gmail antes de cambiar el punto de inicio.');return
         if self.cola.ocupada:
@@ -692,6 +720,7 @@ class App:
         threading.Thread(target=work,daemon=True).start()
 
     def process_latest(self):
+        self.log("Recepción por Gmail desactivada. Utiliza el portal web."); return
         def work():
             try:
                 self.gmail.connect(interactive=False)
@@ -733,18 +762,18 @@ class App:
         except Exception as exc:self.direct_status.set(str(exc));return
         if not safe:
             if self.cola.ocupada:
-                self.direct_status.set('Polaris está trabajando. Espera a que termine antes de confirmar otra prueba REAL.')
+                self.direct_status.set('Polaris está atendiendo otra solicitud. Esta operación debe esperar a que termine.')
                 return
-            if not messagebox.askyesno('Encolar factura REAL',
+            if not messagebox.askyesno('Confirmar emisión de CFDI',
                 f'Estación: {estacion}\nRFC: {rfc}\nFolio: {ticket}\nFecha ticket: {fecha_ticket}\nPago: {fp}\nUso CFDI: {uso}\nCorreo: {em}\n\n'
-                'La cola emitirá una factura real y solicitará el correo cuando llegue su turno. '
-                'Confirma que el ticket no fue facturado: esta versión no consulta la BD. '
-                'Los avisos al cliente se envían si están activados. ¿Autorizar y encolar?',default='no'):return
+                'Se intentará emitir el CFDI y solicitar XML/PDF por correo. '
+                'El bot atenderá una solicitud a la vez y continuará automáticamente. '
+                'Confirma que el folio no fue facturado: esta versión no consulta la BD. ¿Autorizar?',default='no'):return
         try:
             job,new=self.cola.encolar_factura(sol,safe=safe)
             self._direct_job_id=job['id']
             self.direct_status.set('RECIBIDA: '+job['id'][:12]+'. Se ejecutará automáticamente cuando Polaris esté libre.')
-            self.log('Solicitud de factura agregada a la cola única de pantalla.')
+            self.log('Solicitud recibida para atención automática secuencial.')
         except Exception as exc:self.direct_status.set(str(exc))
 
     def test_station_only(self):
@@ -781,9 +810,9 @@ class App:
         if not self._exigir_polaris_vm():return False
         st=self.cola.store.status()
         if st.get('bloqueo'):
-            msg=('COLA EN REVISIÓN: '+str(st.get('motivo',''))+
-                 ' Ve a Cola y avisos, selecciona la prueba/captura pendiente y usa Liberar revisión '+
-                 'después de revisar Polaris. No se añadió otra prueba.')
+            msg=('ATENCIÓN DETENIDA: '+str(st.get('motivo',''))+
+                 ' En Resultados y avisos puedes resolver el bloqueo después de comprobar Polaris. '+
+                 'No se envió otra solicitud.')
             self.direct_status.set(msg);self.log(msg)
             return False
         if self.cola.ocupada:
@@ -816,14 +845,14 @@ class App:
                 if st.get('activa'):
                     text='POLARIS TRABAJANDO: '+str(getattr(self.polaris,'etapa_alerta','Preparando ventana...'))
                 elif st.get('bloqueo'):
-                    text='COLA EN REVISIÓN: '+str(st.get('motivo',''))+' | Cola y avisos > Liberar revisión.'
+                    text='ATENCIÓN DETENIDA: resultado de Polaris pendiente de confirmar. '+str(st.get('motivo',''))+' | Resultados y avisos > Resolver bloqueo confirmado.'
                 elif st.get('pausada'):
-                    text='COLA PAUSADA: '+str(st.get('motivo',''))+' | Cola y avisos > Iniciar / continuar cola.'
+                    text='ATENCIÓN DETENIDA: '+str(st.get('motivo',''))+' | Resultados y avisos > Reanudar atención automática.'
                 else:
-                    text='POLARIS DISPONIBLE | Cola libre | Adaptador VM sobre el original; pantalla sin modificar.'
+                    text='POLARIS DISPONIBLE | Atención automática activa.'
             self.estado_vm_var.set(text)
         except Exception as exc:
-            self.estado_vm_var.set('No se pudo leer el estado de la cola: '+str(exc))
+            self.estado_vm_var.set('No se pudo consultar la atención automática: '+str(exc))
         self.root.after(600,self._estado_vm)
 
     def _drain_cola_events(self):
@@ -835,7 +864,10 @@ class App:
                     self.gmail_status.config(text=ident)
                 elif kind=='trabajo' and ident==self._direct_job_id:
                     job=self.cola.store.get(ident)
-                    if job:self.direct_status.set(job['estado']+': '+job['motivo'])
+                    if job:
+                        from .cola_modelo import resultado_facturacion
+                        resultado,motivo=resultado_facturacion(job)
+                        self.direct_status.set('¿Se facturó? '+resultado+' | '+motivo)
         except queue.Empty:pass
         self.root.after(150,self._drain_cola_events)
 
