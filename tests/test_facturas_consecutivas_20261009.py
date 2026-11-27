@@ -963,6 +963,63 @@ def test_portal_reenvio_identico_devuelve_referencia_original(monkeypatch,tmp_pa
     api.cola.encolar_factura.assert_not_called()
 
 
+
+def test_portal_reintento_archivado_no_se_atasca_en_referencia_vieja(monkeypatch,tmp_path):
+    """Un request_id de una revision archivada permite UNA nueva solicitud."""
+    import threading
+    from arybot.cola_local import ColaLocal
+    from arybot.cola_modelo import factura_datos, clave_trabajo
+    from arybot.portal_http import PortalWSGI
+    from arybot.parser import Solicitud
+    from arybot import portal_http
+
+    datos=factura_datos(Solicitud(
+        estacion='ARY IV',rfc='AAA010101AAA',ticket='0006043150',
+        fecha_ticket=date.today().strftime('%d/%m/%Y'),
+        forma_pago='EFECTIVO',correo_destino='cliente@example.com',
+        remitente='cliente@example.com'))
+    store=ColaLocal(tmp_path)
+    anterior,_=store.enqueue('FACTURA',datos,source='Portal web',
+        source_id='web:'+'x'*64,safe=False,clave=clave_trabajo('FACTURA',datos))
+    store.finish(anterior['id'],'REVISION_REQUERIDA',
+                 reason='La aplicacion se cerro durante una operacion.',hold=True)
+    store.archivar_solicitudes(anterior['id'],confirmado=True)
+    assert store.get(anterior['id'])['archivado']==1
+    assert store.get(anterior['id'])['riesgo_cfdi']==1
+
+    api=PortalWSGI.__new__(PortalWSGI)
+    api.cola=Mock(store=store)
+    api.cola.encolar_factura.side_effect=lambda sol,**kwargs: store.enqueue(
+        'FACTURA',datos,source=kwargs['source'],source_id=kwargs['source_id'],
+        safe=kwargs['safe'],clave=clave_trabajo('FACTURA',datos))
+    api._guard=lambda env,post=False:{'sid':'a'*32}
+    api._body=lambda env:{}
+    api._mac=lambda purpose,value: ('x' if purpose=='request' else 'y')*64
+    api._sign=lambda purpose,value:'firma-nueva'
+    api.clock=lambda:0
+    api.limits=Mock()
+    api.limits.aceptar.return_value=True
+    api.lock=threading.RLock()
+    api.aceptando=True
+    api.settings={'max_solicitudes_pendientes':100,'limite_envios_10_minutos':8}
+    api.modo_seguro=lambda:False
+    monkeypatch.setattr(portal_http,'validar_entrada',
+                        lambda body,**kwargs:('FACTURA',None,datos))
+    monkeypatch.setattr(portal_http,'piloto_habilitado',lambda:False)
+    environ={'REQUEST_METHOD':'POST','PATH_INFO':'/api/facturacion/solicitudes',
+             'HTTP_X_ARY_REQUEST_ID':'0'*32,'HTTP_X_ARY_MODE':'real',
+             'REMOTE_ADDR':'127.0.0.1'}
+    first=api._dispatch(environ)
+    again=api._dispatch(environ)
+    assert first[0]==201 and again[0]==200
+    assert first[1]['referencia']==again[1]['referencia']
+    assert first[1]['estado']=='EN_COLA'
+    assert len(store.list(incluir_archivadas=True))==2
+    assert store.get(anterior['id'])['archivado']==1
+    assert store.get(anterior['id'])['riesgo_cfdi']==1
+    assert api.cola.encolar_factura.call_count==1
+
+
 def test_portal_duplicado_no_revela_seguimiento_a_otros_datos(tmp_path):
     from arybot.cola_local import ColaLocal
     from arybot.cola_modelo import clave_trabajo
