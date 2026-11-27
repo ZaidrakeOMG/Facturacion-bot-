@@ -47,6 +47,29 @@ class ColaOperaciones:
                 try:self.db.actualizar(mid,estado=job['estado'],detalle=job['motivo'] or 'Seguimiento '+ident[:12])
                 except Exception:self.log('No se actualizó el historial antiguo. Consulte Cola y avisos para el estado definitivo.')
 
+    def _finalizar_prueba_sin_bloquear(self, ident, kind, result):
+        """Una prueba NO timbra; cerrar su pantalla y atender la siguiente.
+
+        Si Polaris no confirma el cierre, se detiene por seguridad para no
+        escribir el siguiente cliente sobre una factura todavía abierta.
+        """
+        try:
+            self.polaris.cerrar_polaris_tras_solicitud('PRUEBA SIN EMISIÓN '+kind)
+            if kind == 'ALTA' and self.alta is not None:
+                self.alta.liberar()
+        except Exception as exc:
+            motivo=('La prueba NO emitió CFDI, pero Polaris no confirmó que la pantalla '
+                    'se cerró sin guardar: '+str(exc)+'. Comprueba la ventana antes de continuar.')
+            self.store.finish(ident,'REVISION_REQUERIDA',result={'resultado':'PRUEBA_SIN_EMISION'},
+                              hold=True,reason=motivo)
+            self.log('No se pasó al siguiente cliente porque no pudo cerrarse la pantalla de prueba: '+str(exc))
+            self._notice(self.store.get(ident),'revision')
+            return False
+        self.store.finish(ident,'PRUEBA_CERRADA',result={'resultado':str(result)[:200]},
+                          reason='Prueba terminada SIN emitir CFDI ni registrar cliente; continuando con la siguiente.')
+        self._notice(self.store.get(ident),'completada')
+        return True
+
     def _enqueue(self,kind,data,*,source='Formulario',source_id=None,safe=True,correo='',state='EN_COLA',reason=''):
         opts=ajustes_cola(self.cfg)
         minutes=opts['minutos_alta'] if kind=='ALTA' else opts['minutos_factura']
@@ -153,8 +176,7 @@ class ColaOperaciones:
                     result=self.polaris.invoice(como_solicitud(data),test_mode=safe)
                     if result=='PRUEBA_OK' and safe:
                         cerrar_sesion=False
-                        self.store.finish(ident,'PREPARADA_FACTURA',result={'resultado':result},hold=True,
-                                          reason='Factura preparada SIN TIMBRAR. Resuelva manualmente la captura antes de continuar la cola.')
+                        self._finalizar_prueba_sin_bloquear(ident,'FACTURA',result)
                     elif result=='ENVIO_SOLICITADO' and not safe:
                         self.store.finish(ident,'ENVIO_SOLICITADO',result={'resultado':result},reason='Polaris solicitó el correo; recepción no verificada.')
                         self._notice(self.store.get(ident),'completada')
@@ -179,9 +201,7 @@ class ColaOperaciones:
                     else:
                         cerrar_sesion=False
                         result=self.alta.preparar(sol)
-                        self.store.finish(ident,'PREPARADA_ALTA',result=result,hold=True,
-                                          reason='Alta preparada SIN GUARDAR. Requiere revisar duplicados y autorizar Aceptar en Alta de cliente.')
-                        self._notice(self.store.get(ident),'revision_alta')
+                        self._finalizar_prueba_sin_bloquear(ident,'ALTA',result)
                 else:
                     cerrar_sesion=False
                     if kind=='ESTACION':result=self.polaris.test_station_only(data['estacion'])
