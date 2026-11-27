@@ -7,6 +7,7 @@ from __future__ import annotations
 import argparse
 import base64
 from contextlib import closing
+import hashlib
 import hmac
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import ipaddress
