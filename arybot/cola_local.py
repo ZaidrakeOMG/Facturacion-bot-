@@ -459,8 +459,16 @@ class ColaLocal:
             c.execute('INSERT OR IGNORE INTO avisos(id,trabajo,evento,correo,asunto,cuerpo,estado,creado,actualizado) VALUES(?,?,?,?,?,?,?,?,?)',
                       (ident,job['id'],event,job['correo'],subject,body,'PENDIENTE' if send else 'SIMULADA',now,now))
 
-    def notices(self,limit=200):
-        with self.connect() as c:return [dict(r) for r in c.execute('SELECT * FROM avisos ORDER BY creado DESC LIMIT ?',(limit,))]
+    def notices(self,limit=200,*,only_visible=False):
+        if only_visible:
+            with self.connect() as c:
+                return [dict(r) for r in c.execute(
+                    """SELECT a.* FROM avisos a
+                       JOIN trabajos t ON t.id=a.trabajo AND t.archivado=0
+                       ORDER BY a.creado DESC LIMIT ?""",(limit,))]
+        with self.connect() as c:
+            return [dict(r) for r in c.execute(
+                'SELECT * FROM avisos ORDER BY creado DESC LIMIT ?',(limit,))]
 
     def claim_notice(self):
         with self.connect(True) as c:
