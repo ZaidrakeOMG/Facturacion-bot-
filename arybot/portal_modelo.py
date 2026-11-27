@@ -1,12 +1,11 @@
 """Validación y respuestas del portal. No conecta a Polaris ni captura tarjetas."""
 from __future__ import annotations
-from datetime import date
 from .cliente_model import AltaCliente
 from .coincidencia_fiscal import CODIGO_VERIFICACION_FISCAL, MENSAJE_VERIFICACION_FISCAL
 from .constancia_fiscal import leer_constancia_pdf_base64, ConstanciaError
 from .cliente_facturacion import (CODIGO_SIN_REGIMEN, MENSAJE_SIN_REGIMEN,
                                  CODIGO_NO_REGISTRADO, MENSAJE_NO_REGISTRADO)
-from .parser import STATIONS, USO_CFDI, Solicitud, normalize_ticket_date
+from .parser import STATIONS, USO_CFDI, Solicitud, fecha_facturable_portal
 from .ticket_foto import analizar_ticket_foto, analizar_codigo_barras_foto, FotoTicketError
 from .cola_modelo import datos_alta, factura_datos, tracking
 from .asistencia_whatsapp import datos_asistencia
@@ -80,15 +79,10 @@ def validar_entrada(body, *, vision=False):
             usage = texto(body, 'uso_cfdi', max_len=4)
             if usage not in USO_CFDI:
                 raise EntradaPortalError('Selecciona un uso de CFDI del catálogo del bot.')
-            fecha_ticket = normalize_ticket_date(texto(body, 'fecha_ticket', max_len=10))
-            # Solo tenemos la fecha (no la hora) en el formulario. El corte
-            # exacto de 72 horas requiere la hora impresa en el ticket.
-            # Como límite por día, se admiten hoy y los 3 días anteriores.
-            antiguedad = (date.today() - date.fromisoformat(fecha_ticket)).days
-            if not 0 <= antiguedad <= 3:
-                raise EntradaPortalError(
-                    'El plazo para solicitar factura es de 72 horas desde la compra. '
-                    'La fecha del ticket debe ser de hoy o de los tres días anteriores.')
+            try:
+                fecha_ticket = fecha_facturable_portal(texto(body, 'fecha_ticket', max_len=10))
+            except ValueError as exc:
+                raise EntradaPortalError(str(exc)) from exc
             modo_ticket = body.get('modo_ticket', 'ticket_completo')
             if modo_ticket not in ('ticket_completo', 'codigo_barras'):
                 raise EntradaPortalError('Modo de lectura de ticket no permitido.')
