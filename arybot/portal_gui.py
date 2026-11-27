@@ -52,6 +52,18 @@ def main():
             self.portal_check_busy = False
             self.portal_closing = False
             super().__init__(parent)
+            # Autorización expresa: el portal público también queda en
+            # producción, una sola vez, respetando cambios posteriores.
+            if self.cola.store.meta('ary_portal_prod_magenta_v1') != '1':
+                if not settings['permitir_facturacion_real']:
+                    updated=dict(settings,permitir_facturacion_real=True)
+                    target=Path(BASE)/'portal_config.json'
+                    temp=target.with_suffix('.json.tmp')
+                    temp.write_text(json.dumps(updated,ensure_ascii=False,indent=2),encoding='utf-8')
+                    temp.replace(target)
+                    settings.update(updated)
+                with self.cola.store.connect(True) as conn:
+                    self.cola.store._set(conn,'ary_portal_prod_magenta_v1','1')
             self.portal = PortalWSGI(self.cola, self.cfg, settings, BASE)
             self._build_portal_tab()
             self._start_portal()
