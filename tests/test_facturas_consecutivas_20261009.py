@@ -654,3 +654,43 @@ def test_archivar_bloqueada_limpia_lista_sin_confirmar_cfdi(tmp_path):
     with pytest.raises(SolicitudDuplicada):
         store.enqueue('FACTURA', {'ticket':'34001'}, source='Portal web',
                       safe=False, clave='ARY-V:34001')
+
+
+def test_archivar_no_envia_avisos_que_esperaban(tmp_path):
+    """Quitar un ticket evita enviar recibos aún pendientes; no borra enviados."""
+    from arybot.cola_local import ColaLocal
+    store = ColaLocal(tmp_path)
+    job, _ = store.enqueue('FACTURA', {'ticket':'35001'}, source='Portal web',
+                           safe=False, correo='cliente@example.com')
+    store.notice(job, 'recibida', '[ARY Solicitud] Recibida', 'Recibimos tu solicitud', send=True)
+    assert store.notices()[0]['estado'] == 'PENDIENTE'
+    store.archivar_solicitudes(job['id'], confirmado=True)
+    assert store.notices()[0]['estado'] == 'SUPERADA'
+    assert store.claim_notice() is None
+
+
+def test_archivar_migra_base_sqlite_antigua_sin_perder_registros(tmp_path):
+    """La VM existente puede abrir la base anterior sin borrar trabajos."""
+    import sqlite3
+    from arybot.cola_local import ColaLocal
+    base = tmp_path / 'data'
+    base.mkdir()
+    path = base / 'cola_operaciones.sqlite3'
+    with sqlite3.connect(path) as db:
+        db.execute("""CREATE TABLE trabajos (
+            id TEXT PRIMARY KEY, fuente_id TEXT UNIQUE, clave TEXT, tipo TEXT NOT NULL,
+            origen TEXT NOT NULL, seguro INTEGER NOT NULL, estado TEXT NOT NULL,
+            datos TEXT NOT NULL, correo TEXT NOT NULL DEFAULT '',
+            motivo TEXT NOT NULL DEFAULT '', creado REAL NOT NULL,
+            actualizado REAL NOT NULL, iniciado REAL, terminado REAL,
+            resultado TEXT NOT NULL DEFAULT '{}', minutos INTEGER NOT NULL DEFAULT 5)""")
+        db.execute("""INSERT INTO trabajos
+            (id,clave,tipo,origen,seguro,estado,datos,creado,actualizado)
+            VALUES ('ANTIGUO-001','X:123','FACTURA','Portal web',0,
+                    'ENVIO_SOLICITADO','{"ticket":"123"}',100,100)""")
+    store = ColaLocal(tmp_path)
+    assert store.get('ANTIGUO-001')['estado'] == 'ENVIO_SOLICITADO'
+    assert store.get('ANTIGUO-001')['archivado'] == 0
+    store.archivar_solicitudes('ANTIGUO-001', confirmado=True)
+    assert store.list() == []
+    assert store.get('ANTIGUO-001')['archivado'] == 1
