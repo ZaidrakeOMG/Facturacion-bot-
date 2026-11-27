@@ -772,3 +772,21 @@ def test_nueva_etapa_fiscal_incierto_no_auto_reanuda(tmp_path):
     q.iniciar_cola(polaris_comprobado=True)
     assert not q.store.status()['pausada']
     bot.invoice.assert_not_called()
+
+
+def test_nueva_etapa_incierta_sin_bloqueo_exige_comprobar(tmp_path):
+    from arybot.cola_operaciones import ColaOperaciones
+    from arybot.cola_modelo import DEFAULTS
+    store=ColaLocal(tmp_path)
+    viejo,_=store.enqueue('FACTURA', {'ticket':'40301','estacion':'ARY VI'},
+                          source='Portal web',safe=False,clave='ARY_VI:40301')
+    store.finish(viejo['id'],'REVISION_REQUERIDA',
+                 reason='Posible CFDI timbrado; no se confirmó cierre.',hold=False)
+    assert not store.status()['bloqueo']
+    cfg={'app':{'modo_prueba':False,'ary_nueva_etapa_magenta':True},
+         'gmail':{},'ocr':{},'polaris':{},'cola':dict(DEFAULTS)}
+    q=ColaOperaciones(tmp_path,cfg,Mock(),Mock(),avisos=Mock())
+    assert q.store.list()==[]
+    assert q.store.meta('pendiente_comprobar_polaris')=='1'
+    assert q.store.status()['pausada']
+    assert q.store.get(viejo['id'])['riesgo_cfdi']==1
