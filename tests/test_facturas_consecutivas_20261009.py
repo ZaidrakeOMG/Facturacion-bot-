@@ -610,7 +610,7 @@ def test_archivar_no_interrumpe_consumidor_activo(tmp_path):
 
 
 def test_archivar_atorada_huerfana_sin_reintentar_ni_perder_bloqueo_fiscal(tmp_path):
-    """Una ejecución huérfana se puede retirar, pero nunca reusar su ticket."""
+    """Una ejecución huérfana se archiva; nuevos intentos pueden encolarse sin timbrar aún."""
     from arybot.cola_operaciones import ColaOperaciones
     from arybot.cola_modelo import DEFAULTS, SolicitudDuplicada
     cfg = {'app': {'modo_prueba': False}, 'gmail': {}, 'ocr': {},
@@ -628,9 +628,11 @@ def test_archivar_atorada_huerfana_sin_reintentar_ni_perder_bloqueo_fiscal(tmp_p
     assert q.store.get(job['id'])['estado'] == 'REVISION_CERRADA'
     assert q.store.get(job['id'])['riesgo_cfdi'] == 1
     assert not q.store.status()['activa']
-    with pytest.raises(SolicitudDuplicada, match='operación archivada'):
-        q.store.enqueue('FACTURA', {'ticket':'33001'}, source='Portal web',
-                        safe=False, clave='ARY-V:33001')
+    nuevo, creado = q.store.enqueue('FACTURA', {'ticket':'33001'}, source='Portal web',
+                                    safe=False, clave='ARY-V:33001')
+    assert creado and nuevo['estado'] == 'EN_COLA'
+    assert q.store.get(job['id'])['riesgo_cfdi'] == 1  # Auditoría conservada
+    assert q.store.status()['pausada']  # Polaris todavía no fue confirmado
     bot.invoice.assert_not_called()
 
 
@@ -651,9 +653,10 @@ def test_archivar_bloqueada_limpia_lista_sin_confirmar_cfdi(tmp_path):
     assert store.get(job['id'])['riesgo_cfdi'] == 1
     assert store.get(job['id'])['archivado'] == 1
     assert not store.list()
-    with pytest.raises(SolicitudDuplicada):
-        store.enqueue('FACTURA', {'ticket':'34001'}, source='Portal web',
-                      safe=False, clave='ARY-V:34001')
+    nuevo, creado = store.enqueue('FACTURA', {'ticket':'34001'}, source='Portal web',
+                                 safe=False, clave='ARY-V:34001')
+    assert creado and nuevo['estado'] == 'EN_COLA'
+    assert store.status()['pausada']
 
 
 def test_archivar_no_envia_avisos_que_esperaban(tmp_path):
@@ -748,7 +751,7 @@ def test_primera_instalacion_magenta_lista_blanca_y_sin_reintentos(tmp_path):
 
 
 def test_nueva_etapa_fiscal_incierto_no_auto_reanuda(tmp_path):
-    """Al limpiar un CFDI posiblemente timbrado, sigue bloqueado contra duplicado."""
+    """La revisión archivada ya no bloquea recepción; la cola exige comprobación."""
     from arybot.cola_operaciones import ColaOperaciones
     from arybot.cola_modelo import DEFAULTS
     store=ColaLocal(tmp_path)
@@ -766,9 +769,10 @@ def test_nueva_etapa_fiscal_incierto_no_auto_reanuda(tmp_path):
     assert q.store.get(viejo['id'])['riesgo_cfdi']==1
     with pytest.raises(ColaError,match='Confirma'):
         q.iniciar_cola()
-    with pytest.raises(SolicitudDuplicada):
-        q.store.enqueue('FACTURA', {'ticket':'40201','estacion':'ARY V'},
-                        source='Portal web',safe=False,clave='ARY_V:40201')
+    nuevo, creado = q.store.enqueue('FACTURA', {'ticket':'40201','estacion':'ARY V'},
+                                    source='Portal web',safe=False,clave='ARY_V:40201')
+    assert creado and nuevo['estado']=='EN_COLA'
+    assert q.store.status()['pausada']
     q.iniciar_cola(polaris_comprobado=True)
     assert not q.store.status()['pausada']
     bot.invoice.assert_not_called()
