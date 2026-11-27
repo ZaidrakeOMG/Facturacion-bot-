@@ -127,6 +127,47 @@ def connection_string(settings, password, *, test_untrusted=False):
             f"TrustServerCertificate={'yes' if test_untrusted else 'no'};")
 
 
+def probar_sql_servidor(settings, password):
+    """Comprobar SQL Server por LAN sin tocar las bases de Polaris.
+
+    Conecta a master solo para consultar versión y presencia de la base propia
+    del bot. El usuario y su contraseña se introducen en la VM y nunca
+    se guardan en Git. No requiere instalar o administrar certificados.
+    """
+    settings.validate()
+    if not password or "\x00" in password:
+        raise SqlError("Introduce la contraseña SQL en esta computadora.")
+    try:
+        import pyodbc
+    except ImportError:
+        raise SqlError("Falta pyodbc. Instálalo en Python de esta VM.") from None
+    disponibles=pyodbc.drivers()
+    nombre=next((driver for driver in (
+        "ODBC Driver 18 for SQL Server", "ODBC Driver 17 for SQL Server")
+        if driver in disponibles),None)
+    if not nombre:
+        raise SqlError("Instala Microsoft ODBC Driver 18 o 17 para SQL Server.")
+    password_odbc="{"+password.replace("}","}}")+"}"
+    cadena=(f"DRIVER={{{nombre}}};"
+            f"SERVER=tcp:{settings.server},{settings.port};"
+            f"DATABASE=master;UID={settings.user};PWD={password_odbc};"
+            "Encrypt=yes;TrustServerCertificate=yes;")
+    try:
+        with closing(pyodbc.connect(cadena,timeout=5,autocommit=True)) as conn:
+            cur=conn.cursor()
+            row=cur.execute(
+                "SELECT CONVERT(nvarchar(128),SERVERPROPERTY('ServerName')), "
+                "CONVERT(nvarchar(128),SERVERPROPERTY('ProductVersion'))").fetchone()
+            bot=cur.execute("SELECT 1 FROM sys.databases WHERE name=?",DATABASE).fetchone()
+            return {
+                "servidor":str(row[0] or settings.server),
+                "version":str(row[1] or "?"),
+                "bot_database":bool(bot),
+            }
+    except pyodbc.Error as exc:
+        raise SqlError(friendly_error(exc)) from None
+
+
 def friendly_error(exc):
     # Do not display driver strings, connection strings, queries or row values.
     if isinstance(exc, SqlError):
