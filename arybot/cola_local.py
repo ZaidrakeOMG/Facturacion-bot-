@@ -66,6 +66,30 @@ class ColaLocal:
     def source(self, source_id):
         with self.connect() as c:return self.unpack(c.execute('SELECT * FROM trabajos WHERE fuente_id=?',(source_id,)).fetchone())
 
+    def solicitud_activa_identica(self, kind, data, *, safe):
+        """Encuentra SOLO un envío idéntico todavía en proceso.
+
+        No acepta coincidencias basadas únicamente en un folio: exige la misma
+        estación, RFC, correo, fecha, forma de pago y datos normalizados que
+        se validaron nuevamente desde la constancia y foto originales.
+        Nunca reabre un trabajo archivado ni una operación incierta.
+        """
+        from .cola_modelo import clave_trabajo, BLOQUEAN_CLAVE, BLOQUEAN_CLAVE_ALTA
+        clave=clave_trabajo(kind,data)
+        blockers=BLOQUEAN_CLAVE_ALTA if kind=='ALTA' else BLOQUEAN_CLAVE
+        marks=','.join('?' for _ in blockers)
+        with self.connect() as c:
+            rows=c.execute(
+                f"""SELECT * FROM trabajos WHERE clave=? AND tipo=?
+                    AND origen='Portal web' AND archivado=0 AND seguro=?
+                    AND estado IN ({marks}) ORDER BY creado DESC""",
+                (clave,kind,int(bool(safe)),*sorted(blockers)))
+            for row in rows:
+                original=self.unpack(row)
+                if original['datos']==data:
+                    return original
+        return None
+
     def list(self, limit=200, *, incluir_archivadas=False):
         """La tabla normal es limpia; los registros archivados siguen para auditoría."""
         where="1=1" if incluir_archivadas else "archivado=0"
