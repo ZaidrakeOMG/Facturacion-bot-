@@ -528,6 +528,11 @@ class App:
             if not messagebox.askyesno("Activar producción","Desactivar MODO SEGURO permite que Polaris presione el Aceptar final y TIMBRE CFDI reales. ¿Confirmas?"):
                 self.mode_var.set(True); return
         self.cfg["app"]["modo_prueba"]=new; self.cfgm.save(); self.log("Modo cambiado a " + ("SEGURO" if new else "PRODUCCIÓN"))
+        if not new and hasattr(self,'cola'):
+            # Si las solicitudes recibidas esperaban autorización de producción,
+            # no exigir al operador otro clic de "reanudar".
+            try:self.cola.iniciar_cola()
+            except Exception as exc:self.log("La atención automática no pudo reanudarse: "+str(exc))
 
     def connect_gmail(self):
         self.log("Recepción por Gmail desactivada. Utiliza el portal web."); return
@@ -757,18 +762,18 @@ class App:
         except Exception as exc:self.direct_status.set(str(exc));return
         if not safe:
             if self.cola.ocupada:
-                self.direct_status.set('Polaris está trabajando. Espera a que termine antes de confirmar otra prueba REAL.')
+                self.direct_status.set('Polaris está atendiendo otra solicitud. Esta operación debe esperar a que termine.')
                 return
-            if not messagebox.askyesno('Encolar factura REAL',
+            if not messagebox.askyesno('Confirmar emisión de CFDI',
                 f'Estación: {estacion}\nRFC: {rfc}\nFolio: {ticket}\nFecha ticket: {fecha_ticket}\nPago: {fp}\nUso CFDI: {uso}\nCorreo: {em}\n\n'
-                'La cola emitirá una factura real y solicitará el correo cuando llegue su turno. '
-                'Confirma que el ticket no fue facturado: esta versión no consulta la BD. '
-                'Los avisos al cliente se envían si están activados. ¿Autorizar y encolar?',default='no'):return
+                'Se intentará emitir el CFDI y solicitar XML/PDF por correo. '
+                'El bot atenderá una solicitud a la vez y continuará automáticamente. '
+                'Confirma que el folio no fue facturado: esta versión no consulta la BD. ¿Autorizar?',default='no'):return
         try:
             job,new=self.cola.encolar_factura(sol,safe=safe)
             self._direct_job_id=job['id']
             self.direct_status.set('RECIBIDA: '+job['id'][:12]+'. Se ejecutará automáticamente cuando Polaris esté libre.')
-            self.log('Solicitud de factura agregada a la cola única de pantalla.')
+            self.log('Solicitud recibida para atención automática secuencial.')
         except Exception as exc:self.direct_status.set(str(exc))
 
     def test_station_only(self):
@@ -840,14 +845,14 @@ class App:
                 if st.get('activa'):
                     text='POLARIS TRABAJANDO: '+str(getattr(self.polaris,'etapa_alerta','Preparando ventana...'))
                 elif st.get('bloqueo'):
-                    text='COLA EN REVISIÓN: '+str(st.get('motivo',''))+' | Cola y avisos > Liberar revisión.'
+                    text='ATENCIÓN DETENIDA: resultado de Polaris pendiente de confirmar. '+str(st.get('motivo',''))+' | Resultados y avisos > Resolver bloqueo confirmado.'
                 elif st.get('pausada'):
-                    text='COLA PAUSADA: '+str(st.get('motivo',''))+' | Cola y avisos > Iniciar / continuar cola.'
+                    text='ATENCIÓN DETENIDA: '+str(st.get('motivo',''))+' | Resultados y avisos > Reanudar atención automática.'
                 else:
-                    text='POLARIS DISPONIBLE | Cola libre | Adaptador VM sobre el original; pantalla sin modificar.'
+                    text='POLARIS DISPONIBLE | Atención automática activa.'
             self.estado_vm_var.set(text)
         except Exception as exc:
-            self.estado_vm_var.set('No se pudo leer el estado de la cola: '+str(exc))
+            self.estado_vm_var.set('No se pudo consultar la atención automática: '+str(exc))
         self.root.after(600,self._estado_vm)
 
     def _drain_cola_events(self):
@@ -859,7 +864,10 @@ class App:
                     self.gmail_status.config(text=ident)
                 elif kind=='trabajo' and ident==self._direct_job_id:
                     job=self.cola.store.get(ident)
-                    if job:self.direct_status.set(job['estado']+': '+job['motivo'])
+                    if job:
+                        from .cola_modelo import resultado_facturacion
+                        resultado,motivo=resultado_facturacion(job)
+                        self.direct_status.set('¿Se facturó? '+resultado+' | '+motivo)
         except queue.Empty:pass
         self.root.after(150,self._drain_cola_events)
 
