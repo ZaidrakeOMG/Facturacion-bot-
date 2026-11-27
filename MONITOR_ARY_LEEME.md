@@ -41,6 +41,29 @@ Para validar el código sin tocar Polaris:
 No publiques el puerto 8787 en Internet; HTTP no cifra las contraseñas. Para acceso externo usa VPN y HTTPS.
 
 
+## Nueva estadística: Teléfono vs computadora
+
+Esta clasificación comienza **con las solicitudes nuevas recibidas por Astro** después de reiniciar de forma controlada ARY Facturación Bot. No es necesario modificar ni volver a publicar Astro: la API existente recibe los datos generales del navegador y conserva **solo** la categoría teléfono, computadora, tableta o no identificado. No almacena la cadena completa del navegador ni la IP para esta función.
+
+Los trámites anteriores al cambio, los envíos manuales y los navegadores que no permitan la clasificación aparecen como **No identificado**. El resultado es aproximado y no representa dispositivos únicos.
+
+La tarjeta **¿Desde dónde facturan tus clientes?** permite alternar entre "Con factura" y "Todas las solicitudes", con contadores y porcentajes de cada categoría. No cuenta altas ni pruebas como facturas. Un "Con factura" puede significar ENVIO_SOLICITADO (sin confirmación de PAC/entrega) o YA_FACTURADO (ya existía).
+
+### Aplicación segura en la VM (sin duplicar CFDI)
+
+1. Espera a que no haya un trabajo EJECUTANDO y que Polaris no tenga diálogos de timbrado, envío o altas abiertos.
+2. Cierra ARY Facturación Bot desde su ventana y deja Polaris abierto. **No uses taskkill**.
+3. Ejecuta git pull --ff-only origin main en la carpeta del bot. Si indica cambios locales, revisa antes de continuar.
+4. Reinicia **solo el monitor web** con este comando en PowerShell desde CMD como administrador:
+
+    powershell -NoProfile -Command "Stop-ScheduledTask -TaskName 'ARY - Monitor Web Solo Lectura'; Start-Sleep -Seconds 2; Start-ScheduledTask -TaskName 'ARY - Monitor Web Solo Lectura'"
+
+5. Vuelve a iniciar el bot mediante INICIAR.bat en la misma sesión interactiva de Windows que Polaris. Comprueba que muestre PRODUCCIÓN y atención automática activa.
+6. Transfiere RDP usando ARY_RDP_A_CONSOLA.bat como en la prueba que ya funcionó. No cierres sesión.
+7. Comprueba la gráfica con solicitudes nuevas legítimas, **sin volver a facturar un mismo ticket solo para probarla**.
+
+**La tarea web no factura**: únicamente consulta SQLite. Para detectar el dispositivo en nuevas solicitudes hay que volver a iniciar el bot principal una vez después de actualizar código.
+
 ## Primera y única instalación en la VM
 
 1. Mantén intacto el bot que ya factura. Actualiza una sola vez su copia local desde el repositorio, por ejemplo con `git pull --ff-only origin main`; sin esta instalación inicial la URL no existe.
