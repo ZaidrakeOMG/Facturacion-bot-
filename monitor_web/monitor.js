@@ -81,7 +81,7 @@
     $("shell").classList.remove("menu-open");
     $("btn-menu").setAttribute("aria-expanded", "false");
     if (state.data && name === "solicitudes") renderTable();
-    window.scrollTo({top: 0, behavior: reducedMotion ? "instant" : "smooth"});
+    window.scrollTo({top: 0, behavior: reducedMotion ? "auto" : "smooth"});
   }
   for (const button of q("[data-view]")) button.addEventListener("click", () => openView(button.dataset.view));
   for (const button of q("[data-goto]")) button.addEventListener("click", () => openView(button.dataset.goto));
