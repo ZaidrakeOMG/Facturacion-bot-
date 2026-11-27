@@ -158,13 +158,17 @@ class ColaOperaciones:
             self._wake.set()
         return job,new
 
-    def encolar_factura(self,sol,*,source='Formulario',source_id=None,safe=True,correo=None):
+    def encolar_factura(self,sol,*,source='Formulario',source_id=None,safe=True,correo=None,dispositivo_origen=None):
         data=factura_datos(sol)
+        if source == 'Portal web' and dispositivo_origen in ('telefono','computadora','tableta','no_identificado'):
+            data['dispositivo_origen']=dispositivo_origen
         return self._enqueue('FACTURA',data,source=source,source_id=source_id,safe=safe,
                              correo=correo if correo is not None else data['correo_destino'])
 
-    def encolar_alta(self,sol,*,source='Formulario',source_id=None,safe=True,correo=None):
+    def encolar_alta(self,sol,*,source='Formulario',source_id=None,safe=True,correo=None,dispositivo_origen=None):
         data=datos_alta(sol)
+        if source == 'Portal web' and dispositivo_origen in ('telefono','computadora','tableta','no_identificado'):
+            data['dispositivo_origen']=dispositivo_origen
         return self._enqueue('ALTA',data,source=source,source_id=source_id,safe=safe,
                              correo=correo if correo is not None else data['correo'])
 
