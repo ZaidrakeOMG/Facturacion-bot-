@@ -9,15 +9,15 @@ from datetime import datetime, timedelta
 from .cola_modelo import resultado_facturacion
 from tkinter import ttk
 
-NAVY = "#10243B"
-BLUE = "#164E91"
-RED = "#C62836"
-BG = "#F0F4F8"
+NAVY = "#420E35"
+BLUE = "#C2187C"
+RED = "#A92E66"
+BG = "#FFF3FA"
 WHITE = "#FFFFFF"
-INK = "#172B40"
-MUTED = "#52677D"
-GREEN = "#08764D"
-AMBER = "#9A5808"
+INK = "#3E1934"
+MUTED = "#765368"
+GREEN = "#C2187C"
+AMBER = "#B65C8B"
 
 PERIODS = ("Hoy", "Últimos 7 días", "Este mes", "Todo el historial")
 STATES = {
@@ -57,8 +57,13 @@ def read_jobs(path, period, now=None):
     with sqlite3.connect(uri, uri=True, timeout=.25) as conn:
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA query_only=ON")
+        columns={col[1] for col in conn.execute("PRAGMA table_info(trabajos)")}
         sql = """SELECT id,tipo,origen,seguro,estado,datos,creado,iniciado,terminado,motivo
                  FROM trabajos WHERE tipo IN ('FACTURA','ALTA')"""
+        # Una nueva etapa muestra estadísticas sólo de solicitudes actuales.
+        # "Todo el historial" permite consultar el historial guardado en SQLite.
+        if 'archivado' in columns and period != 'Todo el historial':
+            sql += " AND archivado=0"
         params = ()
         if start is not None:
             sql += " AND creado >= ?"
@@ -159,7 +164,7 @@ def apply_style(root):
     style.configure(".", font=("Segoe UI", 10))
     style.configure("TFrame", background=BG)
     style.configure("TLabel", background=BG, foreground=INK)
-    style.configure("TLabelframe", background=BG, bordercolor="#D6E0EA")
+    style.configure("TLabelframe", background=BG, bordercolor="#E8C6D9")
     style.configure("TLabelframe.Label", background=BG, foreground=BLUE,
                     font=("Segoe UI", 10, "bold"))
     style.configure("TButton", padding=(10, 6))
@@ -169,7 +174,7 @@ def apply_style(root):
     style.map("TNotebook.Tab", background=[("selected", WHITE)], foreground=[("selected", BLUE)])
     style.configure("Treeview", rowheight=27, background=WHITE,
                     fieldbackground=WHITE, foreground=INK, font=("Segoe UI", 9))
-    style.configure("Treeview.Heading", background="#DFE8F2", foreground=NAVY,
+    style.configure("Treeview.Heading", background="#F3D7E7", foreground=NAVY,
                     font=("Segoe UI", 9, "bold"), padding=5)
     style.map("Treeview", background=[("selected", BLUE)], foreground=[("selected", WHITE)])
     style.layout("ARY.TNotebook.Tab", [])
@@ -183,7 +188,7 @@ def attach_navigation(app, sidebar):
     def sync(_event=None):
         try:
             selected = app.nb.select()
-            tabs = app.nb.tabs()
+            tabs = [tab for tab in app.nb.tabs() if app.nb.tab(tab, 'state') != 'hidden']
             for tab in tuple(buttons):
                 if tab not in tabs:
                     buttons.pop(tab).destroy()
@@ -200,7 +205,7 @@ def attach_navigation(app, sidebar):
                 button.pack(fill="x", padx=9, pady=2)
                 active = tab == selected
                 button.configure(bg=BLUE if active else NAVY,
-                                 fg=WHITE if active else "#D5E3F1",
+                                 fg=WHITE if active else "#F0D6E6",
                                  activebackground=BLUE, activeforeground=WHITE)
         except tk.TclError:
             pass
@@ -296,7 +301,7 @@ class Dashboard(ttk.Frame):
             canvas.create_text(label_x, y, text=label, anchor="w",
                                font=("Segoe UI", 13, "bold"), fill=INK)
             canvas.create_rectangle(bar_x, y - 22, bar_x + available, y + 22,
-                                    fill="#E8EEF4", outline="")
+                                    fill="#F7E8F1", outline="")
             if value:
                 canvas.create_rectangle(bar_x, y - 22,
                                         bar_x + max(3, round(available * value / maximum)),
